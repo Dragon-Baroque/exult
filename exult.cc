@@ -31,6 +31,7 @@
 #include <cmath>
 
 #include <SDL.h>
+#include "userevents.h"
 
 #define Font _XFont_
 #include <SDL_syswm.h>
@@ -706,6 +707,7 @@ static void Init(
 		exit(-1);
 	}
 	std::atexit(SDL_Quit);
+	register_user_events();  // Register SDL User Events.
 
 	SDL_SysWMinfo info;     // Get system info.
 
@@ -1278,17 +1280,10 @@ static void Handle_event(
 		}
 		break;
 	}
-	case SDL_USEREVENT: {
+	case SHORTCUT_BAR_USER_EVENT: {
 		if (!dragged) {
-			switch (event.user.code) {
-				case SHORTCUT_BAR_USER_EVENT: {
-					if(g_shortcutBar) // just in case
-						g_shortcutBar->onUserEvent(&event);
-					break;
-				}
-				default:
-					break;
-			}
+			if(g_shortcutBar) // just in case
+				g_shortcutBar->onUserEvent(&event);
 		}
 		dragging = dragged = false;
 		break;

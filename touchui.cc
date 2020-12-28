@@ -20,8 +20,6 @@
 #include "touchui.h"
 #include <cstring>
 
-uint32 TouchUI::eventType = ~uint32(0);
-
 void TouchUI::onTextInput(const char *text) {
 	SDL_Event event;
 
@@ -30,7 +28,7 @@ void TouchUI::onTextInput(const char *text) {
 	}
 
 	SDL_zero(event);
-	event.type = TouchUI::eventType;
+	event.type = TOUCH_UI_USER_EVENT;
 	event.user.code = TouchUI::EVENT_CODE_TEXT_INPUT;
 	event.user.data1 = strdup(text);
 	event.user.data2 = nullptr;
@@ -38,5 +36,4 @@ void TouchUI::onTextInput(const char *text) {
 }
 
 TouchUI::TouchUI() {
-	TouchUI::eventType = SDL_RegisterEvents(1);
 }

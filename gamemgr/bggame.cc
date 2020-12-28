@@ -21,6 +21,7 @@
 #endif
 
 #include "bggame.h"
+#include "userevents.h"
 
 #include "Audio.h"
 #include "AudioMixer.h"
@@ -2079,7 +2080,7 @@ bool BG_Game::new_game(Vga_file &shapes) {
 					}
 					redraw = true;
 				}
-			} else if (event.type == TouchUI::eventType) {
+			} else if (event.type == TOUCH_UI_USER_EVENT) {
 				if (event.user.code == TouchUI::EVENT_CODE_TEXT_INPUT) {
 					if (selected == 0 && event.user.data1 != nullptr) {
 						strncpy(npc_name, static_cast<char*>(event.user.data1), max_name_len);

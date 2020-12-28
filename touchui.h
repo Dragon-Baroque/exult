@@ -21,11 +21,11 @@
 #define TOUCHUI_H
 
 #include <SDL.h>
+#include "userevents.h"
 #include "common_types.h"
 
 class TouchUI {
 public:
-	static uint32 eventType;
 	enum {
 		EVENT_CODE_INVALID = 0,
 		EVENT_CODE_TEXT_INPUT = 1

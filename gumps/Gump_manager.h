@@ -24,6 +24,7 @@
 #include "singles.h"
 #include "mouse.h"
 #include "SDL_events.h"
+#include "userevents.h"
 
 class Gump;
 class Game_object;

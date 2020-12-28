@@ -21,13 +21,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
 #include "SDL.h"
+#include "userevents.h"
 #include "gamewin.h"
 #include "objs.h"
 #include "misc_buttons.h"
 #include "Modal_gump.h"
 #include "Gamemenu_gump.h"
 
-#define SHORTCUT_BAR_USER_EVENT 0x53425545 // "SBUE"
 
 /* -------------------------------------------- */
 
