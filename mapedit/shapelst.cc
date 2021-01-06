@@ -587,7 +587,7 @@ gint Shape_chooser::drag_motion(
 	ignore_unused_variable_warning(widget);
 	auto *chooser = static_cast<Shape_chooser *>(data);
 	if (!chooser->dragging && chooser->selected >= 0)
-		chooser->start_drag(U7_TARGET_GENERIC_NAME,
+		chooser->start_drag(U7_TARGET_SHAPEID_NAME,
 		                    U7_TARGET_SHAPEID, reinterpret_cast<GdkEvent *>(event));
 	return true;
 }
@@ -1743,7 +1743,9 @@ void Shape_chooser::drag_data_get(
     gpointer data           // ->Shape_chooser.
 ) {
 	ignore_unused_variable_warning(widget, context, time);
-	cout << "In DRAG_DATA_GET" << endl;
+	cout << "In DRAG_DATA_GET of Shape for '"
+	     << gdk_atom_name(gtk_selection_data_get_target(seldata))
+	     << "'" << endl;
 	auto *chooser = static_cast<Shape_chooser *>(data);
 	if (chooser->selected < 0 || info != U7_TARGET_SHAPEID)
 		return;         // Not sure about this.
@@ -1762,7 +1764,7 @@ void Shape_chooser::drag_data_get(
 #else
 	// Set data.
 	gtk_selection_data_set(seldata,
-	                       gdk_atom_intern(U7_TARGET_GENERIC_NAME, 0),
+	                       gtk_selection_data_get_target(seldata),
 	                       8, buf, len);
 #endif
 }
@@ -1777,7 +1779,7 @@ gint Shape_chooser::drag_begin(
     gpointer data           // ->Shape_chooser.
 ) {
 	ignore_unused_variable_warning(widget);
-	cout << "In DRAG_BEGIN" << endl;
+	cout << "In DRAG_BEGIN of Shape" << endl;
 	auto *chooser = static_cast<Shape_chooser *>(data);
 	if (chooser->selected < 0)
 		return FALSE;       // ++++Display a halt bitmap.
