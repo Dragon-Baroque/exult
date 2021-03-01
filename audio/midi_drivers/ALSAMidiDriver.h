@@ -32,7 +32,7 @@ class ALSAMidiDriver : public LowLevelMidiDriver
 		return new ALSAMidiDriver();
 	}
 
-public:	
+public:
 	static const MidiDriverDesc* getDesc() { return &desc; }
 	ALSAMidiDriver();
 
@@ -42,18 +42,24 @@ protected:
 	void		send(uint32 b) override;
 //	void		yield() override;
 	void		send_sysex(uint8 status, const uint8 *msg,
-								   uint16 length) override;
+				           uint16 length) override;
 
 	std::string devname;
+	std::string prtname;
 	bool isOpen;
 
-	snd_seq_event_t ev;
-	snd_seq_t *seq_handle;
+	snd_seq_event_t        ev;
+	snd_seq_t             *seq_handle;
+	snd_seq_client_info_t *clt_info;
+	snd_seq_port_info_t   *prt_info;
+
 	int seq_client, seq_port;
-	int my_client, my_port;
+	int my_client,  my_port;
 
 	void send_event(int do_flush);
-	int parse_addr(const std::string& arg, int *client, int *port);
+	int  parse_addr(const std::string& arg, int *client, int *port);
+	int  find_next_midi(bool first);
+	int  identify_alsa_port();
 };
 
 #endif

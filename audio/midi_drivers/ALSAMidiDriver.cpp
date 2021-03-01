@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef USE_ALSA_MIDI
 
 const MidiDriver::MidiDriverDesc ALSAMidiDriver::desc =
-		MidiDriver::MidiDriverDesc ("alsa", createInstance);
+      MidiDriver::MidiDriverDesc ("alsa", createInstance);
 
 
 
@@ -54,6 +54,72 @@ ALSAMidiDriver::ALSAMidiDriver()
 
 }
 
+int ALSAMidiDriver::identify_alsa_port() {
+	prtname  = std::to_string(seq_client);
+	prtname += ":";
+	prtname += std::to_string(seq_port);
+	int clt_status = snd_seq_get_any_client_info(seq_handle, seq_client,           clt_info);
+	int prt_status = snd_seq_get_any_port_info  (seq_handle, seq_client, seq_port, prt_info);
+	if (clt_status < 0 || prt_status < 0 ) {
+		devname = "";
+		return -1;
+	}
+	char const* clt_name = snd_seq_client_info_get_name(clt_info);
+	char const* prt_name = snd_seq_port_info_get_name  (prt_info);
+	devname  = clt_name;
+	devname += " : ";
+	devname += prt_name;
+	return 0;
+}
+
+int ALSAMidiDriver::find_next_midi(bool first) {
+	if (first) {
+		seq_client = 0;
+		snd_seq_get_any_client_info(seq_handle, seq_client, clt_info);
+	}
+	while (snd_seq_query_next_client(seq_handle, clt_info) >= 0) {
+		int clt_id    = snd_seq_client_info_get_client   (clt_info);
+		int num_ports = snd_seq_client_info_get_num_ports(clt_info);
+		for (int prt_count = 0; prt_count < num_ports; prt_count++) {
+			snd_seq_get_any_port_info(seq_handle, clt_id, prt_count, prt_info);
+			int prt_id                  = snd_seq_port_info_get_port         (prt_info);
+			unsigned int prt_capability = snd_seq_port_info_get_capability   (prt_info);
+			unsigned int prt_type       = snd_seq_port_info_get_type         (prt_info);
+			int prt_midi_channels       = snd_seq_port_info_get_midi_channels(prt_info);
+			int prt_write_use           = snd_seq_port_info_get_write_use    (prt_info);
+			if (((prt_capability &
+			      (SND_SEQ_PORT_CAP_READ |
+			       SND_SEQ_PORT_CAP_WRITE |
+			       SND_SEQ_PORT_CAP_DUPLEX |
+			       SND_SEQ_PORT_CAP_SUBS_READ |
+			       SND_SEQ_PORT_CAP_SUBS_WRITE)) ==
+			      (SND_SEQ_PORT_CAP_WRITE |
+			       SND_SEQ_PORT_CAP_SUBS_WRITE)) &&
+			    (prt_type &
+			     (SND_SEQ_PORT_TYPE_MIDI_GENERIC)) &&
+			    (prt_midi_channels > 0) &&
+			    (prt_write_use == 0)) {
+				seq_client = clt_id;
+				seq_port   = prt_id;
+				char const* clt_name = snd_seq_client_info_get_name(clt_info);
+				char const* prt_name = snd_seq_port_info_get_name  (prt_info);
+				prtname    = std::to_string(seq_client);
+				prtname   += ":";
+				prtname   += std::to_string(seq_port);
+				devname    = clt_name;
+				devname   += " : ";
+				devname   += prt_name;
+				return 0;
+			}
+		}
+	}
+	prtname    = "";
+	devname    = "";
+	seq_client = -1;
+	seq_port   = -1;
+	return -1;
+}
+
 int ALSAMidiDriver::open() {
 	std::string arg;
 	unsigned int caps;
@@ -67,24 +133,26 @@ int ALSAMidiDriver::open() {
 		perr << "ALSAMidiDriver: Invalid port: " << arg << std::endl;
 		return -1;
 	}
-	
+
 	if (my_snd_seq_open(&seq_handle)) {
 		perr << "ALSAMidiDriver: Can't open sequencer" << std::endl;
 		return -1;
 	}
 
 	isOpen = true;
-	
+	snd_seq_client_info_malloc(&clt_info);
+	snd_seq_port_info_malloc  (&prt_info);
+
 	my_client = snd_seq_client_id(seq_handle);
 	snd_seq_set_client_name(seq_handle, "PENTAGRAM");
 	snd_seq_set_client_group(seq_handle, "input");
-	
+
 	caps = SND_SEQ_PORT_CAP_READ;
 	if (seq_client == SND_SEQ_ADDRESS_SUBSCRIBERS)
 		caps = ~SND_SEQ_PORT_CAP_SUBS_READ;
 	my_port =
 		snd_seq_create_simple_port(seq_handle, "PENTAGRAM", caps,
-								   SND_SEQ_PORT_TYPE_MIDI_GENERIC | SND_SEQ_PORT_TYPE_APPLICATION);
+		    SND_SEQ_PORT_TYPE_MIDI_GENERIC | SND_SEQ_PORT_TYPE_APPLICATION);
 	if (my_port < 0) {
 		snd_seq_close(seq_handle);
 		isOpen = false;
@@ -92,26 +160,63 @@ int ALSAMidiDriver::open() {
 		return -1;
 	}
 
+	bool connectedAtDefault = true;
 	if (seq_client != SND_SEQ_ADDRESS_SUBSCRIBERS) {
 		/* subscribe to MIDI port */
-		if (snd_seq_connect_to(seq_handle, my_port, seq_client, seq_port) < 0) {
-			snd_seq_close(seq_handle);
-			isOpen = false;
-			perr << "ALSAMidiDriver: "
-				 << "Can't subscribe to MIDI port (" << seq_client
-				 << ":" << seq_port << ")" << std::endl;
-			return -1;
+		identify_alsa_port();
+		if (seq_client == my_client ||
+		    snd_seq_connect_to(seq_handle, my_port, seq_client, seq_port) < 0) {
+			if (!devname.empty())
+				perr << "ALSAMidiDriver: "
+				     << "Can't subscribe to default MIDI port [" << prtname << "]"
+				     << " [ " << devname << " ]"
+				     << ", looking for other MIDI ports" << std::endl;
+			else
+				perr << "ALSAMidiDriver: "
+				     << "Can't subscribe to default MIDI port [" << prtname << "]"
+				     << ", looking for other MIDI ports" << std::endl;
+			bool first = true;
+			while (find_next_midi(first) >= 0) {
+				first = false;
+				if (snd_seq_connect_to(seq_handle, my_port, seq_client, seq_port) >= 0) {
+					connectedAtDefault = false;
+					break;
+				}
+				perr << "ALSAMidiDriver: "
+				     << "Can't subscribe to alternate MIDI port [" << prtname << "]"
+				     << " [ " << devname << " ]"
+				     << ", looking for other MIDI ports" << std::endl;
+			}
+			if (connectedAtDefault) {
+				snd_seq_client_info_free(clt_info);
+				snd_seq_port_info_free  (prt_info);
+				snd_seq_close(seq_handle);
+				isOpen = false;
+				perr << "ALSAMidiDriver: "
+				     << "Can't subscribe to any MIDI port" << std::endl;
+				return -1;
+			}
 		}
+
 	}
 
-	pout << "ALSA client initialised [" << seq_client << ":"
-		 << seq_port << "]" << std::endl;
+	if (!devname.empty())
+		pout << "ALSAMidiDriver: ALSA client initialised on MIDI port [" << prtname << "]"
+		     << " [ " << devname << " ]"
+		     << std::endl;
+	else
+		pout << "ALSAMidiDriver: ALSA client initialised on MIDI port [" << prtname << "]"
+		     << std::endl;
 
 	return 0;
 }
 
 void ALSAMidiDriver::close() {
 	isOpen = false;
+	if (clt_info)
+		snd_seq_client_info_free(clt_info);
+	if (prt_info)
+		snd_seq_port_info_free  (prt_info);
 	if (seq_handle)
 		snd_seq_close(seq_handle);
 }
