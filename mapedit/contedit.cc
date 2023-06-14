@@ -114,9 +114,9 @@ C_EXPORT void on_cont_rotate_clicked(GtkButton* btn, gpointer user_data) {
 /*
  *  Container window's close button.
  */
-C_EXPORT gboolean on_cont_window_delete_event(
-		GtkWidget* widget, GdkEvent* event, gpointer user_data) {
-	ignore_unused_variable_warning(widget, event, user_data);
+C_EXPORT gboolean
+		on_cont_window_delete_event(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
 	if (studio->is_cont_window_dirty()
 		&& !studio->prompt_for_discard(

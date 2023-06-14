@@ -93,9 +93,9 @@ C_EXPORT void on_barge_cancel_btn_clicked(GtkButton* btn, gpointer user_data) {
 /*
  *  Barge window's close button.
  */
-C_EXPORT gboolean on_barge_window_delete_event(
-		GtkWidget* widget, GdkEvent* event, gpointer user_data) {
-	ignore_unused_variable_warning(widget, event, user_data);
+C_EXPORT gboolean
+		on_barge_window_delete_event(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
 	if (studio->is_barge_window_dirty()
 		&& !studio->prompt_for_discard(
@@ -137,11 +137,13 @@ void ExultStudio::open_barge_window(
 			return;
 		}
 		gtk_widget_set_visible(get_widget("barge_okay_btn"), true);
+		gtk_widget_set_hexpand(get_widget("barge_apply_btn"), false);
 		gtk_widget_set_visible(get_widget("barge_status"), false);
 	} else {
 		if (first_time) {    // Init. empty dialog first time.
 		}
 		gtk_widget_set_visible(get_widget("barge_okay_btn"), false);
+		gtk_widget_set_hexpand(get_widget("barge_apply_btn"), true);
 		gtk_widget_set_visible(get_widget("barge_status"), false);
 	}
 	gtk_widget_set_visible(bargewin, true);

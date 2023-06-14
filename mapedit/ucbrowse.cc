@@ -66,7 +66,7 @@ const char* ExultStudio::browse_usecode(bool want_objfun, GtkWidget* parent) {
 	ucbrowsewin->show(true, parent);
 	while (gtk_widget_get_visible(
 			GTK_WIDGET(ucbrowsewin->get_win()))) {    // Spin.
-		gtk_main_iteration();                         // (Blocks).
+		g_main_context_iteration(nullptr, true);      // (Blocks).
 	}
 	const char* choice = ucbrowsewin->get_choice();
 	return choice;
@@ -107,9 +107,9 @@ C_EXPORT void on_usecodes_cancel_clicked(GtkButton* btn, gpointer user_data) {
 /*
  *  Usecode_browser window's X button.
  */
-C_EXPORT gboolean on_usecodes_dialog_delete_event(
-		GtkWidget* widget, GdkEvent* event, gpointer user_data) {
-	ignore_unused_variable_warning(event, user_data);
+C_EXPORT gboolean
+		on_usecodes_dialog_delete_event(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	auto* ucb = static_cast<Usecode_browser*>(
 			g_object_get_data(G_OBJECT(widget), "user_data"));
 

@@ -115,23 +115,23 @@ public:
 	int get_count();    // Get # chunks we can display.
 	// Configure when created/resized.
 	static gint configure(
-			GtkWidget* widget, GdkEvent* event, gpointer user_data);
+			GtkWidget* widget, int width, int height, gpointer user_data);
 	// Blit to screen.
-	static gint expose(GtkWidget* widget, cairo_t* cairo, gpointer user_data);
+	static void expose(
+			GtkDrawingArea* widget, cairo_t* cairo, int x, int y,
+			gpointer user_data);
 	// Handle mouse press.
 	static gint mouse_press(
-			GtkWidget* widget, GdkEvent* event, gpointer user_data);
-	// Give dragged chunk.
-	static void drag_data_get(
-			GtkWidget* widget, GdkDragContext* context,
-			GtkSelectionData* seldata, guint info, guint time,
+			GtkGestureClick* click_ctlr, int n_press, double x, double y,
 			gpointer user_data);
-	static gint drag_begin(
-			GtkWidget* widget, GdkDragContext* context, gpointer user_data);
+	// Give dragged chunk.
+	static GdkContentProvider* drag_prepare(
+			GtkDragSource* source, double x, double y, gpointer user_data);
+	static void drag_begin(
+			GtkDragSource* source, GdkDrag* drag, gpointer user_data);
 	// Handler for drop.
-	static void drag_data_received(
-			GtkWidget* widget, GdkDragContext* context, gint x, gint y,
-			GtkSelectionData* seldata, guint info, guint time,
+	static gboolean drag_data_received(
+			GtkDropTarget* dest, GValue* value, gdouble x, gdouble y,
 			gpointer user_data);
 	void enable_drop();
 	// Handle scrollbar.
@@ -145,8 +145,6 @@ public:
 	void        delete_response(const unsigned char* data, int datalen);
 	void        move(bool upwards) override;    // Move current selected chunk.
 	void        swap_response(const unsigned char* data, int datalen);
-	static gint drag_motion(
-			GtkWidget* widget, GdkEvent* event, gpointer user_data);
 };
 
 #endif
