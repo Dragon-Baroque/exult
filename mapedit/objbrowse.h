@@ -32,17 +32,16 @@ private:
 	GtkWidget* widget;
 
 protected:
-	int                 selected     = -1;    // Index of user-selected entry, counting from the top-left entry currently rendered.
-	GtkWidget*          vscroll      = nullptr;                   // Vertical scrollbar.
-	GtkWidget*          hscroll      = nullptr;                   // Horizontal scrollbar.
-	GtkEventController* vscroll_ctlr = nullptr;                   // Vertical scroll in browser.
-	Shape_group*        group;                                    // Non-null to use filter.
-	GtkWidget*          popup_widget = nullptr;                   // Popup menu in draw area.
-	Shape_file_info*    file_info;                                // Our creator (or null).
-	GtkWidget*          find_text = nullptr;                      // For searching.
-	GtkWidget *         loc_down = nullptr, *loc_up = nullptr;    // 'Locate' buttons.
-	GtkWidget*          loc_q = nullptr;                          // 'Locate' quality/quantity.
-	GtkWidget*          loc_f = nullptr;                          // 'Locate' frame
+	int              selected = -1;         // Index of user-selected entry, counting from the top-left entry currently rendered.
+	GtkWidget*       vscroll  = nullptr;    // Vertical scrollbar.
+	GtkWidget*       hscroll  = nullptr;    // Horizontal scrollbar.
+	Shape_group*     group;                 // Non-null to use filter.
+	GtkWidget*       popup_widget = nullptr;                   // Popup menu in draw area.
+	Shape_file_info* file_info;                                // Our creator (or null).
+	GtkWidget*       find_text = nullptr;                      // For searching.
+	GtkWidget *      loc_down = nullptr, *loc_up = nullptr;    // 'Locate' buttons.
+	GtkWidget*       loc_q = nullptr;                          // 'Locate' quality/quantity.
+	GtkWidget*       loc_f = nullptr;                          // 'Locate' frame
 	// 'Move' buttons:
 	GtkWidget * move_down = nullptr, *move_up = nullptr;
 	int         config_width = 0, config_height = 0;    // For storing prev. dims.
