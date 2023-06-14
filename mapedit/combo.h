@@ -109,8 +109,9 @@ public:
 	friend class Combo_chooser;
 	Combo_editor(Shapes_vga_file* svga, unsigned char* palbuf);
 	~Combo_editor() override;
-	static gboolean on_combo_draw_expose_event(
-			GtkWidget* widget, cairo_t* cairo, gpointer user_data);
+	static void on_combo_draw_expose_event(
+			GtkDrawingArea* widget, cairo_t* cairo, int x, int y,
+			gpointer user_data);
 	void show(bool tf);    // Show/hide.
 	void render_area(GdkRectangle* area);
 
@@ -123,8 +124,9 @@ public:
 	}
 
 	void set_controls();    // Set controls to selected entry.
-	// Handle mouse.
-	gint mouse_press(GtkWidget* widget, GdkEvent* event);
+							// Handle mouse.
+	gint mouse_press(
+			GtkGestureClick* click_ctlr, int n_press, double x, double y);
 	void set_order();       // Set selected to desired order.
 	void set_position();    // Set selected to desired position.
 	// Add object/shape picked from Exult.
@@ -231,25 +233,24 @@ public:
 	void edit();                             // Edit selected.
 	// Configure when created/resized.
 	static gint configure(
-			GtkWidget* widget, GdkEvent* event, gpointer user_data);
+			GtkWidget* widget, int width, int height, gpointer user_data);
 	// Blit to screen.
-	static gint expose(GtkWidget* widget, cairo_t* cairo, gpointer user_data);
+	static void expose(
+			GtkDrawingArea* widget, cairo_t* cairo, int x, int y,
+			gpointer user_data);
 	// Handle mouse press.
 	static gint mouse_press(
-			GtkWidget* widget, GdkEvent* event, gpointer user_data);
-	// Give dragged combo.
-	static void drag_data_get(
-			GtkWidget* widget, GdkDragContext* context,
-			GtkSelectionData* seldata, guint info, guint time,
+			GtkGestureClick* click_ctlr, int n_press, double x, double y,
 			gpointer user_data);
-	static gint drag_begin(
-			GtkWidget* widget, GdkDragContext* context, gpointer user_data);
+	// Give dragged combo.
+	static GdkContentProvider* drag_prepare(
+			GtkDragSource* source, double x, double y, gpointer user_data);
+	static void drag_begin(
+			GtkDragSource* source, GdkDrag* drag, gpointer user_data);
 	// Handle scrollbar.
 	static void scrolled(GtkAdjustment* adj, gpointer user_data);
 	void        move(bool upwards) override;    // Move current selected combo.
 	void        search(const char* srch, int dir) override;
-	static gint drag_motion(
-			GtkWidget* widget, GdkEvent* event, gpointer user_data);
 };
 
 #endif /* INCL_COMBO_H */

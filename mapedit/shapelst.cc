@@ -386,7 +386,8 @@ void Shape_chooser::scroll_to_frame() {
 				}
 			}
 		}
-		GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(hscroll));
+		GtkAdjustment* adj
+				= gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(hscroll));
 		gtk_adjustment_set_value(adj, hoffset);
 	}
 }
@@ -421,7 +422,8 @@ void Shape_chooser::goto_index(unsigned index    // Desired index in 'info'.
 	}
 	if (start < rows.size()) {
 		// Get to right spot again!
-		GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(vscroll));
+		GtkAdjustment* adj
+				= gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(vscroll));
 		gtk_adjustment_set_value(adj, rows[start].y);
 	}
 }
@@ -464,19 +466,19 @@ int Shape_chooser::find_shape(int shnum) {
 
 static gint Configure_chooser(
 		GtkWidget* widget,    // The drawing area.
-		GdkEvent*  event,
-		gpointer   user_data    // ->Shape_chooser.
+		int width, int height,
+		gpointer user_data    // ->Shape_chooser
 ) {
 	ignore_unused_variable_warning(widget);
 	auto* chooser = static_cast<Shape_chooser*>(user_data);
-	return chooser->configure(event);
+	return chooser->configure(width, height);
 }
 
-gint Shape_chooser::configure(GdkEvent* event) {
+gint Shape_chooser::configure(int width, int height) {
 	Shape_draw::configure();
 	gint event_configure_width, event_configure_height;
-	event_configure_width  = event->configure.width;
-	event_configure_height = event->configure.height;
+	event_configure_width  = width;
+	event_configure_height = height;
 	// Did the size change?
 	if (event_configure_width != config_width
 		|| event_configure_height != config_height) {
@@ -500,53 +502,34 @@ gint Shape_chooser::configure(GdkEvent* event) {
  *  Handle an expose event.
  */
 
-gint Shape_chooser::expose(
-		GtkWidget* widget,    // The view window.
-		cairo_t*   cairo,
-		gpointer   user_data    // ->Shape_chooser.
+void Shape_chooser::expose(
+		GtkDrawingArea* widget,    // The view window.
+		cairo_t* cairo, int width, int height,
+		gpointer user_data    // ->Shape_chooser.
 ) {
 	ignore_unused_variable_warning(widget);
 	auto* chooser = static_cast<Shape_chooser*>(user_data);
 	chooser->set_graphic_context(cairo);
-	GdkRectangle area = {0, 0, 0, 0};
-	gdk_cairo_get_clip_rectangle(cairo, &area);
+	GdkRectangle area = {0, 0, width, height};
+	//	gdk_cairo_get_clip_rectangle(cairo, &area);
 	chooser->show(
 			ZoomDown(area.x), ZoomDown(area.y), ZoomDown(area.width),
 			ZoomDown(area.height));
 	chooser->set_graphic_context(nullptr);
-	return true;
-}
-
-/*
- *  Handle a mouse drag event.
- */
-
-gint Shape_chooser::drag_motion(
-		GtkWidget* widget,    // The view window.
-		GdkEvent*  event,
-		gpointer   user_data    // ->Shape_chooser.
-) {
-	ignore_unused_variable_warning(widget);
-	auto* chooser = static_cast<Shape_chooser*>(user_data);
-	if (!chooser->dragging && chooser->selected >= 0) {
-		chooser->start_drag(U7_TARGET_SHAPEID_NAME, U7_TARGET_SHAPEID, event);
-	}
-	return true;
 }
 
 /*
  *  Handle a mouse button-press event.
  */
 gint Shape_chooser::mouse_press(
-		GtkWidget* widget,    // The view window.
-		GdkEvent*  event) {
+		GtkGestureClick* click_ctlr, int n_press, double x, double y) {
+	GtkWidget* widget
+			= gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(click_ctlr));
 	gtk_widget_grab_focus(widget);    // Enables keystrokes.
 
-	GdkEventType event_type = gdk_event_get_event_type(event);
-	guint        event_button_button;
-	gdouble      event_button_x, event_button_y;
-	gdk_event_get_button(event, &event_button_button);
-	gdk_event_get_coords(event, &event_button_x, &event_button_y);
+	guint event_button_button = gtk_gesture_single_get_current_button(
+			GTK_GESTURE_SINGLE(click_ctlr));
+	gdouble event_button_x = x, event_button_y = y;
 
 #ifdef DEBUG
 	cout << "Shapes : Clicked to " << event_button_x << " * " << event_button_y
@@ -588,7 +571,7 @@ gint Shape_chooser::mouse_press(
 		unselect(true);    // No selection.
 	} else if (selected == old_selected && old_selected >= 0) {
 		// Same square.  Check for dbl-click.
-		if (event_type == GDK_2BUTTON_PRESS) {
+		if (n_press == 2) {
 			edit_shape_info();
 		}
 	}
@@ -612,20 +595,18 @@ gint Shape_chooser::mouse_press(
  *  Handle mouse button press/release events.
  */
 static gint Mouse_press(
-		GtkWidget* widget,    // The view window.
-		GdkEvent*  event,
-		gpointer   user_data    // ->Shape_chooser.
+		GtkGestureClick* click_ctlr, int n_press, double x, double y,
+		gpointer user_data    // ->Shape_chooser.
 ) {
 	auto* chooser = static_cast<Shape_chooser*>(user_data);
-	return chooser->mouse_press(widget, event);
+	return chooser->mouse_press(click_ctlr, n_press, x, y);
 }
 
 static gint Mouse_release(
-		GtkWidget* widget,    // The view window.
-		GdkEvent*  event,
-		gpointer   user_data    // ->Shape_chooser.
+		GtkGestureClick* click_ctlr, int n_press, double x, double y,
+		gpointer user_data    // ->Shape_chooser.
 ) {
-	ignore_unused_variable_warning(widget, event);
+	ignore_unused_variable_warning(click_ctlr, n_press, x, y);
 	auto* chooser = static_cast<Shape_chooser*>(user_data);
 	chooser->mouse_up();
 	return true;
@@ -635,11 +616,11 @@ static gint Mouse_release(
  *  Keystroke in draw-area.
  */
 C_EXPORT gboolean on_draw_key_press(
-		GtkEntry* entry, GdkEvent* event, gpointer user_data) {
-	ignore_unused_variable_warning(entry);
-	auto* chooser = static_cast<Shape_chooser*>(user_data);
-	guint event_key_keyval;
-	gdk_event_get_keyval(event, &event_key_keyval);
+		GtkEventControllerKey* key_ctlr, guint keyval, guint keycode,
+		GdkModifierType state, gpointer user_data) {
+	ignore_unused_variable_warning(key_ctlr, keycode, state);
+	auto* chooser          = static_cast<Shape_chooser*>(user_data);
+	guint event_key_keyval = keyval;
 	switch (event_key_keyval) {
 	case GDK_KEY_Delete:
 		chooser->del_frame();
@@ -1651,34 +1632,33 @@ C_EXPORT void on_new_shape_okay_clicked(GtkButton* button, gpointer user_data) {
 
 // Toggled 'From font' button:
 C_EXPORT void on_new_shape_font_toggled(
-		GtkToggleButton* btn, gpointer user_data) {
+		GtkCheckButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);
-	const bool on      = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btn));
+	bool       on      = gtk_check_button_get_active(GTK_CHECK_BUTTON(btn));
 	GtkWidget* win     = widget_get_top(GTK_WIDGET(btn));
 	auto*      chooser = static_cast<Shape_chooser*>(
             g_object_get_data(G_OBJECT(win), "user_data"));
 	chooser->from_font_toggled(on);
 }
 
-gboolean Shape_chooser::on_new_shape_font_color_draw_expose_event(
-		GtkWidget* widget,    // The draw area.
-		cairo_t*   cairo,
-		gpointer   user_data    // ->Shape_chooser.
+void Shape_chooser::on_new_shape_font_color_draw_expose_event(
+		GtkDrawingArea* widget,    // The draw area.
+		cairo_t* cairo, int width, int height,
+		gpointer user_data    // ->Shape_chooser.
 ) {
 	ignore_unused_variable_warning(user_data);
 	ExultStudio* studio  = ExultStudio::get_instance();
-	const int    index   = studio->get_spin("new_shape_font_color");
+	int          index   = studio->get_spin("new_shape_font_color");
 	auto*        chooser = static_cast<Shape_chooser*>(
             g_object_get_data(G_OBJECT(widget), "user_data"));
-	const guint32 color = chooser->get_color(index);
-	GdkRectangle  area  = {0, 0, 0, 0};
-	gdk_cairo_get_clip_rectangle(cairo, &area);
+	guint32      color = chooser->get_color(index);
+	GdkRectangle area  = {0, 0, width, height};
+	//	gdk_cairo_get_clip_rectangle(cairo, &area);
 	cairo_set_source_rgb(
 			cairo, ((color >> 16) & 255) / 255.0, ((color >> 8) & 255) / 255.0,
 			(color & 255) / 255.0);
 	cairo_rectangle(cairo, area.x, area.y, area.width, area.height);
 	cairo_fill(cairo);
-	return true;
 }
 
 C_EXPORT void on_new_shape_font_color_changed(
@@ -1777,9 +1757,9 @@ void Shape_chooser::new_shape() {
 	// Store our pointer in color drawer.
 	GtkWidget* draw = studio->get_widget("new_shape_font_color_draw");
 	g_object_set_data(G_OBJECT(draw), "user_data", this);
-	g_signal_connect(
-			G_OBJECT(draw), "draw",
-			G_CALLBACK(on_new_shape_font_color_draw_expose_event), this);
+	gtk_drawing_area_set_draw_func(
+			GTK_DRAWING_AREA(draw), on_new_shape_font_color_draw_expose_event,
+			this, nullptr);
 	gtk_widget_set_visible(win, true);
 }
 
@@ -1891,67 +1871,58 @@ void Shape_chooser::del_frame() {
 }
 
 /*
- *  Someone wants the dragged shape.
+ *  Beginning of a drag.
  */
 
-void Shape_chooser::drag_data_get(
-		GtkWidget*        widget,    // The view window.
-		GdkDragContext*   context,
-		GtkSelectionData* seldata,    // Fill this in.
-		guint info, guint time,
+GdkContentProvider* Shape_chooser::drag_prepare(
+		GtkDragSource* source, double x, double y,
 		gpointer user_data    // ->Shape_chooser.
 ) {
-	ignore_unused_variable_warning(widget, context, time);
-	cout << "In DRAG_DATA_GET of Shape for " << info << " and '"
-		 << gdk_atom_name(gtk_selection_data_get_target(seldata)) << "'"
-		 << endl;
+	ignore_unused_variable_warning(source, x, y);
+	cout << "In DRAG_PREPARE of Shape" << endl;
 	auto* chooser = static_cast<Shape_chooser*>(user_data);
-	if (chooser->selected < 0
-		|| (info != U7_TARGET_SHAPEID && info != U7_TARGET_SHAPEID + 100
-			&& info != U7_TARGET_SHAPEID + 200)) {
-		return;    // Not sure about this.
+	if (chooser->selected < 0) {
+		return nullptr;    // Not sure about this.
 	}
 	guchar buf[U7DND_DATA_LENGTH(3)];
 	int    file = chooser->ifile->get_u7drag_type();
 	if (file == U7_SHAPE_UNK) {
 		file = U7_SHAPE_SHAPES;    // Just assume it's shapes.vga.
 	}
-	const Shape_entry& shinfo = chooser->info[chooser->selected];
-	const int          len
-			= Store_u7_shapeid(buf, file, shinfo.shapenum, shinfo.framenum);
+	Shape_entry& shinfo = chooser->info[chooser->selected];
+	int len = Store_u7_shapeid(buf, file, shinfo.shapenum, shinfo.framenum);
 	cout << "Setting selection data (" << shinfo.shapenum << '/'
-		 << shinfo.framenum << ')' << " (" << len << ") '" << buf << "'"
-		 << endl;
-	// Set data.
-	gtk_selection_data_set(
-			seldata, gtk_selection_data_get_target(seldata), 8, buf, len);
+		 << shinfo.framenum << ')' << endl;
+	const char*         target    = reinterpret_cast<const char*>(buf);
+	GBytes*             gfile     = g_bytes_new(target, len);
+	GdkContentProvider* targets[] = {
+			gdk_content_provider_new_for_bytes(U7_TARGET_SHAPEID_NAME, gfile),
+			gdk_content_provider_new_for_bytes(
+					U7_TARGET_DROPTEXT_NAME_MIME, gfile),
+			gdk_content_provider_new_typed(G_TYPE_STRING, target)};
+	return gdk_content_provider_new_union(targets, 3);
 }
 
-/*
- *  Beginning of a drag.
- */
-
-gint Shape_chooser::drag_begin(
-		GtkWidget*      widget,    // The view window.
-		GdkDragContext* context,
-		gpointer        user_data    // ->Shape_chooser.
+void Shape_chooser::drag_begin(
+		GtkDragSource* source, GdkDrag* drag,
+		gpointer user_data    // ->Shape_chooser.
 ) {
-	ignore_unused_variable_warning(widget);
+	ignore_unused_variable_warning(source);
 	cout << "In DRAG_BEGIN of Shape" << endl;
 	auto* chooser = static_cast<Shape_chooser*>(user_data);
 	if (chooser->selected < 0) {
-		return false;    // ++++Display a halt bitmap.
+		return;
 	}
 	int file = chooser->ifile->get_u7drag_type();
 	if (file == U7_SHAPE_UNK) {
 		file = U7_SHAPE_SHAPES;    // Just assume it's shapes.vga.
 	}
 	// Get ->shape.
-	const Shape_entry& shinfo = chooser->info[chooser->selected];
-	Shape_frame*       shape
+	Shape_entry& shinfo = chooser->info[chooser->selected];
+	Shape_frame* shape
 			= chooser->ifile->get_shape(shinfo.shapenum, shinfo.framenum);
 	if (!shape) {
-		return false;
+		return;
 	}
 	unsigned char  buf[Exult_server::maxlength];
 	unsigned char* ptr = &buf[0];
@@ -1960,8 +1931,8 @@ gint Shape_chooser::drag_begin(
 	little_endian::Write2(ptr, shinfo.framenum);
 	ExultStudio* studio = ExultStudio::get_instance();
 	studio->send_to_server(Exult_server::drag_shape, buf, ptr - buf);
-	chooser->set_drag_icon(context, shape);    // Set icon for dragging.
-	return true;
+	chooser->set_drag_icon(drag, shape);    // Set icon for dragging.
+	return;
 }
 
 /*
@@ -2042,7 +2013,7 @@ void Shape_chooser::scroll_vertical(int newoffset) {
  */
 
 void Shape_chooser::setup_vscrollbar() {
-	GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(vscroll));
+	GtkAdjustment* adj = gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(vscroll));
 	gtk_adjustment_set_value(adj, 0);
 	gtk_adjustment_set_lower(adj, 0);
 	gtk_adjustment_set_upper(adj, total_height);
@@ -2059,7 +2030,7 @@ void Shape_chooser::setup_vscrollbar() {
 void Shape_chooser::setup_hscrollbar(
 		int newmax    // New max., or -1 to leave alone.
 ) {
-	GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(hscroll));
+	GtkAdjustment* adj = gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(hscroll));
 	if (newmax > 0) {
 		gtk_adjustment_set_upper(adj, newmax);
 	}
@@ -2534,44 +2505,41 @@ Shape_chooser::Shape_chooser(
 
 	// A frame looks nice.
 	GtkWidget* frame = gtk_frame_new(nullptr);
-	gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_IN);
 	widget_set_margins(
 			frame, 2 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
 	gtk_widget_set_visible(frame, true);
 	gtk_box_pack_start(GTK_BOX(hbox), frame, true, true, 0);
 
 	// NOTE:  draw is in Shape_draw.
-	// Indicate the events we want.
-	gtk_widget_set_events(
-			draw, GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK
-						  | GDK_BUTTON_RELEASE_MASK | GDK_BUTTON1_MOTION_MASK
-						  | GDK_KEY_PRESS_MASK);
-	// Set "configure" handler.
 	g_signal_connect(
-			G_OBJECT(draw), "configure-event", G_CALLBACK(Configure_chooser),
-			this);
+			G_OBJECT(draw), "resize", G_CALLBACK(Configure_chooser), this);
 	// Set "expose-event" - "draw" handler.
-	g_signal_connect(G_OBJECT(draw), "draw", G_CALLBACK(expose), this);
+	gtk_drawing_area_set_draw_func(
+			GTK_DRAWING_AREA(draw), Shape_chooser::expose, this, nullptr);
 	// Keystroke.
+	GtkEventController* key_ctlr
+			= GTK_EVENT_CONTROLLER(gtk_event_controller_key_new());
+	gtk_widget_add_controller(GTK_WIDGET(draw), key_ctlr);
 	g_signal_connect(
-			G_OBJECT(draw), "key-press-event", G_CALLBACK(on_draw_key_press),
+			G_OBJECT(key_ctlr), "key-pressed", G_CALLBACK(on_draw_key_press),
 			this);
 	gtk_widget_set_can_focus(GTK_WIDGET(draw), true);
 	// Set mouse click handler.
+	GtkEventController* click_ctlr
+			= GTK_EVENT_CONTROLLER(gtk_gesture_click_new());
+	gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click_ctlr), 0);
+	gtk_widget_add_controller(GTK_WIDGET(draw), click_ctlr);
 	g_signal_connect(
-			G_OBJECT(draw), "button-press-event", G_CALLBACK(Mouse_press),
-			this);
+			G_OBJECT(click_ctlr), "pressed", G_CALLBACK(Mouse_press), this);
 	g_signal_connect(
-			G_OBJECT(draw), "button-release-event", G_CALLBACK(Mouse_release),
-			this);
+			G_OBJECT(click_ctlr), "released", G_CALLBACK(Mouse_release), this);
 	// Mouse motion.
+	GtkEventController* drag_source
+			= GTK_EVENT_CONTROLLER(gtk_drag_source_new());
 	g_signal_connect(
-			G_OBJECT(draw), "drag-begin", G_CALLBACK(drag_begin), this);
-	g_signal_connect(
-			G_OBJECT(draw), "motion-notify-event", G_CALLBACK(drag_motion),
-			this);
-	g_signal_connect(
-			G_OBJECT(draw), "drag-data-get", G_CALLBACK(drag_data_get), this);
+			G_OBJECT(drag_source), "prepare", G_CALLBACK(drag_prepare), this);
+	g_signal_connect(drag_source, "drag-begin", G_CALLBACK(drag_begin), this);
+	gtk_widget_add_controller(draw, drag_source);
 	gtk_container_add(GTK_CONTAINER(frame), draw);
 	widget_set_margins(
 			draw, 2 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);

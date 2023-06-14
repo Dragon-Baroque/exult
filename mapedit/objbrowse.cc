@@ -40,11 +40,6 @@ Object_browser::~Object_browser() {
 		gtk_widget_destroy(popup_widget);
 	}
 	popup_widget = nullptr;
-	if ((G_IS_OBJECT(vscroll_ctlr))
-		&& (G_OBJECT(vscroll_ctlr)->ref_count > 0)) {
-		g_object_unref(vscroll_ctlr);
-	}
-	vscroll_ctlr = nullptr;
 }
 
 void Object_browser::set_widget(GtkWidget* w) {
@@ -157,24 +152,22 @@ void Create_file_selection(
 			stock_accept, GTK_RESPONSE_ACCEPT, nullptr));
 	GtkWidget*      btn  = gtk_dialog_get_widget_for_response(
             GTK_DIALOG(fsel), GTK_RESPONSE_CANCEL);
-	GtkWidget* img = gtk_image_new_from_icon_name(
-			"window-close", GTK_ICON_SIZE_BUTTON);
+	GtkWidget* img = gtk_image_new_from_icon_name("window-close");
 	gtk_button_set_image(GTK_BUTTON(btn), img);
 	btn = gtk_dialog_get_widget_for_response(
 			GTK_DIALOG(fsel), GTK_RESPONSE_ACCEPT);
 	img = gtk_image_new_from_icon_name(
 			(action == GTK_FILE_CHOOSER_ACTION_OPEN) ? "document-open"
-													 : "document-save",
-			GTK_ICON_SIZE_BUTTON);
+													 : "document-save");
 	gtk_button_set_image(GTK_BUTTON(btn), img);
 	gtk_window_set_modal(GTK_WINDOW(fsel), true);
 	if (action == GTK_FILE_CHOOSER_ACTION_SAVE) {
-		gtk_file_chooser_set_do_overwrite_confirmation(fsel, true);
 	}
 	if (path != nullptr && is_system_path_defined(path)) {
 		// Default to a writable location.
 		const std::string startdir = get_system_path(path);
-		gtk_file_chooser_set_current_folder(fsel, startdir.c_str());
+		gtk_file_chooser_set_current_folder(
+				fsel, g_file_new_for_path(startdir.c_str()), nullptr);
 	}
 	if (!filters.empty()) {
 		GtkFileFilter* gfilt = gtk_file_filter_new();
@@ -187,7 +180,7 @@ void Create_file_selection(
 		gtk_file_chooser_add_filter(fsel, gfilt);
 	}
 	if (gtk_dialog_run(GTK_DIALOG(fsel)) == GTK_RESPONSE_ACCEPT) {
-		char* filename = gtk_file_chooser_get_filename(fsel);
+		char* filename = g_file_get_path(gtk_file_chooser_get_file(fsel));
 		ok_handler(filename, user_data);
 		g_free(filename);
 	}
@@ -299,18 +292,10 @@ static void on_find_up(GtkButton* button, gpointer user_data) {
 			gtk_entry_get_text(GTK_ENTRY(chooser->get_find_text())), -1);
 }
 
-static gboolean on_find_key(
-		GtkEntry* entry, GdkEvent* event, gpointer user_data) {
-	ignore_unused_variable_warning(entry);
-	guint event_key_keyval;
-	gdk_event_get_keyval(event, &event_key_keyval);
-	if (event_key_keyval == GDK_KEY_Return) {
-		auto* chooser = static_cast<Object_browser*>(user_data);
-		chooser->search(
-				gtk_entry_get_text(GTK_ENTRY(chooser->get_find_text())), 1);
-		return true;
-	}
-	return false;    // Let parent handle it.
+static gboolean on_find_key(GtkEntry* entry, gpointer user_data) {
+	auto* chooser = static_cast<Object_browser*>(user_data);
+	chooser->search(gtk_entry_get_text(entry), 1);
+	return true;
 }
 
 static void on_loc_down(GtkButton* button, gpointer user_data) {
@@ -402,8 +387,7 @@ GtkWidget* Object_browser::create_controls(
 		gtk_box_pack_start(GTK_BOX(hbox3), find_up, true, true, 0);
 
 		g_signal_connect(
-				G_OBJECT(find_text), "key-press-event", G_CALLBACK(on_find_key),
-				this);
+				G_OBJECT(find_text), "activate", G_CALLBACK(on_find_key), this);
 	}
 	/*
 	 *  The 'Locate' controls.
@@ -513,8 +497,9 @@ void Object_browser::draw_vscrolled(       // For scroll events.
 ) {
 	ignore_unused_variable_warning(self, dx);
 	auto*          browser = static_cast<Object_browser*>(user_data);
-	GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(browser->vscroll));
-	const gdouble  adj_value = gtk_adjustment_get_value(adj);
+	GtkAdjustment* adj
+			= gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(browser->vscroll));
+	const gdouble adj_value = gtk_adjustment_get_value(adj);
 #if defined(MACOSX) && !defined(XWIN)
 	const gdouble new_unit = 1.0;
 #else
@@ -535,8 +520,10 @@ void Object_browser::draw_vscrolled(       // For scroll events.
 }
 
 void Object_browser::enable_draw_vscroll(GtkWidget* draw) {
-	vscroll_ctlr = GTK_EVENT_CONTROLLER(gtk_event_controller_scroll_new(
-			draw, GTK_EVENT_CONTROLLER_SCROLL_VERTICAL));
+	GtkEventController* vscroll_ctlr
+			= GTK_EVENT_CONTROLLER(gtk_event_controller_scroll_new(
+					GTK_EVENT_CONTROLLER_SCROLL_VERTICAL));
+	gtk_widget_add_controller(draw, vscroll_ctlr);
 	g_signal_connect(
 			G_OBJECT(vscroll_ctlr), "scroll", G_CALLBACK(draw_vscrolled), this);
 }

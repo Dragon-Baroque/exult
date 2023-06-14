@@ -199,4 +199,116 @@ inline T1* gtk_cast(T2* obj) {
 #	pragma GCC diagnostic pop
 #endif
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+
+#	include "ignore_unused_variable_warning.h"
+#	define GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER \
+		GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER
+
+gint gtk_dialog_run(GtkDialog* d);
+
+static inline void gtk_window_resize(GtkWindow* w, int a, int b) {
+	gtk_widget_set_size_request(GTK_WIDGET(w), a, b);
+}
+
+#	define gtk_buildable_get_name(w) gtk_buildable_get_buildable_id((w))
+
+static inline void gdk_cairo_get_clip_rectangle(
+		cairo_t* cr, GdkRectangle* rect) {
+	double x1, y1, x2, y2;
+	cairo_clip_extents(cr, &x1, &y1, &x2, &y2);
+	x1           = floor(x1);
+	y1           = floor(y1);
+	x2           = ceil(x2);
+	y2           = ceil(y2);
+	rect->x      = CLAMP(x1, G_MININT, G_MAXINT);
+	rect->y      = CLAMP(y1, G_MININT, G_MAXINT);
+	rect->width  = CLAMP(x2 - x1, G_MININT, G_MAXINT);
+	rect->height = CLAMP(y2 - y1, G_MININT, G_MAXINT);
+}
+
+#	define gtk_menu_bar_new_from_model(m) \
+		gtk_popover_menu_bar_new_from_model((m))
+
+static inline GtkWidget* gtk_popover_new_from_model(
+		GtkWidget* p, GMenuModel* m) {
+	GtkWidget* r
+			= gtk_popover_menu_new_from_model_full(m, GTK_POPOVER_MENU_NESTED);
+	gtk_widget_set_parent(r, p);
+	return r;
+}
+
+#	define GtkBin               GtkWidget
+#	define GtkContainer         GtkWidget
+#	define GTK_BIN(w)           GTK_WIDGET((w))
+#	define GTK_CONTAINER(w)     GTK_WIDGET((w))
+#	define gtk_bin_get_child(b) gtk_widget_get_first_child(b)
+
+#	define gtk_box_reorder_child(b, c, n) \
+		gtk_box_reorder_child_after((b), (c), nullptr)
+
+#	define GTK_BUTTON_BOX(w)          GTK_BOX((w))
+#	define GTK_BUTTONBOX_START        0
+#	define gtk_button_box_new(o)      gtk_box_new((o), 0)
+#	define gtk_button_set_image(w, i) gtk_button_set_child((w), (i))
+
+static inline bool gtk_widget_destroy(GtkWidget* w) {
+	// Do not gtk_window_destroy a GTK4 GtkPopover
+	//   since its GtkWindow ancestor is Studio main window.
+	// Instead only unparent it :
+	//   undoes the set_parent in gtk_popover_new_from_model,
+	//   causes the right sequence : object_unref then widget_dispose.
+	if (GTK_IS_POPOVER(w)) {
+		gtk_widget_unparent(w);
+		return true;
+	}
+	GtkWidget* win = gtk_widget_get_ancestor(w, GTK_TYPE_WINDOW);
+	if (GTK_IS_WINDOW(win)) {
+		gtk_window_destroy(GTK_WINDOW(win));
+	}
+	return true;
+}
+
+#	define gtk_entry_get_text(w) gtk_editable_get_text(GTK_EDITABLE((w)))
+#	define gtk_entry_set_text(w, t) \
+		gtk_editable_set_text(GTK_EDITABLE((w)), (t))
+
+static inline bool gtk_css_provider_load_from_path(
+		GtkCssProvider* p, const char* s, GError** e) {
+	ignore_unused_variable_warning(e);
+	gtk_css_provider_load_from_path(p, s);
+	return true;
+}
+
+static inline void gtk_box_pack_start(
+		GtkBox* b, GtkWidget* w, gboolean e, gboolean f, guint p) {
+	gtk_box_append(b, w);
+	if (gtk_orientable_get_orientation(GTK_ORIENTABLE(b))
+		== GTK_ORIENTATION_HORIZONTAL) {
+		gtk_widget_set_hexpand(w, e);
+		gtk_widget_set_halign(w, f ? GTK_ALIGN_FILL : GTK_ALIGN_START);
+		gtk_widget_set_margin_start(w, p + gtk_widget_get_margin_start(w));
+		gtk_widget_set_margin_end(w, p + gtk_widget_get_margin_end(w));
+	} else {
+		gtk_widget_set_vexpand(w, e);
+		gtk_widget_set_valign(w, f ? GTK_ALIGN_FILL : GTK_ALIGN_START);
+		gtk_widget_set_margin_top(w, p + gtk_widget_get_margin_top(w));
+		gtk_widget_set_margin_bottom(w, p + gtk_widget_get_margin_bottom(w));
+	}
+}
+
+static inline void gtk_container_add(GtkWidget* b, GtkWidget* w) {
+	if (GTK_IS_FRAME(b)) {
+		gtk_frame_set_child(GTK_FRAME(b), w);
+	}
+	if (GTK_IS_BOX(b)) {
+		gtk_box_append(GTK_BOX(b), w);
+	}
+	if (GTK_IS_VIEWPORT(b)) {
+		gtk_viewport_set_child(GTK_VIEWPORT(b), w);
+	}
+}
+
+#else     // GTK 4
+#endif    // GTK 4
 #endif

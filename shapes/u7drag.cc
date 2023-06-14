@@ -65,7 +65,7 @@ int Store_u7_shapeid(
 ) {
 	return snprintf(
 			reinterpret_cast<char*>(data), U7DND_DATA_LENGTH(3),
-			FILE_URI "/%s.%d.%d.%d", U7_TARGET_SHAPEID_NAME, file, shape,
+			FILE_URI "/%s.%d.%d.%d\r\n", U7_TARGET_SHAPEID_NAME, file, shape,
 			frame);
 }
 
@@ -103,7 +103,7 @@ int Store_u7_chunkid(
 ) {
 	return snprintf(
 			reinterpret_cast<char*>(data), U7DND_DATA_LENGTH(1),
-			FILE_URI "/%s.%d", U7_TARGET_CHUNKID_NAME, cnum);
+			FILE_URI "/%s.%d\r\n", U7_TARGET_CHUNKID_NAME, cnum);
 }
 
 /*
@@ -138,7 +138,7 @@ int Store_u7_npcid(
 ) {
 	return snprintf(
 			reinterpret_cast<char*>(data), U7DND_DATA_LENGTH(1),
-			FILE_URI "/%s.%d", U7_TARGET_NPCID_NAME, npcnum);
+			FILE_URI "/%s.%d\r\n", U7_TARGET_NPCID_NAME, npcnum);
 }
 
 /*
@@ -192,6 +192,10 @@ int Store_u7_comboid(
 					  ".%d.%d.%d.%d.%d", ents[i].tx, ents[i].ty, ents[i].tz,
 					  ents[i].shape, ents[i].frame);
 	}
+	ptr = ptr
+		  + snprintf(
+				  reinterpret_cast<char*>(ptr),
+				  U7DND_DATA_LENGTH(5 + (5 * cnt)) - (ptr - data), "\r\n");
 	return ptr - data;
 }
 

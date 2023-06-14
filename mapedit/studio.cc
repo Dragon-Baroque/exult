@@ -469,10 +469,10 @@ void ExultStudio::on_play_button_toggled(
 }
 
 C_EXPORT void on_tile_grid_button_toggled(
-		GtkToggleButton* button, gpointer user_data) {
+		GtkCheckButton* button, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);
 	ExultStudio::get_instance()->set_tile_grid(
-			gtk_toggle_button_get_active(button));
+			gtk_check_button_get_active(button));
 }
 
 C_EXPORT void on_bbox_color_combo_changed(
@@ -497,32 +497,46 @@ C_EXPORT void on_hide_lift_spin_changed(
 }
 
 C_EXPORT void on_edit_terrain_button_toggled(
-		GtkToggleButton* button, gpointer user_data) {
+		GtkCheckButton* button, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);
 	ExultStudio::get_instance()->set_edit_terrain(
-			gtk_toggle_button_get_active(button));
+			gtk_check_button_get_active(button));
 }
 
 /*
  *  Configure main window.
  */
-C_EXPORT gboolean on_main_window_configure_event(
-		GtkWidget* widget,    // The view window.
-		GdkEvent* event, gpointer user_data) {
-	ignore_unused_variable_warning(widget, event, user_data);
-	ExultStudio* studio = ExultStudio::get_instance();
-	// Configure "Hide lift" spin range.
-	studio->set_spin(
-			"hide_lift_spin", studio->get_spin("hide_lift_spin"), 1, 255);
+static gboolean on_response(
+		GtkDialog* dialog, gint response_id, gpointer user_data) {
+	ignore_unused_variable_warning(dialog);
+	*(reinterpret_cast<gint*>(user_data)) = response_id;
 	return false;
+}
+
+gint gtk_dialog_run(GtkDialog* w) {
+	int response = 0;
+
+	g_signal_connect(
+			G_OBJECT(w), "response", G_CALLBACK(on_response),
+			reinterpret_cast<gpointer>(&response));
+	gtk_window_set_transient_for(
+			GTK_WINDOW(w),
+			GTK_WINDOW(ExultStudio::get_instance()->get_widget("main_window")));
+	gtk_window_set_modal(GTK_WINDOW(w), true);
+	gtk_widget_set_visible(GTK_WIDGET(w), true);
+	while (response == 0) {
+		g_main_context_iteration(nullptr, true);    // (Blocks).
+	}
+	gtk_widget_set_visible(GTK_WIDGET(w), false);
+	return response;
 }
 
 /*
  *  Main window's close button.
  */
-C_EXPORT gboolean on_main_window_delete_event(
-		GtkWidget* widget, GdkEvent* event, gpointer user_data) {
-	ignore_unused_variable_warning(widget, event, user_data);
+C_EXPORT gboolean
+		on_main_window_delete_event(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(widget, user_data);
 	if (!ExultStudio::get_instance()->okay_to_close()) {
 		return true;    // Can't quit.
 	}
@@ -1023,8 +1037,8 @@ void ExultStudio::activate() {    // GtkApplication over GApplication.
 	}
 #if !defined(_WIN32) && !defined(MACOSX)
 	string iconstr = datastr + "/../icons/";
-	gtk_icon_theme_append_search_path(
-			gtk_icon_theme_get_for_screen(gdk_screen_get_default()),
+	gtk_icon_theme_add_search_path(
+			gtk_icon_theme_get_for_display(gdk_display_get_default()),
 			iconstr.c_str());
 #endif
 	path += "/exult_studio.glade";
@@ -1086,8 +1100,8 @@ void ExultStudio::activate() {    // GtkApplication over GApplication.
 	} else {
 		cout << "but it wasn't there." << endl;
 	}
-	gtk_style_context_add_provider_for_screen(
-			gdk_screen_get_default(), GTK_STYLE_PROVIDER(css_provider),
+	gtk_style_context_add_provider_for_display(
+			gdk_display_get_default(), GTK_STYLE_PROVIDER(css_provider),
 			GTK_STYLE_PROVIDER_PRIORITY_USER);
 	css_path = g_strdup(csspath.c_str());
 
@@ -1098,7 +1112,6 @@ void ExultStudio::activate() {    // GtkApplication over GApplication.
 
 	// More setting up...
 	// Connect signals automagically.
-	gtk_builder_connect_signals(app_xml, nullptr);
 	// Manually connect button signals to store handler IDs for blocking
 	connect_button = get_widget("connect_button");
 	play_button    = get_widget("play_button");
@@ -1131,11 +1144,21 @@ void ExultStudio::activate() {    // GtkApplication over GApplication.
 			this);
 	gtk_application_set_menubar(
 			application, G_MENU_MODEL(get_gobject("main_menu_bar")));
+	GtkWidget* main_pane = get_widget("hpaned1");
+	gtk_paned_set_resize_start_child(GTK_PANED(main_pane), false);
+	gtk_paned_set_resize_end_child(GTK_PANED(main_pane), true);
+	gtk_paned_set_shrink_start_child(GTK_PANED(main_pane), false);
+	gtk_paned_set_shrink_end_child(GTK_PANED(main_pane), false);
+	gtk_paned_set_position(GTK_PANED(main_pane), -1);
 	gtk_window_set_application(
 			GTK_WINDOW(app), application);    // GtkApplication
 	gtk_widget_set_visible(app, true);
+	GtkEventController* key_ctlr
+			= GTK_EVENT_CONTROLLER(gtk_event_controller_key_new());
+	gtk_event_controller_set_propagation_phase(key_ctlr, GTK_PHASE_CAPTURE);
+	gtk_widget_add_controller(GTK_WIDGET(app), key_ctlr);
 	g_signal_connect(
-			G_OBJECT(app), "key-press-event", G_CALLBACK(on_app_key_press),
+			G_OBJECT(key_ctlr), "key-pressed", G_CALLBACK(on_app_key_press),
 			this);
 	// Background color for shape browser.
 	int bcolor;
@@ -1341,7 +1364,7 @@ void ExultStudio::set_browser(const char* name, Object_browser* obj) {
 	GtkWidget* browser_box   = get_widget("browser_box");
 	//+++Now owned by Shape_file_info.  delete browser;
 	if (browser) {
-		gtk_container_remove(GTK_CONTAINER(browser_box), browser->get_widget());
+		gtk_box_remove(GTK_BOX(browser_box), browser->get_widget());
 	}
 	browser = obj;
 
@@ -1475,8 +1498,8 @@ void ExultStudio::create_new_game(const char* dir    // Directory for new game.
 	gamemanager->add_game(gamestr, gamestr);
 	set_game_path(gamestr);    // Open as current game.
 	// Process any pending GTK events after loading game
-	while (gtk_events_pending()) {
-		gtk_main_iteration();
+	while (g_main_context_pending(nullptr)) {
+		g_main_context_iteration(nullptr, true);
 	}
 	write_shape_info(true);    // Create initial .dat files.
 }
@@ -2030,6 +2053,8 @@ void ExultStudio::connect_widget_signals(
 				G_OBJECT(widget), "value-changed", callback, user_data);
 	} else if (GTK_IS_ENTRY(widget)) {
 		g_signal_connect(G_OBJECT(widget), "changed", callback, user_data);
+	} else if (GTK_IS_CHECK_BUTTON(widget)) {
+		g_signal_connect(G_OBJECT(widget), "toggled", callback, user_data);
 	} else if (GTK_IS_TOGGLE_BUTTON(widget)) {
 		g_signal_connect(G_OBJECT(widget), "toggled", callback, user_data);
 	} else if (GTK_IS_COMBO_BOX(widget)) {
@@ -2049,15 +2074,13 @@ void ExultStudio::connect_widget_signals(
 						num_excluded);
 			}
 		}
-	} else if (GTK_IS_CONTAINER(widget)) {
-		GList* children = gtk_container_get_children(GTK_CONTAINER(widget));
-		for (GList* iter = children; iter != nullptr;
-			 iter        = g_list_next(iter)) {
+	} else {
+		for (GtkWidget* child = gtk_widget_get_first_child(widget); child;
+			 child            = gtk_widget_get_next_sibling(child)) {
 			connect_widget_signals(
-					GTK_WIDGET(iter->data), callback, user_data, excluded_names,
+					GTK_WIDGET(child), callback, user_data, excluded_names,
 					num_excluded);
 		}
-		g_list_free(children);
 	}
 }
 
@@ -2752,6 +2775,9 @@ void ExultStudio::create_shape_file(
 bool ExultStudio::get_toggle(const char* name) {
 	GtkWidget* btn = get_widget(name);
 	assert(btn);
+	if (GTK_IS_CHECK_BUTTON(btn)) {
+		return gtk_check_button_get_active(GTK_CHECK_BUTTON(btn));
+	}
 	return gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btn));
 }
 
@@ -2762,6 +2788,11 @@ bool ExultStudio::get_toggle(const char* name) {
 void ExultStudio::set_toggle(const char* name, bool val, bool sensitive) {
 	GtkWidget* btn = get_widget(name);
 	if (btn) {
+		if (GTK_IS_CHECK_BUTTON(btn)) {
+			gtk_check_button_set_active(GTK_CHECK_BUTTON(btn), val);
+			gtk_widget_set_sensitive(btn, sensitive);
+			return;
+		}
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btn), val);
 		gtk_widget_set_sensitive(btn, sensitive);
 	}
@@ -2882,6 +2913,9 @@ int ExultStudio::get_num_entry(const char* name) {
 
 int ExultStudio::get_num_entry(GtkWidget* field, int if_empty) {
 	assert(field);
+	if (GTK_IS_SPIN_BUTTON(field)) {
+		return gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(field));
+	}
 	const gchar* txt = gtk_entry_get_text(GTK_ENTRY(field));
 	if (!txt) {
 		return -1;
@@ -3049,8 +3083,8 @@ int ExultStudio::prompt(
 	static GtkWidget* dlg = nullptr;
 	if (!dlg) {    // First time?
 		dlg             = get_widget("prompt3_dialog");
-		GtkWidget* draw = gtk_image_new_from_icon_name(
-				"exult_warning", GTK_ICON_SIZE_DIALOG);
+		GtkWidget* draw = gtk_image_new_from_icon_name("exult_warning");
+		gtk_image_set_icon_size(GTK_IMAGE(draw), GTK_ICON_SIZE_LARGE);
 		GtkWidget* hbox = get_widget("prompt3_hbox");
 		gtk_widget_set_visible(draw, true);
 		gtk_box_pack_start(GTK_BOX(hbox), draw, false, false, 12);
@@ -3077,6 +3111,10 @@ int ExultStudio::prompt(
 
 	gtk_label_set_text(GTK_LABEL(get_widget("prompt3_label")), msg);
 	set_button("prompt3_yes", choice0);
+	GtkWidget* prompt3_yes = get_widget("prompt3_yes");
+	gtk_widget_set_halign(prompt3_yes, GTK_ALIGN_END);
+	gtk_widget_set_hexpand(prompt3_yes, true);
+	gtk_widget_set_hexpand(gtk_widget_get_parent(prompt3_yes), true);
 	if (choice1) {
 		set_button("prompt3_no", choice1);
 		set_visible("prompt3_no", true);
@@ -3092,10 +3130,10 @@ int ExultStudio::prompt(
 	prompt_choice = -1;
 	gtk_window_set_transient_for(GTK_WINDOW(dlg), GTK_WINDOW(app));
 	gtk_window_set_modal(GTK_WINDOW(dlg), true);
-	gtk_window_present(GTK_WINDOW(dlg));    // Make sure it's on top
-	gtk_widget_set_visible(dlg, true);      // Should be modal.
-	while (prompt_choice == -1) {           // Spin.
-		gtk_main_iteration();               // (Blocks).
+	gtk_window_present(GTK_WINDOW(dlg));            // Make sure it's on top
+	gtk_widget_set_visible(dlg, true);              // Should be modal.
+	while (prompt_choice == -1) {                   // Spin.
+		g_main_context_iteration(nullptr, true);    // (Blocks).
 	}
 	gtk_widget_set_visible(dlg, false);
 	assert(prompt_choice >= 0 && prompt_choice <= 2);
@@ -3143,8 +3181,7 @@ namespace EStudio {
 	) {
 		GtkWidget* btn = gtk_button_new();
 		GtkWidget* img = gtk_image_new_from_icon_name(
-				dir == GTK_ARROW_UP ? "go-up" : "go-down",
-				GTK_ICON_SIZE_BUTTON);
+				dir == GTK_ARROW_UP ? "go-up" : "go-down");
 		gtk_button_set_image(GTK_BUTTON(btn), img);
 		gtk_widget_set_visible(btn, true);
 		g_signal_connect(G_OBJECT(btn), "clicked", clicked, func_data);
@@ -3246,28 +3283,27 @@ C_EXPORT void on_prefs_background_choose_clicked(
 
 // Background color area exposed.
 
-gboolean ExultStudio::on_prefs_background_expose_event(
-		GtkWidget* widget,    // The draw area.
-		cairo_t*   cairo,
-		gpointer   user_data    // ->ExultStudio.
+void ExultStudio::on_prefs_background_expose_event(
+		GtkDrawingArea* widget,    // The draw area.
+		cairo_t* cairo, int width, int height,
+		gpointer user_data    // ->ExultStudio.
 ) {
 	ignore_unused_variable_warning(widget, user_data);
 	auto         color = static_cast<guint32>(reinterpret_cast<uintptr>(
             g_object_get_data(G_OBJECT(widget), "user_data")));
-	GdkRectangle area  = {0, 0, 0, 0};
-	gdk_cairo_get_clip_rectangle(cairo, &area);
+	GdkRectangle area  = {0, 0, width, height};
+	//	gdk_cairo_get_clip_rectangle(cairo, &area);
 	cairo_set_source_rgb(
 			cairo, ((color >> 16) & 255) / 255.0, ((color >> 8) & 255) / 255.0,
 			(color & 255) / 255.0);
 	cairo_rectangle(cairo, area.x, area.y, area.width, area.height);
 	cairo_fill(cairo);
-	return true;
 }
 
 // X at top of window.
-C_EXPORT gboolean on_prefs_window_delete_event(
-		GtkWidget* widget, GdkEvent* event, gpointer user_data) {
-	ignore_unused_variable_warning(event, user_data);
+C_EXPORT gboolean
+		on_prefs_window_delete_event(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	gtk_widget_set_visible(widget, false);
 	return true;
 }
@@ -3303,9 +3339,9 @@ void ExultStudio::open_preferences() {
 			G_OBJECT(backgrnd), "user_data",
 			reinterpret_cast<gpointer>(uintptr(background_color)));
 	GtkWidget* win = get_widget("prefs_window");
-	g_signal_connect(
-			G_OBJECT(get_widget("prefs_background")), "draw",
-			G_CALLBACK(on_prefs_background_expose_event), this);
+	gtk_drawing_area_set_draw_func(
+			GTK_DRAWING_AREA(get_widget("prefs_background")),
+			on_prefs_background_expose_event, this, nullptr);
 	gtk_widget_set_visible(win, true);
 }
 
@@ -3767,13 +3803,15 @@ void ExultStudio::update_menu_items(bool connected) {
 
 void ExultStudio::update_connect_button(bool connected) {
 	GtkWidget* button = get_widget("connect_button");
+	GtkWidget* image  = get_widget("connect_button_image");
+	GtkWidget* label  = get_widget("connect_button_label");
+	ignore_unused_variable_warning(image);
 
-	if (!button) {
+	if (!button || !image || !label) {
 		return;
 	}
 
-	gtk_button_set_label(
-			GTK_BUTTON(button), connected ? "Disconnect" : "Connect");
+	gtk_label_set_text(GTK_LABEL(label), connected ? "Disconnect" : "Connect");
 
 	// Update button state without triggering the signal
 	g_signal_handlers_block_matched(
@@ -3788,22 +3826,21 @@ void ExultStudio::update_connect_button(bool connected) {
 void ExultStudio::update_play_button(bool playing) {
 	GtkWidget* button = get_widget("play_button");
 	GtkWidget* image  = get_widget("play_button_image");
+	GtkWidget* label  = get_widget("play_button_label");
 
-	if (!button || !image) {
+	if (!button || !image || !label) {
 		return;
 	}
 
 	// Update label and icon based on play state
-	gtk_button_set_label(GTK_BUTTON(button), playing ? "Edit" : "Play");
+	gtk_label_set_text(GTK_LABEL(label), playing ? "Edit" : "Play");
 
 	if (playing) {
 		gtk_image_set_from_icon_name(
-				GTK_IMAGE(image), "media-playback-pause-symbolic",
-				GTK_ICON_SIZE_BUTTON);
+				GTK_IMAGE(image), "media-playback-pause-symbolic");
 	} else {
 		gtk_image_set_from_icon_name(
-				GTK_IMAGE(image), "media-playback-start-symbolic",
-				GTK_ICON_SIZE_BUTTON);
+				GTK_IMAGE(image), "media-playback-start-symbolic");
 	}
 
 	// Update button state without triggering the signal
@@ -4443,10 +4480,10 @@ int get_skinvar(const std::string& key) {
 }
 
 // Zoom callbacks
-void ExultStudio::on_zoom_bilinear(GtkToggleButton* btn, gpointer user_data) {
+void ExultStudio::on_zoom_bilinear(GtkCheckButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(btn, user_data);
 	auto* studio           = ExultStudio::get_instance();
-	studio->shape_bilinear = gtk_toggle_button_get_active(btn);
+	studio->shape_bilinear = gtk_check_button_get_active(btn);
 	if (studio->browser) {
 		// No need to setup_info, the sizes of the shapes do not change.
 		studio->browser->render();
@@ -4500,11 +4537,11 @@ void ExultStudio::on_zoom_down(GtkButton* btn, gpointer user_data) {
 }
 
 gboolean ExultStudio::on_app_key_press(
-		GtkEntry* entry, GdkEvent* event, gpointer user_data) {
-	ignore_unused_variable_warning(entry, user_data);
-	auto* studio = ExultStudio::get_instance();
-	guint event_key_keyval;
-	gdk_event_get_keyval(event, &event_key_keyval);
+		GtkEventControllerKey* key_ctlr, guint keyval, guint keycode,
+		GdkModifierType state, gpointer user_data) {
+	ignore_unused_variable_warning(key_ctlr, keycode, state, user_data);
+	auto* studio           = ExultStudio::get_instance();
+	guint event_key_keyval = keyval;
 	switch (event_key_keyval) {
 	case GDK_KEY_plus:
 	case GDK_KEY_KP_Add:
@@ -4574,7 +4611,7 @@ void ExultStudio::create_zoom_controls() {
 	widget_set_margins(
 			zcheck, 2 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
 	gtk_box_pack_start(GTK_BOX(zbox2), zcheck, true, true, 0);
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(zcheck), shape_bilinear);
+	gtk_check_button_set_active(GTK_CHECK_BUTTON(zcheck), shape_bilinear);
 	gtk_widget_set_visible(zcheck, true);
 	g_signal_connect(
 			G_OBJECT(zcheck), "toggled",
