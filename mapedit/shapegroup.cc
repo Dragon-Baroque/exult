@@ -41,7 +41,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <cassert>
 #include <cstdlib>
 
-using EStudio::Alert;
 using std::ios;
 using std::make_unique;
 using std::string;
@@ -442,7 +441,7 @@ void Shape_group_file::write() {
 		}
 	} catch (exult_exception& e) {
 		ignore_unused_variable_warning(e);
-		Alert("Error writing '%s'", patchname.c_str());
+		EStudio::Alert("Error writing '%s'", patchname.c_str());
 	}
 	modified = false;
 }
@@ -497,9 +496,11 @@ C_EXPORT void on_groups_import_clicked(GtkButton* button, gpointer user_data) {
 	ExultStudio::get_instance()->import_groups();
 }
 
-C_EXPORT gboolean on_groups_new_name_key_press(GtkEntry* entry, GdkEventKey* event, gpointer user_data) {
+C_EXPORT gboolean on_groups_new_name_key_press(GtkEntry* entry, GdkEvent* event, gpointer user_data) {
 	ignore_unused_variable_warning(entry, user_data);
-	if (event->keyval == GDK_KEY_Return) {
+	guint event_key_keyval;
+	gdk_event_get_keyval(event, &event_key_keyval);
+	if (event_key_keyval == GDK_KEY_Return) {
 		ExultStudio::get_instance()->add_group();
 		return true;
 	}
@@ -839,12 +840,12 @@ void ExultStudio::export_group() {
 			Flex_writer     writer(out, "Exult Studio exported group", 1);
 			writer.write_object(grp);
 
-			Alert("Group '%s' exported successfully.", grp->get_name());
+			EStudio::Alert("Group '%s' exported successfully.", grp->get_name());
 
 		} catch (exult_exception& e) {
 			string msg = "Error exporting group: ";
 			msg += e.what();
-			Alert("%s", msg.c_str());
+			EStudio::Alert("%s", msg.c_str());
 		}
 
 		g_free(filename);
@@ -987,11 +988,11 @@ void ExultStudio::import_groups() {
 				msg = "No groups found in file.";
 			}
 
-			Alert("%s", msg.c_str());
+			EStudio::Alert("%s", msg.c_str());
 		} catch (exult_exception& e) {
 			string msg = "Error importing groups: ";
 			msg += e.what();
-			Alert("%s", msg.c_str());
+			EStudio::Alert("%s", msg.c_str());
 		}
 
 		g_free(filename);
@@ -1042,11 +1043,10 @@ C_EXPORT gboolean on_group_window_delete_event(GtkWidget* widget, GdkEvent* even
 }
 
 C_EXPORT void on_group_up_clicked(GtkToggleButton* button, gpointer user_data) {
-	ignore_unused_variable_warning(user_data, button);
-	auto* chooser
-			= static_cast<Object_browser*>(g_object_get_data(G_OBJECT(gtk_widget_get_toplevel(GTK_WIDGET(button))), "browser"));
-	Shape_group* grp = chooser->get_group();
-	const int    i   = chooser->get_selected();
+	ignore_unused_variable_warning(user_data);
+	auto*        chooser = static_cast<Object_browser*>(g_object_get_data(G_OBJECT(widget_get_top(GTK_WIDGET(button))), "browser"));
+	Shape_group* grp     = chooser->get_group();
+	const int    i       = chooser->get_selected();
 	if (grp && i > 0) {    // Moving item up.
 		grp->swap(i - 1);
 		// Move selection up with the shape
@@ -1056,11 +1056,10 @@ C_EXPORT void on_group_up_clicked(GtkToggleButton* button, gpointer user_data) {
 }
 
 C_EXPORT void on_group_down_clicked(GtkToggleButton* button, gpointer user_data) {
-	ignore_unused_variable_warning(user_data, button);
-	auto* chooser
-			= static_cast<Object_browser*>(g_object_get_data(G_OBJECT(gtk_widget_get_toplevel(GTK_WIDGET(button))), "browser"));
-	Shape_group* grp = chooser->get_group();
-	const int    i   = chooser->get_selected();
+	ignore_unused_variable_warning(user_data);
+	auto*        chooser = static_cast<Object_browser*>(g_object_get_data(G_OBJECT(widget_get_top(GTK_WIDGET(button))), "browser"));
+	Shape_group* grp     = chooser->get_group();
+	const int    i       = chooser->get_selected();
 	if (grp && i >= 0 && i < grp->size() - 1) {    // Moving down.
 		grp->swap(i);
 		// Move selection down with the shape
@@ -1071,10 +1070,9 @@ C_EXPORT void on_group_down_clicked(GtkToggleButton* button, gpointer user_data)
 
 C_EXPORT void on_group_shape_remove_clicked(GtkToggleButton* button, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);
-	auto* chooser
-			= static_cast<Object_browser*>(g_object_get_data(G_OBJECT(gtk_widget_get_toplevel(GTK_WIDGET(button))), "browser"));
-	Shape_group* grp = chooser->get_group();
-	const int    i   = chooser->get_selected();
+	auto*        chooser = static_cast<Object_browser*>(g_object_get_data(G_OBJECT(widget_get_top(GTK_WIDGET(button))), "browser"));
+	Shape_group* grp     = chooser->get_group();
+	const int    i       = chooser->get_selected();
 	if (grp && i >= 0) {
 		chooser->reset_selected();
 		grp->del(i);
@@ -1388,7 +1386,7 @@ static void apply_group_window_changes(GtkWidget* grpwin) {
  */
 C_EXPORT void on_group_okay_clicked(GtkButton* button, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);
-	GtkWidget* grpwin = gtk_widget_get_toplevel(GTK_WIDGET(button));
+	GtkWidget* grpwin = widget_get_top(GTK_WIDGET(button));
 
 	// Apply the changes
 	apply_group_window_changes(grpwin);
@@ -1402,7 +1400,7 @@ C_EXPORT void on_group_okay_clicked(GtkButton* button, gpointer user_data) {
  */
 C_EXPORT void on_group_apply_clicked(GtkButton* button, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);
-	GtkWidget* grpwin = gtk_widget_get_toplevel(GTK_WIDGET(button));
+	GtkWidget* grpwin = widget_get_top(GTK_WIDGET(button));
 
 	// Apply the changes but keep the window open
 	apply_group_window_changes(grpwin);
@@ -1413,7 +1411,7 @@ C_EXPORT void on_group_apply_clicked(GtkButton* button, gpointer user_data) {
  */
 C_EXPORT void on_group_cancel_clicked(GtkButton* button, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);
-	GtkWidget* grpwin = gtk_widget_get_toplevel(GTK_WIDGET(button));
+	GtkWidget* grpwin = widget_get_top(GTK_WIDGET(button));
 
 	auto* chooser = static_cast<Object_browser*>(g_object_get_data(G_OBJECT(grpwin), "browser"));
 
