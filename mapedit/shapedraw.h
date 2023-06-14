@@ -30,7 +30,7 @@ class Shape_frame;
 class Image_buffer8;
 class Animation_info;
 
-using Drop_callback = void (*)(int filenum, int shapenum, int framenum, void* udata);
+using Drop_callback = void (*)(int filenum, int shapenum, int framenum, void* user_data);
 
 #include "studio.h"
 
@@ -170,8 +170,8 @@ public:
 	// Handler for drop.
 	static void drag_data_received(
 			GtkWidget* widget, GdkDragContext* context, gint x, gint y, GtkSelectionData* seldata, guint info, guint time,
-			gpointer udata);
-	gulong enable_drop(Drop_callback callback, void* udata);
+			gpointer user_data);
+	gulong enable_drop(Drop_callback callback, void* user_data);
 	void   set_drag_icon(GdkDragContext* context, Shape_frame* shape);
 	// Start/end dragging from here.
 	void start_drag(const char* target, int id, GdkEvent* event);
