@@ -153,8 +153,14 @@ private:
 	GtkWidget* shape_zlabel;      // Zoom shape label, set to 50 * shape_scale.
 	GtkWidget* shape_zup;         // Zoom up arrow.
 	GtkWidget* shape_zdown;       // Zoom down arrow.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	static gboolean on_app_key_press(
+			GtkEventControllerKey* key_ctlr, guint keyval, guint keycode,
+			GdkModifierType state, gpointer user_data);
+#else     // GTK 4
 	static gboolean on_app_key_press(
 			GtkEntry* entry, GdkEvent* event, gpointer user_data);
+#endif    // GTK 4
 	// Modified one of the .dat's?
 	bool                             shape_info_modified, shape_names_modified;
 	bool                             npc_modified;
@@ -418,10 +424,14 @@ public:
 	void open_shape_window(
 			int shnum, int frnum, Shape_file_info* file_info,
 			const char* shname, Shape_info* info = nullptr);
-	void        save_shape_window();
-	void        close_shape_window();
-	void        create_zoom_controls();
+	void save_shape_window();
+	void close_shape_window();
+	void create_zoom_controls();
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	static void on_zoom_bilinear(GtkCheckButton* btn, gpointer user_data);
+#else     // GTK 4
 	static void on_zoom_bilinear(GtkToggleButton* btn, gpointer user_data);
+#endif    // GTK 4
 	static void on_zoom_up(GtkButton* btn, gpointer user_data);
 	static void on_zoom_down(GtkButton* btn, gpointer user_data);
 	// Map locator.
@@ -458,8 +468,14 @@ public:
 	void info_received(unsigned char* data, int datalen);
 	void set_edit_menu(bool sel, bool clip);
 	// Preferences.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	static void on_prefs_background_expose_event(
+			GtkDrawingArea* widget, cairo_t* cairo, int x, int y,
+			gpointer user_data);
+#else     // GTK 4
 	static gboolean on_prefs_background_expose_event(
 			GtkWidget* widget, cairo_t* cairo, gpointer user_data);
+#endif    // GTK 4
 	void open_preferences();
 	void save_preferences();
 	// GTK/CSS utils:
