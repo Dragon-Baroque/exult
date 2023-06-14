@@ -497,7 +497,7 @@ C_EXPORT void on_shinfo_apply_clicked(GtkButton* btn, gpointer user_data) {
 C_EXPORT void on_shinfo_cancel_clicked(GtkButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(btn, user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
-	GtkWindow*   parent = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(btn)));
+	GtkWindow*   parent = GTK_WINDOW(widget_get_top(GTK_WIDGET(btn)));
 	if (!studio->prompt_for_discard(
 				studio->shape_window_dirty, "Shape", parent)) {
 		return;    // User canceled
@@ -558,8 +558,8 @@ C_EXPORT gboolean on_shape_window_delete_event(
  *  Weapon ammo type changed.
  */
 C_EXPORT gboolean
-		on_shinfo_weapon_ammo_changed(GtkWidget* widget, gpointer data) {
-	ignore_unused_variable_warning(data);
+		on_shinfo_weapon_ammo_changed(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	mark_shape_window_dirty();
 	const int    sel    = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
 	const bool   on     = sel == 0;
@@ -572,8 +572,8 @@ C_EXPORT gboolean
  *  Weapon projectile type changed.
  */
 C_EXPORT gboolean
-		on_shinfo_weapon_sprite_changed(GtkWidget* widget, gpointer data) {
-	ignore_unused_variable_warning(data);
+		on_shinfo_weapon_sprite_changed(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	mark_shape_window_dirty();
 	const int    sel    = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
 	const bool   on     = sel == 0;
@@ -586,8 +586,8 @@ C_EXPORT gboolean
  *  Ammo projectile type changed.
  */
 C_EXPORT gboolean
-		on_shinfo_ammo_sprite_changed(GtkWidget* widget, gpointer data) {
-	ignore_unused_variable_warning(data);
+		on_shinfo_ammo_sprite_changed(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	mark_shape_window_dirty();
 	const int    sel    = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
 	const bool   on     = sel == 0;
@@ -599,9 +599,9 @@ C_EXPORT gboolean
 /*
  *  Animation type changed.
  */
-C_EXPORT gboolean
-		on_shinfo_animation_type_changed(GtkWidget* widget, gpointer data) {
-	ignore_unused_variable_warning(data);
+C_EXPORT gboolean on_shinfo_animation_type_changed(
+		GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	const int    sel    = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
 	bool         on     = sel != static_cast<int>(Animation_info::FA_HOURLY);
 	ExultStudio* studio = ExultStudio::get_instance();
@@ -660,8 +660,8 @@ C_EXPORT gboolean on_shinfo_animation_sfxsynch_toggled(
  *  Animation first frame freeze type changed.
  */
 C_EXPORT gboolean on_shinfo_animation_freezefirst_changed(
-		GtkWidget* widget, gpointer data) {
-	ignore_unused_variable_warning(data);
+		GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	const int    sel    = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
 	ExultStudio* studio = ExultStudio::get_instance();
 	studio->set_sensitive("shinfo_animation_freezechance", sel == 2);
@@ -756,8 +756,8 @@ C_EXPORT gboolean on_shinfo_framenames_qual_type_toggled(
  *  Frame name main name type changed.
  */
 C_EXPORT gboolean on_shinfo_framenames_name_type_changed(
-		GtkWidget* widget, gpointer data) {
-	ignore_unused_variable_warning(data);
+		GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	const int    type   = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
 	ExultStudio* studio = ExultStudio::get_instance();
 	if (type == 0) {
@@ -793,8 +793,8 @@ C_EXPORT gboolean on_shinfo_framenames_name_type_changed(
  *  Frame name other kind changed.
  */
 C_EXPORT gboolean on_shinfo_framenames_comp_msg_type_changed(
-		GtkWidget* widget, gpointer data) {
-	ignore_unused_variable_warning(data);
+		GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	const int    val    = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
 	ExultStudio* studio = ExultStudio::get_instance();
 	studio->set_sensitive("shinfo_framenames_comp_msg_text", val == 2);
@@ -805,8 +805,8 @@ C_EXPORT gboolean on_shinfo_framenames_comp_msg_type_changed(
  *  Frame name other type changed.
  */
 C_EXPORT gboolean on_shinfo_framenames_comp_type_changed(
-		GtkWidget* widget, gpointer data) {
-	ignore_unused_variable_warning(data);
+		GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	int          val    = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
 	ExultStudio* studio = ExultStudio::get_instance();
 	if (!val) {
@@ -1035,8 +1035,8 @@ void reset_gump_info_loaded() {
  *  Gump class changed.
  */
 C_EXPORT gboolean
-		on_shinfo_gumpobj_class_changed(GtkWidget* widget, gpointer data) {
-	ignore_unused_variable_warning(data);
+		on_shinfo_gumpobj_class_changed(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	mark_shape_window_dirty();
 	const int    gump_class = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
 	ExultStudio* studio     = ExultStudio::get_instance();
@@ -1260,8 +1260,8 @@ C_EXPORT void on_shinfo_effhps_list_cursor_changed(
  *  Changed shape class.
  */
 C_EXPORT gboolean
-		on_shinfo_shape_class_changed(GtkWidget* widget, gpointer data) {
-	ignore_unused_variable_warning(widget, data);
+		on_shinfo_shape_class_changed(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(widget, user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
 	if (!Have_quality()) {
 		studio->set_toggle("shinfo_effhps_qual_type", true, false);
@@ -1888,7 +1888,8 @@ C_EXPORT void on_shinfo_frameusecode_browse_clicked(
 		GtkButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(btn, user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
-	const char*  uc     = studio->browse_usecode(true);
+	const char*  uc
+			= studio->browse_usecode(true, studio->get_widget("shape_window"));
 	if (*uc) {
 		studio->set_entry("shinfo_frameusecode_ucfun", uc, true);
 	}
@@ -2403,9 +2404,9 @@ C_EXPORT void on_shinfo_objpaperdoll_remove_clicked(
 /*
  *  Paperdoll spot changed.
  */
-C_EXPORT gboolean
-		on_shinfo_objpaperdoll_spot_changed(GtkWidget* widget, gpointer data) {
-	ignore_unused_variable_warning(data);
+C_EXPORT gboolean on_shinfo_objpaperdoll_spot_changed(
+		GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	const int    spot   = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
 	ExultStudio* studio = ExultStudio::get_instance();
 	const int    ready  = studio->get_optmenu("shinfo_ready_spot");
@@ -2417,8 +2418,8 @@ C_EXPORT gboolean
  *  Ready spot changed.
  */
 C_EXPORT gboolean
-		on_shinfo_ready_spot_changed(GtkWidget* widget, gpointer data) {
-	ignore_unused_variable_warning(data);
+		on_shinfo_ready_spot_changed(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	const int    ready  = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
 	ExultStudio* studio = ExultStudio::get_instance();
 	const int    spot   = studio->get_optmenu("shinfo_objpaperdoll_spot");
@@ -2643,7 +2644,8 @@ C_EXPORT void on_shinfo_ammo_usecode_browse_clicked(
 		GtkButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(btn, user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
-	const char*  uc     = studio->browse_usecode(true);
+	const char*  uc
+			= studio->browse_usecode(true, studio->get_widget("shape_window"));
 	if (*uc) {
 		studio->set_entry("shinfo_ammo_usecode", uc, true);
 	}
@@ -2714,7 +2716,8 @@ C_EXPORT void on_shinfo_weapon_uc_browse_clicked(
 		GtkButton* button, gpointer user_data) {
 	ignore_unused_variable_warning(button, user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
-	const char*  uc     = studio->browse_usecode(true);
+	const char*  uc
+			= studio->browse_usecode(true, studio->get_widget("shape_window"));
 	if (*uc) {
 		studio->set_entry("shinfo_weapon_uc", uc, true);
 	}
@@ -2724,7 +2727,8 @@ C_EXPORT void on_shinfo_weapon_usecode_browse_clicked(
 		GtkButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(btn, user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
-	const char*  uc     = studio->browse_usecode(true);
+	const char*  uc
+			= studio->browse_usecode(true, studio->get_widget("shape_window"));
 	if (*uc) {
 		studio->set_entry("shinfo_weapon_usecode", uc, true);
 	}

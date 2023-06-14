@@ -476,24 +476,23 @@ void ExultStudio::save_npc_to_preset(const char* preset_name) {
 	unsigned long xflags     = 0;
 	unsigned long type_flags = 0;
 
-	GtkContainer* flags_table = GTK_CONTAINER(get_widget("npc_flags_table"));
-	if (flags_table) {
-		GList* children = gtk_container_get_children(flags_table);
-		for (GList* list = children; list != nullptr;
-			 list        = g_list_next(list)) {
-			GtkCheckButton* cbox;
-			unsigned long*  bits;
-			int             fnum;
-			if (Get_flag_cbox(
-						list, &oflags, &xflags, &type_flags, cbox, bits,
-						fnum)) {
-				if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbox))) {
-					*bits |= (1 << fnum);
-				}
+	// Set flag buttons.
+	GtkContainer* ftable = GTK_CONTAINER(get_widget("npc_flags_table"));
+	// Get flag checkboxes.
+	GList* children = g_list_first(gtk_container_get_children(ftable));
+	for (GList* list = children; list; list = g_list_next(list)) {
+		GtkCheckButton* cbox;
+		unsigned long*  bits;
+		int             fnum;
+		if (Get_flag_cbox(
+					list->data, &oflags, &xflags, &type_flags, cbox, bits,
+					fnum)) {
+			if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbox))) {
+				*bits |= (1 << fnum);
 			}
 		}
-		g_list_free(children);
 	}
+	g_list_free(children);
 
 	preset->set_value("oflags", std::to_string(oflags));
 	preset->set_value("xflags", std::to_string(xflags));
@@ -593,23 +592,22 @@ void ExultStudio::load_npc_preset_to_npc(const char* preset_name) {
 				preset->get_value("type_flags").c_str(), nullptr, 10);
 	}
 
-	GtkContainer* flags_table = GTK_CONTAINER(get_widget("npc_flags_table"));
-	if (flags_table) {
-		GList* children = gtk_container_get_children(flags_table);
-		for (GList* list = children; list != nullptr;
-			 list        = g_list_next(list)) {
-			GtkCheckButton* cbox;
-			unsigned long*  bits;
-			int             fnum;
-			if (Get_flag_cbox(
-						list, &oflags, &xflags, &type_flags, cbox, bits,
-						fnum)) {
-				const bool active = (*bits & (1 << fnum)) != 0;
-				gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cbox), active);
-			}
+	// Set flag buttons.
+	GtkContainer* ftable = GTK_CONTAINER(get_widget("npc_flags_table"));
+	// Set flag checkboxes.
+	GList* children = g_list_first(gtk_container_get_children(ftable));
+	for (GList* list = children; list; list = g_list_next(list)) {
+		GtkCheckButton* cbox;
+		unsigned long*  bits;
+		int             fnum;
+		if (Get_flag_cbox(
+					list->data, &oflags, &xflags, &type_flags, cbox, bits,
+					fnum)) {
+			gtk_toggle_button_set_active(
+					GTK_TOGGLE_BUTTON(cbox), (*bits & (1 << fnum)) != 0);
 		}
-		g_list_free(children);
 	}
+	g_list_free(children);
 
 	// Set schedules (only the activity type for each time slot 0-7)
 	for (int time = 0; time < 8; time++) {

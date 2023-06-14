@@ -89,10 +89,10 @@ static void Update_teleport_locate_button(ExultStudio* studio, int tx, int ty) {
  *  Open egg window.
  */
 
-C_EXPORT void on_open_egg_activate(GtkMenuItem* menuitem, gpointer user_data) {
-	ignore_unused_variable_warning(menuitem, user_data);
-	ExultStudio* studio = ExultStudio::get_instance();
-	studio->open_egg_window();
+C_EXPORT void app_open_egg_action(
+		GSimpleAction* action, GVariant* parameter, gpointer user_data) {
+	ignore_unused_variable_warning(action, parameter);
+	(static_cast<ExultStudio*>(user_data))->open_egg_window();
 }
 
 /*
@@ -118,7 +118,7 @@ C_EXPORT void on_egg_apply_btn_clicked(GtkButton* btn, gpointer user_data) {
 C_EXPORT void on_egg_cancel_btn_clicked(GtkButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(btn, user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
-	GtkWindow*   parent = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(btn)));
+	GtkWindow*   parent = GTK_WINDOW(widget_get_top(GTK_WIDGET(btn)));
 
 	// Check if there are unsaved changes
 	if (studio->is_egg_window_dirty()) {
@@ -158,7 +158,8 @@ C_EXPORT void on_egg_browse_usecode_clicked(
 		GtkButton* button, gpointer user_data) {
 	ignore_unused_variable_warning(button, user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
-	const char*  uc     = studio->browse_usecode(true);
+	const char*  uc
+			= studio->browse_usecode(true, studio->get_widget("egg_window"));
 	if (*uc) {
 		studio->set_entry("usecode_number", uc, true);
 	}
