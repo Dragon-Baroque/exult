@@ -39,7 +39,7 @@ C_EXPORT void on_audio_type_combo_changed(GtkComboBox* combo, gpointer user_data
 		// Disable repeat checkbox for voice (type == 2)
 		gtk_widget_set_sensitive(repeat_check, type != 2);
 		if (type == 2) {
-			gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(repeat_check), false);
+			gtk_check_button_set_active(GTK_CHECK_BUTTON(repeat_check), false);
 		}
 	}
 }
@@ -60,7 +60,7 @@ C_EXPORT void on_play_audio_play_clicked(GtkButton* button, gpointer user_data) 
 	const int  type   = gtk_combo_box_get_active(GTK_COMBO_BOX(type_combo));
 	const int  track  = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(track_spin));
 	const int  volume = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(volume_spin));
-	const bool repeat = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(repeat_check));
+	const bool repeat = gtk_check_button_get_active(GTK_CHECK_BUTTON(repeat_check));
 
 	studio->play_audio(type, track, volume, repeat);
 }
@@ -100,7 +100,7 @@ void ExultStudio::play_audio_dialog() {
 		gtk_spin_button_set_value(GTK_SPIN_BUTTON(volume_spin), 100);
 	}
 	if (repeat_check) {
-		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(repeat_check), false);
+		gtk_check_button_set_active(GTK_CHECK_BUTTON(repeat_check), false);
 		gtk_widget_set_sensitive(repeat_check, true);    // Enable by default
 	}
 

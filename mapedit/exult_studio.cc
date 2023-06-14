@@ -35,23 +35,18 @@ int main(int argc, char** argv) {
 		if (U7exists(bundle_res)) {
 			std::string bundle_share;
 			std::string bundle_pixbuf;
-			std::string bundle_im;
 			bundle_share = bundle_res;
 			bundle_share += "/share";
 			bundle_pixbuf = bundle_res;
 			bundle_pixbuf += "/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache";
-			bundle_im = bundle_res;
-			bundle_im += "/lib/gtk-3.0/3.0.0/immodules.cache";
 			const gchar* b_res    = bundle_res.c_str();
 			const gchar* b_share  = bundle_share.c_str();
 			const gchar* b_pixbuf = bundle_pixbuf.c_str();
-			const gchar* b_im     = bundle_im.c_str();
 			g_setenv("XDG_DATA_DIRS", b_share, 1);
 			g_setenv("GTK_DATA_PREFIX", b_res, 1);
 			g_setenv("GTK_EXE_PREFIX", b_res, 1);
 			g_setenv("GTK_PATH", b_res, 1);
 			g_setenv("GDK_PIXBUF_MODULE_FILE", b_pixbuf, 1);
-			g_setenv("GTK_IM_MODULE_FILE", b_im, 1);
 		}
 	}
 #endif

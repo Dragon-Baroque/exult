@@ -496,15 +496,10 @@ C_EXPORT void on_groups_import_clicked(GtkButton* button, gpointer user_data) {
 	ExultStudio::get_instance()->import_groups();
 }
 
-C_EXPORT gboolean on_groups_new_name_key_press(GtkEntry* entry, GdkEvent* event, gpointer user_data) {
+C_EXPORT gboolean on_groups_new_name_key_press(GtkEntry* entry, gpointer user_data) {
 	ignore_unused_variable_warning(entry, user_data);
-	guint event_key_keyval;
-	gdk_event_get_keyval(event, &event_key_keyval);
-	if (event_key_keyval == GDK_KEY_Return) {
-		ExultStudio::get_instance()->add_group();
-		return true;
-	}
-	return false;    // Let parent handle it.
+	ExultStudio::get_instance()->add_group();
+	return true;
 }
 
 C_EXPORT void on_open_builtin_group_clicked(GtkButton* button, gpointer user_data) {
@@ -600,6 +595,7 @@ void ExultStudio::setup_groups() {
 		g_object_set_data_full(G_OBJECT(model), "row-deleted", new gulong(delsig), gulong_deleter);
 		chgsig = g_signal_connect(G_OBJECT(model), "row-changed", G_CALLBACK(on_group_list_row_changed), this);
 		g_object_set_data_full(G_OBJECT(model), "row-changed", new gulong(delsig), gulong_deleter);
+		g_signal_connect(G_OBJECT(get_widget("groups_new_name")), "activate", G_CALLBACK(on_groups_new_name_key_press), this);
 	} else {
 		model  = GTK_TREE_STORE(oldmod);
 		addsig = *static_cast<gulong*>(g_object_get_data(G_OBJECT(model), "row-inserted"));
@@ -807,12 +803,10 @@ void ExultStudio::export_group() {
 			"Export Group to File", GTK_WINDOW(get_widget("main_window")), GTK_FILE_CHOOSER_ACTION_SAVE, "_Cancel",
 			GTK_RESPONSE_CANCEL, "_Save", GTK_RESPONSE_ACCEPT, nullptr);
 
-	gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(dialog), true);
-
 	// Set default folder to patch directory
 	if (is_system_path_defined("<PATCH>")) {
 		const std::string patchdir = get_system_path("<PATCH>");
-		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), patchdir.c_str());
+		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), g_file_new_for_path(patchdir.c_str()), nullptr);
 	}
 
 	// Add filter for .grp files
@@ -833,7 +827,7 @@ void ExultStudio::export_group() {
 	gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), suggested.c_str());
 
 	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-		char* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+		char* filename = g_file_get_path(gtk_file_chooser_get_file(GTK_FILE_CHOOSER(dialog)));
 
 		try {
 			OFileDataSource out(filename);
@@ -871,7 +865,7 @@ void ExultStudio::import_groups() {
 	// Set default folder to patch directory
 	if (is_system_path_defined("<PATCH>")) {
 		const std::string patchdir = get_system_path("<PATCH>");
-		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), patchdir.c_str());
+		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), g_file_new_for_path(patchdir.c_str()), nullptr);
 	}
 
 	// Add filter for .grp files
@@ -887,7 +881,7 @@ void ExultStudio::import_groups() {
 	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 
 	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-		char* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+		char* filename = g_file_get_path(gtk_file_chooser_get_file(GTK_FILE_CHOOSER(dialog)));
 
 		try {
 			// Get maximum entry number for current file
@@ -1036,8 +1030,8 @@ void ExultStudio::groups_changed(
 /*
  *  Npc window's close button.
  */
-C_EXPORT gboolean on_group_window_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data) {
-	ignore_unused_variable_warning(event, user_data);
+C_EXPORT gboolean on_group_window_delete_event(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	ExultStudio::get_instance()->close_group_window(widget);
 	return true;
 }
@@ -1198,16 +1192,14 @@ void ExultStudio::duplicate_builtin_group() {
  */
 
 void ExultStudio::open_group_window(Shape_group* grp) {
-	GError*      error = nullptr;
-	GtkBuilder*  xml   = gtk_builder_new();
-	const gchar* objects[]
-			= {"group_window_goup_img", "group_window_godown_img", "group_window_remove_img", "group_window", nullptr};
-	if (!gtk_builder_add_objects_from_file(xml, glade_path, const_cast<gchar**>(objects), &error)) {
+	GError*      error     = nullptr;
+	GtkBuilder*  xml       = gtk_builder_new();
+	const gchar* objects[] = {"group_window", nullptr};
+	if (!gtk_builder_add_objects_from_file(xml, glade_path, objects, &error)) {
 		g_warning("Couldn't load group window: %s", error->message);
 		g_error_free(error);
 		exit(1);
 	}
-	gtk_builder_connect_signals(xml, nullptr);
 	GtkWidget*      grpwin  = get_widget(xml, "group_window");
 	Object_browser* chooser = curfile->create_browser(vgafile, palbuf.get(), grp);
 	// Set xml as data on window.
@@ -1245,7 +1237,7 @@ void ExultStudio::open_group_window(Shape_group* grp) {
 	gtk_widget_set_visible(browser_box, true);
 	gtk_box_pack_start(GTK_BOX(browser_box), chooser->get_widget(), true, true, 0);
 	// Auto-connect doesn't seem to work.
-	g_signal_connect(G_OBJECT(grpwin), "delete-event", G_CALLBACK(on_group_window_delete_event), this);
+	g_signal_connect(G_OBJECT(grpwin), "close-request", G_CALLBACK(on_group_window_delete_event), this);
 	group_windows.push_back(GTK_WINDOW(grpwin));
 	gtk_widget_set_visible(grpwin, true);
 }
