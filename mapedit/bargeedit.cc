@@ -52,11 +52,10 @@ static void on_barge_changed(GtkWidget* widget, gpointer user_data) {
  *  Open barge window.
  */
 
-C_EXPORT void on_open_barge_activate(
-		GtkMenuItem* menuitem, gpointer user_data) {
-	ignore_unused_variable_warning(menuitem, user_data);
-	ExultStudio* studio = ExultStudio::get_instance();
-	studio->open_barge_window();
+C_EXPORT void app_open_barge_action(
+		GSimpleAction* action, GVariant* parameter, gpointer user_data) {
+	ignore_unused_variable_warning(action, parameter);
+	(static_cast<ExultStudio*>(user_data))->open_barge_window();
 }
 
 /*
@@ -82,7 +81,7 @@ C_EXPORT void on_barge_apply_btn_clicked(GtkButton* btn, gpointer user_data) {
 C_EXPORT void on_barge_cancel_btn_clicked(GtkButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(btn, user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
-	GtkWindow*   parent = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(btn)));
+	GtkWindow*   parent = GTK_WINDOW(widget_get_top(GTK_WIDGET(btn)));
 	if (studio->is_barge_window_dirty()
 		&& !studio->prompt_for_discard(
 				studio->barge_window_dirty, "Barge", parent)) {
