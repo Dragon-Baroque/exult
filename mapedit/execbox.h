@@ -36,14 +36,13 @@ using Exec_done_fun = void (*)(int exit_code, Exec_box* box, gpointer user_data)
 #ifndef _WIN32
 
 /*
- *  A class for executing a child process and capturing its output in a
- *  GTK program.
+ *  A class for executing a child process and capturing its output
+ *    in a GTK program.
  */
 class Exec_process {
 public:
-	// Function called when data is read
-	//   from child.  If datalen == 0,
-	//   child is done & exit_code is set.
+	// Function called when data is read from child.
+	//   If datalen == 0, child is done & exit_code is set.
 	using Reader_fun = void (*)(char* data, int datalen, int exit_code, gpointer user_data);
 
 private:
@@ -59,7 +58,7 @@ public:
 	void kill_child();               // Kill process.
 	void read_from_child(int id);    // Read and call 'reader'.
 	// Execute.
-	bool exec(const char* file, const char* argv[], Reader_fun rfun, void* udata);
+	bool exec(const char* file, const char* argv[], Reader_fun rfun, void* user_data);
 	bool check_child(int& exit_code);    // Is child still running?
 };
 
@@ -75,8 +74,8 @@ public:
 		ignore_unused_variable_warning(id);
 	}
 
-	bool exec(const char* file, const char* argv[], Reader_fun rfun, void* udata) {
-		ignore_unused_variable_warning(file, argv, rfun, udata);
+	bool exec(const char* file, const char* argv[], Reader_fun rfun, void* user_data) {
+		ignore_unused_variable_warning(file, argv, rfun, user_data);
 		return false;
 	}
 
@@ -97,9 +96,9 @@ class Exec_box {
 	GtkStatusbar* status;        // For showing status.
 	guint         status_ctx;    // Context for status.
 	Exec_done_fun done_fun;      // Called when child has exited.
-	gpointer      user_data;     // Passed to done_fun.
+	gpointer      done_data;     // Passed to done_fun.
 public:
-	Exec_box(GtkTextView* b, GtkStatusbar* s, Exec_done_fun dfun = nullptr, gpointer udata = nullptr);
+	Exec_box(GtkTextView* b, GtkStatusbar* s, Exec_done_fun dfun = nullptr, gpointer user_data = nullptr);
 	~Exec_box();
 	void show_status(const char* msg);    // Set status bar.
 	// Handle data from child.
