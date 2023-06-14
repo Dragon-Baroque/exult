@@ -45,6 +45,21 @@ Object_browser::~Object_browser() {
 		g_object_unref(vscroll_ctlr);
 	}
 	vscroll_ctlr = nullptr;
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	if ((G_IS_OBJECT(key_ctlr)) && (G_OBJECT(key_ctlr)->ref_count > 0)) {
+		g_object_unref(key_ctlr);
+	}
+	key_ctlr = nullptr;
+	if ((G_IS_OBJECT(click_ctlr)) && (G_OBJECT(click_ctlr)->ref_count > 0)) {
+		g_object_unref(click_ctlr);
+	}
+	click_ctlr = nullptr;
+	if ((G_IS_OBJECT(drag_source)) && (G_OBJECT(drag_source)->ref_count > 0)) {
+		g_object_unref(drag_source);
+	}
+	drag_source = nullptr;
+#else     // GTK 4
+#endif    // GTK 4
 }
 
 void Object_browser::set_widget(GtkWidget* w) {
@@ -157,24 +172,42 @@ void Create_file_selection(
 			stock_accept, GTK_RESPONSE_ACCEPT, nullptr));
 	GtkWidget*      btn  = gtk_dialog_get_widget_for_response(
             GTK_DIALOG(fsel), GTK_RESPONSE_CANCEL);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	GtkWidget* img = gtk_image_new_from_icon_name("window-close");
+#else     // GTK 4
 	GtkWidget* img = gtk_image_new_from_icon_name(
 			"window-close", GTK_ICON_SIZE_BUTTON);
+#endif    // GTK 4
 	gtk_button_set_image(GTK_BUTTON(btn), img);
 	btn = gtk_dialog_get_widget_for_response(
 			GTK_DIALOG(fsel), GTK_RESPONSE_ACCEPT);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	img = gtk_image_new_from_icon_name(
+			(action == GTK_FILE_CHOOSER_ACTION_OPEN) ? "document-open"
+													 : "document-save");
+#else     // GTK 4
 	img = gtk_image_new_from_icon_name(
 			(action == GTK_FILE_CHOOSER_ACTION_OPEN) ? "document-open"
 													 : "document-save",
 			GTK_ICON_SIZE_BUTTON);
+#endif    // GTK 4
 	gtk_button_set_image(GTK_BUTTON(btn), img);
 	gtk_window_set_modal(GTK_WINDOW(fsel), true);
 	if (action == GTK_FILE_CHOOSER_ACTION_SAVE) {
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 		gtk_file_chooser_set_do_overwrite_confirmation(fsel, true);
+#endif                            // GTK 4
 	}
 	if (path != nullptr && is_system_path_defined(path)) {
 		// Default to a writable location.
 		const std::string startdir = get_system_path(path);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+		gtk_file_chooser_set_current_folder(
+				fsel, g_file_new_for_path(startdir.c_str()), nullptr);
+#else     // GTK 4
 		gtk_file_chooser_set_current_folder(fsel, startdir.c_str());
+#endif    // GTK 4
 	}
 	if (!filters.empty()) {
 		GtkFileFilter* gfilt = gtk_file_filter_new();
@@ -187,7 +220,11 @@ void Create_file_selection(
 		gtk_file_chooser_add_filter(fsel, gfilt);
 	}
 	if (gtk_dialog_run(GTK_DIALOG(fsel)) == GTK_RESPONSE_ACCEPT) {
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+		char* filename = g_file_get_path(gtk_file_chooser_get_file(fsel));
+#else     // GTK 4
 		char* filename = gtk_file_chooser_get_filename(fsel);
+#endif    // GTK 4
 		ok_handler(filename, user_data);
 		g_free(filename);
 	}
@@ -298,7 +335,13 @@ static void on_find_up(GtkButton* button, gpointer user_data) {
 	chooser->search(
 			gtk_entry_get_text(GTK_ENTRY(chooser->get_find_text())), -1);
 }
-
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+static gboolean on_find_key(GtkEntry* entry, gpointer user_data) {
+	auto* chooser = static_cast<Object_browser*>(user_data);
+	chooser->search(gtk_entry_get_text(entry), 1);
+	return true;
+}
+#else     // GTK 4
 static gboolean on_find_key(
 		GtkEntry* entry, GdkEvent* event, gpointer user_data) {
 	ignore_unused_variable_warning(entry);
@@ -312,6 +355,7 @@ static gboolean on_find_key(
 	}
 	return false;    // Let parent handle it.
 }
+#endif    // GTK 4
 
 static void on_loc_down(GtkButton* button, gpointer user_data) {
 	ignore_unused_variable_warning(button);
@@ -401,9 +445,14 @@ GtkWidget* Object_browser::create_controls(
 				find_up, 1 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
 		gtk_box_pack_start(GTK_BOX(hbox3), find_up, true, true, 0);
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+		g_signal_connect(
+				G_OBJECT(find_text), "activate", G_CALLBACK(on_find_key), this);
+#else     // GTK 4
 		g_signal_connect(
 				G_OBJECT(find_text), "key-press-event", G_CALLBACK(on_find_key),
 				this);
+#endif    // GTK 4
 	}
 	/*
 	 *  The 'Locate' controls.
@@ -512,9 +561,14 @@ void Object_browser::draw_vscrolled(       // For scroll events.
 		gpointer user_data                 // ->Object_browser.
 ) {
 	ignore_unused_variable_warning(self, dx);
-	auto*          browser = static_cast<Object_browser*>(user_data);
+	auto* browser = static_cast<Object_browser*>(user_data);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	GtkAdjustment* adj
+			= gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(browser->vscroll));
+#else     // GTK 4
 	GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(browser->vscroll));
-	const gdouble  adj_value = gtk_adjustment_get_value(adj);
+#endif    // GTK 4
+	const gdouble adj_value = gtk_adjustment_get_value(adj);
 #if defined(MACOSX) && !defined(XWIN)
 	const gdouble new_unit = 1.0;
 #else
@@ -535,8 +589,14 @@ void Object_browser::draw_vscrolled(       // For scroll events.
 }
 
 void Object_browser::enable_draw_vscroll(GtkWidget* draw) {
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	vscroll_ctlr = GTK_EVENT_CONTROLLER(gtk_event_controller_scroll_new(
+			GTK_EVENT_CONTROLLER_SCROLL_VERTICAL));
+	gtk_widget_add_controller(draw, vscroll_ctlr);
+#else     // GTK 4
 	vscroll_ctlr = GTK_EVENT_CONTROLLER(gtk_event_controller_scroll_new(
 			draw, GTK_EVENT_CONTROLLER_SCROLL_VERTICAL));
+#endif    // GTK 4
 	g_signal_connect(
 			G_OBJECT(vscroll_ctlr), "scroll", G_CALLBACK(draw_vscrolled), this);
 }
