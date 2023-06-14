@@ -48,10 +48,10 @@ class Actor;
  *  Open npc window.
  */
 
-C_EXPORT void on_open_npc_activate(GtkMenuItem* menuitem, gpointer user_data) {
-	ignore_unused_variable_warning(menuitem, user_data);
-	ExultStudio* studio = ExultStudio::get_instance();
-	studio->open_npc_window();
+C_EXPORT void app_open_npc_action(
+		GSimpleAction* action, GVariant* parameter, gpointer user_data) {
+	ignore_unused_variable_warning(action, parameter);
+	(static_cast<ExultStudio*>(user_data))->open_npc_window();
 }
 
 /*
@@ -90,7 +90,7 @@ C_EXPORT void on_npc_show_gump_clicked(GtkButton* btn, gpointer user_data) {
 	unsigned char data[Exult_server::maxlength];
 	// Get container address.
 	auto           addr = reinterpret_cast<uintptr>(g_object_get_data(
-            G_OBJECT(gtk_widget_get_toplevel(GTK_WIDGET(btn))), "user_data"));
+            G_OBJECT(widget_get_top(GTK_WIDGET(btn))), "user_data"));
 	unsigned char* ptr  = &data[0];
 	Serial_out     io(ptr);
 	io << addr;
@@ -130,7 +130,8 @@ C_EXPORT void on_npc_usecode_browse_clicked(
 		GtkButton* button, gpointer user_data) {
 	ignore_unused_variable_warning(button, user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
-	const char*  uc     = studio->browse_usecode(true);
+	const char*  uc
+			= studio->browse_usecode(true, studio->get_widget("npc_window"));
 	if (*uc) {
 		studio->set_entry("npc_usecode_entry", uc, true);
 	}
@@ -338,12 +339,11 @@ void ExultStudio::close_npc_window() {
  */
 
 static bool Get_prop_spin(
-		GList*          list,    // Entry in table of properties.
-		GtkSpinButton*& spin,    // Spin button returned.
-		int&            pnum     // Property number (0-11) returned.
+		gpointer        widget,    // Entry in table of properties.
+		GtkSpinButton*& spin,      // Spin button returned.
+		int&            pnum       // Property number (0-11) returned.
 ) {
-	GtkBin* frame = GTK_BIN(list->data);
-	spin          = GTK_SPIN_BUTTON(gtk_bin_get_child(frame));
+	spin = GTK_SPIN_BUTTON(gtk_bin_get_child(GTK_BIN(widget)));
 	assert(spin != nullptr);
 	const char* name = gtk_buildable_get_name(GTK_BUILDABLE(spin));
 	// Names: npc_prop_nn.
@@ -362,7 +362,7 @@ static bool Get_prop_spin(
  */
 
 bool Get_flag_cbox(
-		GList*           list,          // Entry in table of flags.
+		gpointer         widget,        // Entry in table of flags.
 		unsigned long*   oflags,        // Object flags.
 		unsigned long*   xflags,        // Extra object flags.
 		unsigned long*   type_flags,    // Type (movement) flags.
@@ -370,7 +370,7 @@ bool Get_flag_cbox(
 		unsigned long*&  bits,          // ->one of 3 flags above.
 		int&             fnum           // Flag # (0-31) returned.
 ) {
-	cbox = GTK_CHECK_BUTTON(list->data);
+	cbox = GTK_CHECK_BUTTON(widget);
 	assert(cbox != nullptr);
 	const char* name = gtk_buildable_get_name(GTK_BUILDABLE(cbox));
 	// Names: npc_flag_xx_nn, where
@@ -444,7 +444,7 @@ void ExultStudio::init_new_npc() {
 	for (GList* list = children; list; list = g_list_next(list)) {
 		GtkSpinButton* spin;
 		int            pnum;
-		if (Get_prop_spin(list, spin, pnum)) {
+		if (Get_prop_spin(list->data, spin, pnum)) {
 			gtk_spin_button_set_value(spin, 12);
 		}
 	}
@@ -526,7 +526,8 @@ int ExultStudio::init_npc_window(unsigned char* data, int datalen) {
 		unsigned long*  bits;
 		int             fnum;
 		if (Get_flag_cbox(
-					list, &oflags, &xflags, &type_flags, cbox, bits, fnum)) {
+					list->data, &oflags, &xflags, &type_flags, cbox, bits,
+					fnum)) {
 			gtk_toggle_button_set_active(
 					GTK_TOGGLE_BUTTON(cbox), (*bits & (1 << fnum)) != 0);
 		}
@@ -538,7 +539,7 @@ int ExultStudio::init_npc_window(unsigned char* data, int datalen) {
 	for (GList* list = children; list; list = g_list_next(list)) {
 		GtkSpinButton* spin;
 		int            pnum;
-		if (Get_prop_spin(list, spin, pnum)) {
+		if (Get_prop_spin(list->data, spin, pnum)) {
 			gtk_spin_button_set_value(spin, properties[pnum]);
 		}
 	}
@@ -634,7 +635,8 @@ int ExultStudio::save_npc_window() {
 		unsigned long*  bits;
 		int             fnum;
 		if (Get_flag_cbox(
-					list, &oflags, &xflags, &type_flags, cbox, bits, fnum)) {
+					list->data, &oflags, &xflags, &type_flags, cbox, bits,
+					fnum)) {
 			if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbox))) {
 				*bits |= (1 << fnum);
 			}
@@ -647,7 +649,7 @@ int ExultStudio::save_npc_window() {
 	for (GList* list = children; list; list = g_list_next(list)) {
 		GtkSpinButton* spin;
 		int            pnum;
-		if (Get_prop_spin(list, spin, pnum)) {
+		if (Get_prop_spin(list->data, spin, pnum)) {
 			properties[pnum] = gtk_spin_button_get_value_as_int(spin);
 		}
 	}
@@ -691,15 +693,15 @@ int ExultStudio::save_npc_window() {
  */
 
 void ExultStudio::schedule_btn_clicked(
-		GtkWidget* btn,    // Button on the schedule dialog.
-		gpointer   data    // Dialog itself.
+		GtkWidget* btn,         // Button on the schedule dialog.
+		gpointer   user_data    // Dialog itself.
 ) {
 	ExultStudio* studio = ExultStudio::get_instance();
 	// Get name assigned in Glade.
 	const char* name     = gtk_buildable_get_name(GTK_BUILDABLE(btn));
 	const char* numptr   = name + 5;    // Past "sched".
 	const int   num      = atoi(numptr);
-	auto*       schedwin = static_cast<GtkWidget*>(data);
+	auto*       schedwin = static_cast<GtkWidget*>(user_data);
 	auto*       label    = static_cast<GtkLabel*>(
             g_object_get_data(G_OBJECT(schedwin), "user_data"));
 	// User data = schedule #.
@@ -716,10 +718,10 @@ void ExultStudio::schedule_btn_clicked(
  *  Set signal handler for each schedule button.
  */
 
-static void Set_sched_btn(GtkWidget* btn, gpointer data) {
+static void Set_sched_btn(GtkWidget* btn, gpointer user_data) {
 	g_signal_connect(
 			G_OBJECT(btn), "clicked",
-			G_CALLBACK(ExultStudio::schedule_btn_clicked), data);
+			G_CALLBACK(ExultStudio::schedule_btn_clicked), user_data);
 }
 
 /*
@@ -752,6 +754,8 @@ C_EXPORT void on_npc_set_sched(
 	}
 	// Store label as dialog's data.
 	g_object_set_data(G_OBJECT(schedwin), "user_data", label);
+	gtk_window_set_transient_for(
+			GTK_WINDOW(schedwin), GTK_WINDOW(studio->get_widget("npc_window")));
 	gtk_widget_set_visible(schedwin, true);
 }
 

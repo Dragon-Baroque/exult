@@ -29,12 +29,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *  GTK callback handlers for audio testing dialog.
  */
 
-C_EXPORT void on_play_audio_activate(
-		GtkMenuItem* menuitem, gpointer user_data) {
-	ignore_unused_variable_warning(menuitem, user_data);
-	ExultStudio::get_instance()->play_audio_dialog();
-}
-
 C_EXPORT void on_audio_type_combo_changed(
 		GtkComboBox* combo, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);

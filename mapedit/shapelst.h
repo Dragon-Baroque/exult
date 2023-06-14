@@ -152,11 +152,11 @@ public:
 		return selected < 0 ? -1 : info[selected].shapenum;
 	}
 
-	void       scroll_row_vertical(unsigned newrow);
-	void       scroll_vertical(int newoffset);    // Scroll.
-	void       setup_vscrollbar();                // Set new scroll amounts.
-	void       setup_hscrollbar(int newmax);
-	GtkWidget* create_popup() override;    // Popup menu.
+	void   scroll_row_vertical(unsigned newrow);
+	void   scroll_vertical(int newoffset);    // Scroll.
+	void   setup_vscrollbar();                // Set new scroll amounts.
+	void   setup_hscrollbar(int newmax);
+	GMenu* create_popup() override;    // Popup menu.
 public:
 	Shape_chooser(
 			Vga_file* i, unsigned char* palbuf, int w, int h,
@@ -194,13 +194,13 @@ public:
 	}
 
 	// Configure when created/resized.
-	gint configure(GdkEventConfigure* event);
+	gint configure(GdkEvent* event);
 	// Blit to screen.
-	static gint     expose(GtkWidget* widget, cairo_t* cairo, gpointer data);
+	static gint expose(GtkWidget* widget, cairo_t* cairo, gpointer user_data);
 	static gboolean on_new_shape_font_color_draw_expose_event(
-			GtkWidget* widget, cairo_t* cairo, gpointer data);
+			GtkWidget* widget, cairo_t* cairo, gpointer user_data);
 	// Handle mouse press.
-	gint mouse_press(GtkWidget* widget, GdkEventButton* event);
+	gint mouse_press(GtkWidget* widget, GdkEvent* event);
 	// Export current frame as a PNG.
 	time_t export_png(const char* fname);
 	// Export given image as a PNG.
@@ -213,7 +213,7 @@ public:
 	void edit_shape(int tiles = 0, bool bycols = false);
 	// Deal with list of files being edited
 	//   by an external prog. (Gimp).
-	static gint check_editing_files_cb(gpointer data);
+	static gint check_editing_files_cb(gpointer user_data);
 	static gint check_editing_files();
 	static void read_back_edited(Editing_file* ed);
 	static void clear_editing_files();
@@ -234,24 +234,25 @@ public:
 	// Give dragged shape.
 	static void drag_data_get(
 			GtkWidget* widget, GdkDragContext* context,
-			GtkSelectionData* seldata, guint info, guint time, gpointer data);
+			GtkSelectionData* seldata, guint info, guint time,
+			gpointer user_data);
 	static gint drag_begin(
-			GtkWidget* widget, GdkDragContext* context, gpointer data);
+			GtkWidget* widget, GdkDragContext* context, gpointer user_data);
 	// Handle scrollbar.
-	static void vscrolled(GtkAdjustment* adj, gpointer data);
-	static void hscrolled(GtkAdjustment* adj, gpointer data);
+	static void vscrolled(GtkAdjustment* adj, gpointer user_data);
+	static void hscrolled(GtkAdjustment* adj, gpointer user_data);
 	// Handle spin-button for frames.
-	static void frame_changed(GtkAdjustment* adj, gpointer data);
+	static void frame_changed(GtkAdjustment* adj, gpointer user_data);
 	static void all_frames_toggled(GtkToggleButton* btn, gpointer user_data);
 	static gint drag_motion(
-			GtkWidget* widget, GdkEventMotion* event, gpointer data);
+			GtkWidget* widget, GdkEvent* event, gpointer user_data);
 	// Menu items:
-	static void on_shapes_popup_info_activate(
-			GtkMenuItem* item, gpointer udata);
-	static void on_shapes_popup_edit_activate(
-			GtkMenuItem* item, gpointer udata);
-	static void on_shapes_popup_edtiles_activate(
-			GtkMenuItem* item, gpointer udata);
+	static void shp_info_action(
+			GSimpleAction* action, GVariant* parameter, gpointer user_data);
+	static void shp_edit_action(
+			GSimpleAction* action, GVariant* parameter, gpointer user_data);
+	static void shp_edtiles_action(
+			GSimpleAction* action, GVariant* parameter, gpointer user_data);
 };
 
 #endif
