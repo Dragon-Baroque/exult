@@ -87,6 +87,19 @@ public:
 	void move_palette(bool up);
 	void add_palette();
 	void remove_palette();
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	// Configure when created/resized.
+	static gint configure(
+			GtkWidget* widget, int width, int height, gpointer user_data);
+	// Blit to screen.
+	static void expose(
+			GtkDrawingArea* widget, cairo_t* cairo, int x, int y,
+			gpointer user_data);
+	// Handle mouse press.
+	static int mouse_press(
+			GtkGestureClick* click_ctlr, int n_press, double x, double y,
+			gpointer user_data);
+#else                             // GTK 4
 	// Configure when created/resized.
 	static gint configure(
 			GtkWidget* widget, GdkEvent* event, gpointer user_data);
@@ -95,6 +108,14 @@ public:
 	// Handle mouse press.
 	static gint mouse_press(
 			GtkWidget* widget, GdkEvent* event, gpointer user_data);
+#endif                            // GTK 4
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	// Give dragged palette.
+	static GdkContentProvider* drag_prepare(
+			GtkDragSource* source, double x, double y, gpointer user_data);
+	static void drag_begin(
+			GtkDragSource* source, GdkDrag* drag, gpointer user_data);
+#else     // GTK 4
 	// Give dragged palette.
 	static void drag_data_get(
 			GtkWidget* widget, GdkDragContext* context,
@@ -102,6 +123,7 @@ public:
 			gpointer user_data);
 	static gint drag_begin(
 			GtkWidget* widget, GdkDragContext* context, gpointer user_data);
+#endif    // GTK 4
 	static void palnum_changed(GtkAdjustment* adj, gpointer user_data);
 	static void export_palette(const char* fname, gpointer user_data);
 	static void import_palette(const char* fname, gpointer user_data);

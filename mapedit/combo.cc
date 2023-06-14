@@ -105,6 +105,20 @@ void ExultStudio::save_combos() {
 /*
  *  Callbacks for "Combo" editor window.
  */
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+void Combo_editor::on_combo_draw_expose_event(
+		GtkDrawingArea* widget,    // The view window.
+		cairo_t* cairo, int width, int height, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
+	auto* combo = static_cast<Combo_editor*>(g_object_get_data(
+			G_OBJECT(widget_get_top(GTK_WIDGET(widget))), "user_data"));
+	combo->set_graphic_context(cairo);
+	GdkRectangle area = {0, 0, width, height};
+	//	gdk_cairo_get_clip_rectangle(cairo, &area);
+	combo->render_area(&area);
+	combo->set_graphic_context(nullptr);
+}
+#else     // GTK 4
 gboolean Combo_editor::on_combo_draw_expose_event(
 		GtkWidget* widget,    // The view window.
 		cairo_t* cairo, gpointer user_data) {
@@ -118,6 +132,7 @@ gboolean Combo_editor::on_combo_draw_expose_event(
 	combo->set_graphic_context(nullptr);
 	return true;
 }
+#endif    // GTK 4
 
 C_EXPORT void on_combo_remove_clicked(GtkButton* button, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);
@@ -174,6 +189,19 @@ C_EXPORT void on_combo_order_changed(
 /*
  *  Mouse events in draw area.
  */
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+C_EXPORT gboolean on_combo_draw_button_press_event(
+		GtkGestureClick* click_ctlr, int n_press, double x, double y,
+		gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
+
+	GtkWidget* widget
+			= gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(click_ctlr));
+	auto* combo = static_cast<Combo_editor*>(g_object_get_data(
+			G_OBJECT(widget_get_top(GTK_WIDGET(widget))), "user_data"));
+	return combo->mouse_press(click_ctlr, n_press, x, y);
+}
+#else     // GTK 4
 C_EXPORT gboolean on_combo_draw_button_press_event(
 		GtkWidget* widget,    // The view window.
 		GdkEvent* event, gpointer user_data) {
@@ -182,6 +210,7 @@ C_EXPORT gboolean on_combo_draw_button_press_event(
 			G_OBJECT(widget_get_top(GTK_WIDGET(widget))), "user_data"));
 	return combo->mouse_press(widget, event);
 }
+#endif    // GTK 4
 
 /*
  *  Which member makes the better 'hot-spot' in a combo, where 'better'
@@ -512,15 +541,32 @@ Combo_editor::Combo_editor(
 	combo             = new Combo(svga);
 	win               = ExultStudio::get_instance()->get_widget("combo_win");
 	g_object_set_data(G_OBJECT(win), "user_data", this);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	click_ctlr = GTK_EVENT_CONTROLLER(gtk_gesture_click_new());
+	gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click_ctlr), 0);
+	gtk_widget_add_controller(GTK_WIDGET(draw), click_ctlr);
+	g_signal_connect(
+			G_OBJECT(click_ctlr), "pressed",
+			G_CALLBACK(on_combo_draw_button_press_event), nullptr);
+#else     // GTK 4
+#endif    // GTK 4
 	gtk_widget_set_can_focus(GTK_WIDGET(draw), true);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	gtk_drawing_area_set_draw_func(
+			GTK_DRAWING_AREA(draw), on_combo_draw_expose_event, this, nullptr);
+#else                             // GTK 4
 	g_signal_connect(
 			G_OBJECT(draw), "draw", G_CALLBACK(on_combo_draw_expose_event),
 			this);
-	if (first) {    // Indicate the events we want.
+#endif                            // GTK 4
+	if (first) {                  // Indicate the events we want.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 		gtk_widget_set_events(
 				draw, GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK
 							  | GDK_BUTTON_RELEASE_MASK
 							  | GDK_BUTTON1_MOTION_MASK);
+#endif                            // GTK 4
 		first = false;
 	}
 	set_controls();
@@ -532,6 +578,13 @@ Combo_editor::Combo_editor(
 
 Combo_editor::~Combo_editor() {
 	delete combo;
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	if ((G_IS_OBJECT(click_ctlr)) && (G_OBJECT(click_ctlr)->ref_count > 0)) {
+		g_object_unref(click_ctlr);
+	}
+	click_ctlr = nullptr;
+#else     // GTK 4
+#endif    // GTK 4
 }
 
 /*
@@ -608,6 +661,26 @@ void Combo_editor::set_controls() {
  *  Handle a mouse-press event.
  */
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+gint Combo_editor::mouse_press(
+		GtkGestureClick* click_ctlr, int n_press, double x, double y) {
+	ignore_unused_variable_warning(n_press);
+	guint event_button_button = gtk_gesture_single_get_current_button(
+			GTK_GESTURE_SINGLE(click_ctlr));
+	gdouble event_button_x = x, event_button_y = y;
+
+	if (event_button_button != 1) {
+		return false;    // Handling left-click.
+	}
+	// Get mouse position, draw dims.
+	const int mx = ZoomDown(static_cast<int>(event_button_x));
+	const int my = ZoomDown(static_cast<int>(event_button_y));
+	selected     = combo->find(mx, my);    // Find it (or -1 if not found).
+	set_controls();
+	render();
+	return true;
+}
+#else     // GTK 4
 gint Combo_editor::mouse_press(GtkWidget* widget, GdkEvent* event) {
 	ignore_unused_variable_warning(widget);
 	guint   event_button_button;
@@ -626,6 +699,7 @@ gint Combo_editor::mouse_press(GtkWidget* widget, GdkEvent* event) {
 	render();
 	return true;
 }
+#endif    // GTK 4
 
 /*
  *  Move the selected item within the order.
@@ -925,8 +999,12 @@ void Combo_chooser::scroll(int newpixel    // Abs. index of leftmost to show.
  */
 
 void Combo_chooser::scroll(bool upwards) {
-	GtkAdjustment* adj   = gtk_range_get_adjustment(GTK_RANGE(vscroll));
-	gdouble        delta = 128 + border;
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	GtkAdjustment* adj = gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(vscroll));
+#else     // GTK 4
+	GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(vscroll));
+#endif    // GTK 4
+	gdouble delta = 128 + border;
 	if (upwards) {
 		delta = -delta;
 	}
@@ -935,6 +1013,82 @@ void Combo_chooser::scroll(bool upwards) {
 	scroll(static_cast<gint>(gtk_adjustment_get_value(adj)));
 }
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+/*
+ *  Beginning of a drag.
+ */
+
+GdkContentProvider* Combo_chooser::drag_prepare(
+		GtkDragSource* source, double x, double y,
+		gpointer user_data    // ->Combo_chooser.
+) {
+	ignore_unused_variable_warning(source, x, y);
+	cout << "In DRAG_PREPARE of Combo" << endl;
+	auto* chooser = static_cast<Combo_chooser*>(user_data);
+	if (chooser->selected < 0) {
+		return nullptr;    // Not sure about this.
+	}
+	// Get combo #.
+	int    num   = chooser->info[chooser->selected].num;
+	Combo* combo = chooser->combos[num];
+	// Get enough memory.
+	int cnt    = combo->members.size();
+	int buflen = U7DND_DATA_LENGTH(5 + cnt * 5);
+	cout << "Buflen = " << buflen << endl;
+	auto* buf  = new unsigned char[buflen];
+	auto* ents = new U7_combo_data[cnt];
+	// Get 'hot-spot' member.
+	Combo_member* hot = combo->members[combo->hot_index];
+	for (int i = 0; i < cnt; i++) {
+		Combo_member* m = combo->members[i];
+		ents[i].tx      = m->tx - hot->tx;
+		ents[i].ty      = m->ty - hot->ty;
+		ents[i].tz      = m->tz - hot->tz;
+		ents[i].shape   = m->shapenum;
+		ents[i].frame   = m->framenum;
+	}
+	TileRect foot = combo->tilefoot;
+	int      len  = Store_u7_comboid(
+            buf, foot.w, foot.h, foot.x + foot.w - 1 - hot->tx,
+            foot.y + foot.h - 1 - hot->ty, cnt, ents);
+	assert(len <= buflen);
+	const char*         target    = reinterpret_cast<const char*>(buf);
+	GBytes*             gfile     = g_bytes_new(target, len);
+	GdkContentProvider* targets[] = {
+			gdk_content_provider_new_for_bytes(U7_TARGET_COMBOID_NAME, gfile),
+			gdk_content_provider_new_for_bytes(
+					U7_TARGET_DROPFILE_NAME_MIME, gfile),
+			gdk_content_provider_new_for_bytes(
+					U7_TARGET_DROPFILE_NAME_MACOSX, gfile),
+			gdk_content_provider_new_typed(G_TYPE_STRING, target)};
+	delete[] buf;
+	delete[] ents;
+	return gdk_content_provider_new_union(targets, 4);
+}
+
+void Combo_chooser::drag_begin(
+		GtkDragSource* source, GdkDrag* drag,
+		gpointer user_data    // ->Combo_chooser.
+) {
+	ignore_unused_variable_warning(source);
+	cout << "In DRAG_BEGIN of Combo" << endl;
+	auto* chooser = static_cast<Combo_chooser*>(user_data);
+	if (chooser->selected < 0) {
+		return;
+	}
+	// Get ->combo.
+	int    num   = chooser->info[chooser->selected].num;
+	Combo* combo = chooser->combos[num];
+	// Show 'hot' member as icon.
+	Combo_member* hot = combo->members[combo->hot_index];
+	Shape_frame*  shape
+			= combo->shapes_file->get_shape(hot->shapenum, hot->framenum);
+	if (shape) {
+		chooser->set_drag_icon(drag, shape);
+	}
+	return;
+}
+#else     // GTK 4
 /*
  *  Someone wants the dragged combo.
  */
@@ -1012,6 +1166,7 @@ gint Combo_chooser::drag_begin(
 	}
 	return true;
 }
+#endif    // GTK 4
 
 /*
  *  Handle a scrollbar event.
@@ -1040,6 +1195,21 @@ void Combo_chooser::scrolled(
 /*
  *  Keystroke in draw-area.
  */
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+static gboolean on_combo_key_press(
+		GtkEventControllerKey* key_ctlr, guint keyval, guint keycode,
+		GdkModifierType state, gpointer user_data) {
+	ignore_unused_variable_warning(key_ctlr, keycode, state);
+	auto* chooser          = static_cast<Combo_chooser*>(user_data);
+	guint event_key_keyval = keyval;
+	switch (event_key_keyval) {
+	case GDK_KEY_Delete:
+		chooser->remove();
+		return true;
+	}
+	return false;    // Let parent handle it.
+}
+#else     // GTK 4
 static gboolean on_combo_key_press(
 		GtkEntry* entry, GdkEvent* event, gpointer user_data) {
 	ignore_unused_variable_warning(entry);
@@ -1053,6 +1223,7 @@ static gboolean on_combo_key_press(
 	}
 	return false;    // Let parent handle it.
 }
+#endif    // GTK 4
 
 /*
  *  Enable/disable controls after selection changed.
@@ -1073,8 +1244,14 @@ void Combo_chooser::enable_controls() {
 	}
 }
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+static gint Mouse_release(
+		GtkGestureClick* click_ctlr, int n_press, double x, double y,
+		gpointer user_data);
+#else     // GTK 4
 static gint Mouse_release(
 		GtkWidget* widget, GdkEvent* event, gpointer user_data);
+#endif    // GTK 4
 
 /*
  *  Create the list.
@@ -1106,7 +1283,10 @@ Combo_chooser::Combo_chooser(
 
 	// A frame looks nice.
 	GtkWidget* frame = gtk_frame_new(nullptr);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_IN);
+#endif                            // GTK 4
 	widget_set_margins(
 			frame, 2 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
 	gtk_widget_set_visible(frame, true);
@@ -1114,28 +1294,65 @@ Combo_chooser::Combo_chooser(
 
 	// NOTE:  draw is in Shape_draw.
 	// Indicate the events we want.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_widget_set_events(
 			draw, GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK
 						  | GDK_BUTTON_RELEASE_MASK | GDK_BUTTON1_MOTION_MASK
 						  | GDK_KEY_PRESS_MASK);
-	// Set "configure" handler.
+#endif                            // GTK 4
+								  // Set "configure" handler.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	g_signal_connect(G_OBJECT(draw), "resize", G_CALLBACK(configure), this);
+#else                             // GTK 4
 	g_signal_connect(
 			G_OBJECT(draw), "configure-event", G_CALLBACK(configure), this);
-	// Set "expose-event" - "draw" handler.
+#endif                            // GTK 4
+								  // Set "expose-event" - "draw" handler.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	gtk_drawing_area_set_draw_func(
+			GTK_DRAWING_AREA(draw), expose, this, nullptr);
+#else                             // GTK 4
 	g_signal_connect(G_OBJECT(draw), "draw", G_CALLBACK(expose), this);
-	// Keystroke.
+#endif                            // GTK 4
+								  // Keystroke.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	key_ctlr = GTK_EVENT_CONTROLLER(gtk_event_controller_key_new());
+	gtk_widget_add_controller(GTK_WIDGET(draw), key_ctlr);
+	g_signal_connect(
+			G_OBJECT(key_ctlr), "key-pressed", G_CALLBACK(on_combo_key_press),
+			this);
+#else     // GTK 4
 	g_signal_connect(
 			G_OBJECT(draw), "key-press-event", G_CALLBACK(on_combo_key_press),
 			this);
+#endif    // GTK 4
 	gtk_widget_set_can_focus(GTK_WIDGET(draw), true);
 	// Set mouse click handler.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	click_ctlr = GTK_EVENT_CONTROLLER(gtk_gesture_click_new());
+	gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click_ctlr), 0);
+	gtk_widget_add_controller(GTK_WIDGET(draw), click_ctlr);
+	g_signal_connect(
+			G_OBJECT(click_ctlr), "pressed", G_CALLBACK(mouse_press), this);
+	g_signal_connect(
+			G_OBJECT(click_ctlr), "released", G_CALLBACK(Mouse_release), this);
+#else                             // GTK 4
 	g_signal_connect(
 			G_OBJECT(draw), "button-press-event", G_CALLBACK(mouse_press),
 			this);
 	g_signal_connect(
 			G_OBJECT(draw), "button-release-event", G_CALLBACK(Mouse_release),
 			this);
-	// Mouse motion.
+#endif                            // GTK 4
+								  // Mouse motion.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	drag_source = GTK_EVENT_CONTROLLER(gtk_drag_source_new());
+	g_signal_connect(
+			G_OBJECT(drag_source), "prepare", G_CALLBACK(drag_prepare), this);
+	g_signal_connect(drag_source, "drag-begin", G_CALLBACK(drag_begin), this);
+	gtk_widget_add_controller(draw, drag_source);
+#else     // GTK 4
 	g_signal_connect(
 			G_OBJECT(draw), "drag-begin", G_CALLBACK(drag_begin), this);
 	g_signal_connect(
@@ -1143,6 +1360,7 @@ Combo_chooser::Combo_chooser(
 			this);
 	g_signal_connect(
 			G_OBJECT(draw), "drag-data-get", G_CALLBACK(drag_data_get), this);
+#endif    // GTK 4
 	gtk_container_add(GTK_CONTAINER(frame), draw);
 	widget_set_margins(
 			draw, 2 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
@@ -1215,7 +1433,11 @@ int Combo_chooser::add(
 		delete combos[index];
 		combos[index] = newcombo;
 	}
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	GtkAdjustment* adj = gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(vscroll));
+#else     // GTK 4
 	GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(vscroll));
+#endif    // GTK 4
 	gtk_adjustment_set_upper(
 			adj, (((128 + border) * combos.size()) + per_row - 1) / per_row);
 	g_signal_emit_by_name(G_OBJECT(adj), "changed");
@@ -1245,8 +1467,12 @@ void Combo_chooser::remove() {
 	delete todel;    // Delete from our list.
 	combos.erase(combos.begin() + tnum);
 	flex_info->set_modified();
-	flex_info->remove(tnum);    // Update flex-file list.
+	flex_info->remove(tnum);      // Update flex-file list.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	GtkAdjustment* adj = gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(vscroll));
+#else     // GTK 4
 	GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(vscroll));
+#endif    // GTK 4
 	gtk_adjustment_set_upper(
 			adj, (((128 + border) * combos.size()) + per_row - 1) / per_row);
 	g_signal_emit_by_name(G_OBJECT(adj), "changed");
@@ -1280,6 +1506,20 @@ void Combo_chooser::edit() {
  *  Configure the viewing window.
  */
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+gint Combo_chooser::configure(
+		GtkWidget* widget,    // The draw area.
+		int width, int height,
+		gpointer user_data    // ->Combo_chooser
+) {
+	ignore_unused_variable_warning(widget, width, height);
+	auto* chooser = static_cast<Combo_chooser*>(user_data);
+	chooser->Shape_draw::configure();
+	chooser->render();
+	chooser->setup_info(true);
+	return true;
+}
+#else     // GTK 4
 gint Combo_chooser::configure(
 		GtkWidget* widget,    // The draw area.
 		GdkEvent*  event,
@@ -1292,6 +1532,7 @@ gint Combo_chooser::configure(
 	chooser->setup_info(true);
 	return true;
 }
+#endif    // GTK 4
 
 void Combo_chooser::setup_info(bool savepos    // Try to keep current position.
 ) {
@@ -1302,7 +1543,11 @@ void Combo_chooser::setup_info(bool savepos    // Try to keep current position.
 	const int h           = ZoomDown(alloc.height);
 	const int per_row_old = per_row;
 	per_row               = std::max((w - border) / (128 + border), 1);
-	GtkAdjustment* adj    = gtk_range_get_adjustment(GTK_RANGE(vscroll));
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	GtkAdjustment* adj = gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(vscroll));
+#else     // GTK 4
+	GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(vscroll));
+#endif    // GTK 4
 	gtk_adjustment_set_upper(
 			adj, (((128 + border) * combos.size()) + per_row - 1) / per_row);
 	gtk_adjustment_set_step_increment(adj, ZoomDown(16));
@@ -1328,6 +1573,23 @@ void Combo_chooser::setup_info(bool savepos    // Try to keep current position.
  *  Handle an expose event.
  */
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+void Combo_chooser::expose(
+		GtkDrawingArea* widget,    // The view window.
+		cairo_t* cairo, int width, int height,
+		gpointer user_data    // ->Combo_chooser.
+) {
+	ignore_unused_variable_warning(widget);
+	auto* chooser = static_cast<Combo_chooser*>(user_data);
+	chooser->set_graphic_context(cairo);
+	GdkRectangle area = {0, 0, width, height};
+	//	gdk_cairo_get_clip_rectangle(cairo, &area);
+	chooser->show(
+			ZoomDown(area.x), ZoomDown(area.y), ZoomDown(area.width),
+			ZoomDown(area.height));
+	chooser->set_graphic_context(nullptr);
+}
+#else     // GTK 4
 gint Combo_chooser::expose(
 		GtkWidget* widget,    // The view window.
 		cairo_t*   cairo,
@@ -1344,7 +1606,10 @@ gint Combo_chooser::expose(
 	chooser->set_graphic_context(nullptr);
 	return true;
 }
+#endif    // GTK 4
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 gint Combo_chooser::drag_motion(
 		GtkWidget* widget,    // The view window.
 		GdkEvent*  event,
@@ -1357,11 +1622,95 @@ gint Combo_chooser::drag_motion(
 	}
 	return true;
 }
+#endif                            // GTK 4
 
 /*
  *  Handle a mouse button press event.
  */
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+gint Combo_chooser::mouse_press(
+		GtkGestureClick* click_ctlr, int n_press, double x, double y,
+		gpointer user_data    // ->Combo_chooser.
+) {
+	GtkWidget* widget
+			= gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(click_ctlr));
+	gtk_widget_grab_focus(widget);    // Enables keystrokes.
+	auto* chooser = static_cast<Combo_chooser*>(user_data);
+
+	guint event_button_button = gtk_gesture_single_get_current_button(
+			GTK_GESTURE_SINGLE(click_ctlr));
+	gdouble event_button_x = x, event_button_y = y;
+
+#	ifdef DEBUG
+	cout << "Combos : Clicked to " << event_button_x << " * " << event_button_y
+		 << " by " << event_button_button << endl;
+#	endif
+	if (event_button_button == 4) {
+		chooser->scroll(true);
+		return true;
+	} else if (event_button_button == 5) {
+		chooser->scroll(false);
+		return true;
+	}
+
+	const int old_selected = chooser->selected;
+	int       i;    // Search through entries.
+	for (i = 0; i < chooser->info_cnt; i++) {
+		if (chooser->info[i].box.has_point(
+					ZoomDown(static_cast<int>(event_button_x)),
+					ZoomDown(static_cast<int>(event_button_y)))) {
+			// Found the box?
+			// Indicate we can drag.
+			chooser->selected = i;
+			chooser->render();
+			// Tell client.
+			if (chooser->sel_changed) {
+				(*chooser->sel_changed)();
+			}
+			break;
+		}
+	}
+	if (i == chooser->info_cnt && event_button_button == 1) {
+		chooser->unselect(true);    // Nothing under mouse.
+	} else if (chooser->selected == old_selected && old_selected >= 0) {
+		// Same square.  Check for dbl-click.
+		if (n_press == 2) {
+			chooser->edit();
+		}
+	}
+	if (event_button_button == 3) {
+		GMenu* popup = chooser->create_popup();
+		chooser->popup_widget
+				= gtk_popover_new_from_model(widget, G_MENU_MODEL(popup));
+		g_object_unref(popup);
+		if (chooser->selected >= 0) {
+			GdkRectangle target
+					= {ZoomUp(chooser->info[chooser->selected].box.x),
+					   ZoomUp(chooser->info[chooser->selected].box.y),
+					   ZoomUp(chooser->info[chooser->selected].box.w),
+					   ZoomUp(chooser->info[chooser->selected].box.h)};
+			gtk_popover_set_pointing_to(
+					GTK_POPOVER(chooser->popup_widget), &target);
+		}
+		gtk_widget_set_visible(chooser->popup_widget, true);
+	}
+	return true;
+}
+
+/*
+ *  Handle a mouse button-release event in the combo chooser.
+ */
+static gint Mouse_release(
+		GtkGestureClick* click_ctlr, int n_press, double x, double y,
+		gpointer user_data    // ->Combo_chooser.
+) {
+	ignore_unused_variable_warning(click_ctlr, n_press, x, y);
+	auto* chooser = static_cast<Combo_chooser*>(user_data);
+	chooser->mouse_up();
+	return true;
+}
+#else    // GTK 4
 gint Combo_chooser::mouse_press(
 		GtkWidget* widget,    // The view window.
 		GdkEvent*  event,
@@ -1376,10 +1725,10 @@ gint Combo_chooser::mouse_press(
 	gdk_event_get_button(event, &event_button_button);
 	gdk_event_get_coords(event, &event_button_x, &event_button_y);
 
-#ifdef DEBUG
+#	ifdef DEBUG
 	cout << "Combos : Clicked to " << event_button_x << " * " << event_button_y
 		 << " by " << event_button_button << endl;
-#endif
+#	endif
 	if (event_button_button == 4) {
 		chooser->scroll(true);
 		return true;
@@ -1445,6 +1794,7 @@ static gint Mouse_release(
 	chooser->mouse_up();
 	return true;
 }
+#endif    // GTK 4
 
 /*
  *  Move currently-selected combo up or down.
