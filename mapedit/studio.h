@@ -158,7 +158,8 @@ private:
 	GtkWidget* shape_zup;         // Zoom up arrow.
 	GtkWidget* shape_zdown;       // Zoom down arrow.
 	static gboolean on_app_key_press(
-			GtkEntry* entry, GdkEvent* event, gpointer user_data);
+			GtkEventControllerKey* key_ctlr, guint keyval, guint keycode,
+			GdkModifierType state, gpointer user_data);
 	// Modified one of the .dat's?
 	bool                             shape_info_modified, shape_names_modified;
 	bool                             npc_modified;
@@ -516,7 +517,7 @@ public:
 	void        save_shape_window();
 	void        close_shape_window();
 	void        create_zoom_controls();
-	static void on_zoom_bilinear(GtkToggleButton* btn, gpointer user_data);
+	static void on_zoom_bilinear(GtkCheckButton* btn, gpointer user_data);
 	static void on_zoom_up(GtkButton* btn, gpointer user_data);
 	static void on_zoom_down(GtkButton* btn, gpointer user_data);
 	// Map locator.
@@ -553,8 +554,9 @@ public:
 	void info_received(unsigned char* data, int datalen);
 	void set_edit_menu(bool sel, bool clip);
 	// Preferences.
-	static gboolean on_prefs_background_expose_event(
-			GtkWidget* widget, cairo_t* cairo, gpointer user_data);
+	static void on_prefs_background_expose_event(
+			GtkDrawingArea* widget, cairo_t* cairo, int x, int y,
+			gpointer user_data);
 	void open_preferences();
 	void save_preferences();
 	// GTK/CSS utils:

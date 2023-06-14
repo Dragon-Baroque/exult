@@ -137,10 +137,10 @@ C_EXPORT void on_egg_browse_usecode_clicked(
  *  "Teleport coords" toggled.
  */
 C_EXPORT void on_teleport_coord_toggled(
-		GtkToggleButton* btn, gpointer user_data) {
+		GtkCheckButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
-	const bool   on     = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btn));
+	bool         on     = gtk_check_button_get_active(GTK_CHECK_BUTTON(btn));
 	studio->set_sensitive("teleport_x", on);
 	studio->set_sensitive("teleport_y", on);
 	studio->set_sensitive("teleport_z", on);
@@ -202,6 +202,7 @@ void ExultStudio::open_egg_window(
 			return;
 		}
 		gtk_widget_set_visible(get_widget("egg_okay_btn"), true);
+		gtk_widget_set_hexpand(get_widget("egg_apply_btn"), false);
 		gtk_widget_set_visible(get_widget("egg_status"), false);
 	} else {    // Init. empty dialog.
 		if (first_time) {
@@ -223,6 +224,7 @@ void ExultStudio::open_egg_window(
 		set_toggle("sfx_cont", false);
 		set_spin("speech_number", 0);
 		gtk_widget_set_visible(get_widget("egg_okay_btn"), false);
+		gtk_widget_set_hexpand(get_widget("egg_apply_btn"), true);
 		gtk_widget_set_visible(get_widget("egg_status"), false);
 	}
 	gtk_widget_set_visible(eggwin, true);

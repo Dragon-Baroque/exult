@@ -66,7 +66,7 @@ const char* ExultStudio::browse_usecode(bool want_objfun, GtkWidget* parent) {
 	ucbrowsewin->show(true, parent);
 	while (gtk_widget_get_visible(
 			GTK_WIDGET(ucbrowsewin->get_win()))) {    // Spin.
-		gtk_main_iteration();                         // (Blocks).
+		g_main_context_iteration(nullptr, true);      // (Blocks).
 	}
 	const char* choice = ucbrowsewin->get_choice();
 	return choice;

@@ -212,7 +212,7 @@ unsigned char* Chunk_chooser::get_chunk(int chunknum) {
 
 void Chunk_chooser::update_num_chunks(int new_num_chunks) {
 	num_chunks         = new_num_chunks;
-	GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(vscroll));
+	GtkAdjustment* adj = gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(vscroll));
 	gtk_adjustment_set_upper(
 			adj, ((128 + border) * ((num_chunks + per_row - 1) / per_row)));
 	g_signal_emit_by_name(G_OBJECT(adj), "changed");
@@ -314,10 +314,10 @@ int Chunk_chooser::get_count() {
 
 gint Chunk_chooser::configure(
 		GtkWidget* widget,    // The drawing area.
-		GdkEvent*  event,
-		gpointer   user_data    // ->Chunk_chooser.
+		int width, int height,
+		gpointer user_data    // ->Chunk_chooser
 ) {
-	ignore_unused_variable_warning(widget, event);
+	ignore_unused_variable_warning(widget, width, height);
 	auto* chooser = static_cast<Chunk_chooser*>(user_data);
 	chooser->Shape_draw::configure();
 	chooser->render();
@@ -338,7 +338,7 @@ void Chunk_chooser::setup_info(bool savepos    // Try to keep current position.
 	const int h           = ZoomDown(alloc.height);
 	const int per_row_old = per_row;
 	per_row               = std::max((w - border) / (128 + border), 1);
-	GtkAdjustment* adj    = gtk_range_get_adjustment(GTK_RANGE(vscroll));
+	GtkAdjustment* adj = gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(vscroll));
 	gtk_adjustment_set_upper(
 			adj, ((128 + border) * ((num_chunks + per_row - 1) / per_row)));
 	gtk_adjustment_set_step_increment(adj, ZoomDown(16));
@@ -364,52 +364,34 @@ void Chunk_chooser::setup_info(bool savepos    // Try to keep current position.
  *  Handle an expose event.
  */
 
-gint Chunk_chooser::expose(
-		GtkWidget* widget,    // The view window.
-		cairo_t*   cairo,
-		gpointer   user_data    // ->Chunk_chooser.
+void Chunk_chooser::expose(
+		GtkDrawingArea* widget,    // The view window.
+		cairo_t* cairo, int width, int height,
+		gpointer user_data    // ->Chunk_chooser.
 ) {
 	ignore_unused_variable_warning(widget);
 	auto*        chooser = static_cast<Chunk_chooser*>(user_data);
-	GdkRectangle area    = {0, 0, 0, 0};
-	gdk_cairo_get_clip_rectangle(cairo, &area);
+	GdkRectangle area    = {0, 0, width, height};
+	//	gdk_cairo_get_clip_rectangle(cairo, &area);
 	chooser->set_graphic_context(cairo);
 	chooser->show(
 			ZoomDown(area.x), ZoomDown(area.y), ZoomDown(area.width),
 			ZoomDown(area.height));
 	chooser->set_graphic_context(nullptr);
-	return true;
-}
-
-/*
- *  Handle a mouse button press event.
- */
-
-gint Chunk_chooser::drag_motion(
-		GtkWidget* widget,    // The view window.
-		GdkEvent*  event,
-		gpointer   user_data    // ->Chunk_chooser.
-) {
-	ignore_unused_variable_warning(widget);
-	auto* chooser = static_cast<Chunk_chooser*>(user_data);
-	if (!chooser->dragging && chooser->selected >= 0) {
-		chooser->start_drag(U7_TARGET_CHUNKID_NAME, U7_TARGET_CHUNKID, event);
-	}
-	return true;
 }
 
 gint Chunk_chooser::mouse_press(
-		GtkWidget* widget,    // The view window.
-		GdkEvent*  event,
-		gpointer   user_data    // ->Chunk_chooser.
+		GtkGestureClick* click_ctlr, int n_press, double x, double y,
+		gpointer user_data    // ->Chunk_chooser.
 ) {
-	ignore_unused_variable_warning(widget);
+	ignore_unused_variable_warning(n_press);
+	GtkWidget* widget
+			= gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(click_ctlr));
 	auto* chooser = static_cast<Chunk_chooser*>(user_data);
 
-	guint   event_button_button;
-	gdouble event_button_x, event_button_y;
-	gdk_event_get_button(event, &event_button_button);
-	gdk_event_get_coords(event, &event_button_x, &event_button_y);
+	guint event_button_button = gtk_gesture_single_get_current_button(
+			GTK_GESTURE_SINGLE(click_ctlr));
+	gdouble event_button_x = x, event_button_y = y;
 
 #ifdef DEBUG
 	cout << "Chunks : Clicked to " << event_button_x << " * " << event_button_y
@@ -432,7 +414,7 @@ gint Chunk_chooser::mouse_press(
 			// Found the box?
 			//			if (i == old_selected)
 			//				return true;
-			// Indicate we can dra.
+			// Indicate we can drag.
 			chooser->selected  = i;
 			chooser->locate_cx = chooser->locate_cy = -1;
 			chooser->render();
@@ -468,61 +450,52 @@ gint Chunk_chooser::mouse_press(
  *  Handle a mouse button-release event.
  */
 static gint Mouse_release(
-		GtkWidget* widget,    // The view window.
-		GdkEvent*  event,
-		gpointer   user_data    // ->Chunk_chooser.
+		GtkGestureClick* click_ctlr, int n_press, double x, double y,
+		gpointer user_data    // ->Chunk_chooser.
 ) {
-	ignore_unused_variable_warning(widget, event);
+	ignore_unused_variable_warning(click_ctlr, n_press, x, y);
 	auto* chooser = static_cast<Chunk_chooser*>(user_data);
 	chooser->mouse_up();
 	return true;
 }
 
 /*
- *  Someone wants the dragged chunk.
- */
-
-void Chunk_chooser::drag_data_get(
-		GtkWidget*        widget,    // The view window.
-		GdkDragContext*   context,
-		GtkSelectionData* seldata,    // Fill this in.
-		guint info, guint time,
-		gpointer user_data    // ->Chunk_chooser.
-) {
-	ignore_unused_variable_warning(widget, context, time);
-	cout << "In DRAG_DATA_GET of Chunk for " << info << " and '"
-		 << gdk_atom_name(gtk_selection_data_get_target(seldata)) << "'"
-		 << endl;
-	auto* chooser = static_cast<Chunk_chooser*>(user_data);
-	if (chooser->selected < 0
-		|| (info != U7_TARGET_CHUNKID && info != U7_TARGET_CHUNKID + 100
-			&& info != U7_TARGET_CHUNKID + 200)) {
-		return;    // Not sure about this.
-	}
-	guchar            buf[U7DND_DATA_LENGTH(1)];
-	const Chunk_info& shinfo = chooser->info[chooser->selected];
-	const int         len    = Store_u7_chunkid(buf, shinfo.num);
-	cout << "Setting selection data (" << shinfo.num << ')' << " (" << len
-		 << ") '" << buf << "'" << endl;
-	// Set data.
-	gtk_selection_data_set(
-			seldata, gtk_selection_data_get_target(seldata), 8, buf, len);
-}
-
-/*
  *  Beginning of a drag.
  */
 
-gint Chunk_chooser::drag_begin(
-		GtkWidget*      widget,    // The view window.
-		GdkDragContext* context,
-		gpointer        user_data    // ->Chunk_chooser.
+GdkContentProvider* Chunk_chooser::drag_prepare(
+		GtkDragSource* source, double x, double y,
+		gpointer user_data    // ->Chunk_chooser.
 ) {
-	ignore_unused_variable_warning(widget, context);
+	ignore_unused_variable_warning(source, x, y);
+	cout << "In DRAG_PREPARE of Chunk" << endl;
+	auto* chooser = static_cast<Chunk_chooser*>(user_data);
+	if (chooser->selected < 0) {
+		return nullptr;    // Not sure about this.
+	}
+	guchar      buf[U7DND_DATA_LENGTH(1)];
+	Chunk_info& shinfo = chooser->info[chooser->selected];
+	int         len    = Store_u7_chunkid(buf, shinfo.num);
+	cout << "Setting selection data (" << shinfo.num << ')' << endl;
+	const char*         target    = reinterpret_cast<const char*>(buf);
+	GBytes*             gfile     = g_bytes_new(target, len);
+	GdkContentProvider* targets[] = {
+			gdk_content_provider_new_for_bytes(U7_TARGET_CHUNKID_NAME, gfile),
+			gdk_content_provider_new_for_bytes(
+					U7_TARGET_DROPTEXT_NAME_MIME, gfile),
+			gdk_content_provider_new_typed(G_TYPE_STRING, target)};
+	return gdk_content_provider_new_union(targets, 3);
+}
+
+void Chunk_chooser::drag_begin(
+		GtkDragSource* source, GdkDrag* drag,
+		gpointer user_data    // ->Chunk_chooser.
+) {
+	ignore_unused_variable_warning(source, drag);
 	cout << "In DRAG_BEGIN of Chunk" << endl;
 	auto* chooser = static_cast<Chunk_chooser*>(user_data);
 	if (chooser->selected < 0) {
-		return false;    // ++++Display a halt bitmap.
+		return;
 	}
 	// Get ->chunk.
 	Chunk_info&   shinfo = chooser->info[chooser->selected];
@@ -554,38 +527,34 @@ gint Chunk_chooser::drag_begin(
 	ExultStudio* studio = ExultStudio::get_instance();
 	studio->send_to_server(Exult_server::drag_chunk, buf, ptr - buf);
 	// This will be the chunk dragged.
-	gtk_drag_set_icon_pixbuf(context, pixbuf, w - 2, h - 2);
+	GdkTexture* icon = gdk_texture_new_for_pixbuf(pixbuf);
+	// Discard the Origin, space the pointer and the Shape for macOS
+	gtk_drag_icon_set_from_paintable(drag, GDK_PAINTABLE(icon), w + 2, h + 2);
 	g_object_unref(pixbuf);
-	return true;
+	g_object_unref(icon);
+	return;
 }
 
 /*
  *  Chunk was dropped here.
  */
 
-void Chunk_chooser::drag_data_received(
-		GtkWidget* widget, GdkDragContext* context, gint x, gint y,
-		GtkSelectionData* seldata, guint info, guint time,
-		gpointer user_data    // ->Chunk_chooser.
-) {
-	ignore_unused_variable_warning(widget, context, x, y, info, time);
+gboolean Chunk_chooser::drag_data_received(
+		GtkDropTarget* dest, GValue* value, double x, double y,
+		gpointer user_data) {
+	ignore_unused_variable_warning(dest, x, y);
+	const unsigned char* seldata
+			= reinterpret_cast<const unsigned char*>(g_value_get_string(value));
 	auto* chooser = static_cast<Chunk_chooser*>(user_data);
-	cout << "In DRAG_DATA_RECEIVED of Chunk for '"
-		 << gdk_atom_name(gtk_selection_data_get_data_type(seldata)) << "'"
-		 << endl;
-	auto seltype = gtk_selection_data_get_data_type(seldata);
-	if (((seltype == gdk_atom_intern(U7_TARGET_CHUNKID_NAME, 0))
-		 || (seltype == gdk_atom_intern(U7_TARGET_DROPTEXT_NAME_MIME, 0))
-		 || (seltype == gdk_atom_intern(U7_TARGET_DROPTEXT_NAME_GENERIC, 0)))
-		&& Is_u7_chunkid(gtk_selection_data_get_data(seldata))
-		&& gtk_selection_data_get_format(seldata) == 8
-		&& gtk_selection_data_get_length(seldata) > 0) {
+	cout << "In DRAG_DATA_RECEIVED of Chunk for '" << seldata << "'" << endl;
+	if (Is_u7_chunkid(seldata) == true) {
 		int cnum;
-		Get_u7_chunkid(gtk_selection_data_get_data(seldata), cnum);
+		Get_u7_chunkid(seldata, cnum);
 		chooser->group->add(cnum);
 		chooser->render();
 		//		chooser->adjust_scrollbar(); ++++++Probably need to do this.
 	}
+	return true;
 }
 
 /*
@@ -598,23 +567,11 @@ void Chunk_chooser::enable_drop() {
 	}
 	drop_enabled = true;
 	gtk_widget_realize(draw);    //???????
-	GtkTargetEntry tents[3];
-	tents[0].target = const_cast<char*>(U7_TARGET_CHUNKID_NAME);
-	tents[1].target = const_cast<char*>(U7_TARGET_DROPTEXT_NAME_MIME);
-	tents[2].target = const_cast<char*>(U7_TARGET_DROPTEXT_NAME_GENERIC);
-	tents[0].flags  = 0;
-	tents[1].flags  = 0;
-	tents[2].flags  = 0;
-	tents[0].info   = U7_TARGET_CHUNKID;
-	tents[1].info   = U7_TARGET_CHUNKID + 100;
-	tents[2].info   = U7_TARGET_CHUNKID + 200;
-	gtk_drag_dest_set(
-			draw, GTK_DEST_DEFAULT_ALL, tents, 3,
+	GtkDropTarget* dest = gtk_drop_target_new(
+			G_TYPE_STRING,
 			static_cast<GdkDragAction>(GDK_ACTION_COPY | GDK_ACTION_MOVE));
-
-	g_signal_connect(
-			G_OBJECT(draw), "drag-data-received",
-			G_CALLBACK(drag_data_received), this);
+	g_signal_connect(dest, "drop", G_CALLBACK(drag_data_received), this);
+	gtk_widget_add_controller(draw, GTK_EVENT_CONTROLLER(dest));
 }
 
 /*
@@ -640,7 +597,7 @@ void Chunk_chooser::scroll(int newpixel    // Abs. index of leftmost to show.
  */
 
 void Chunk_chooser::scroll(bool upwards) {
-	GtkAdjustment* adj   = gtk_range_get_adjustment(GTK_RANGE(vscroll));
+	GtkAdjustment* adj   = gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(vscroll));
 	gdouble        delta = 128 + border;
 	if (upwards) {
 		delta = -delta;
@@ -807,7 +764,6 @@ Chunk_chooser::Chunk_chooser(
 
 	// A frame looks nice.
 	GtkWidget* frame = gtk_frame_new(nullptr);
-	gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_IN);
 	widget_set_margins(
 			frame, 2 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
 	gtk_widget_set_visible(frame, true);
@@ -815,29 +771,27 @@ Chunk_chooser::Chunk_chooser(
 
 	// NOTE:  draw is in Shape_draw.
 	// Indicate the events we want.
-	gtk_widget_set_events(
-			draw, GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK
-						  | GDK_BUTTON_RELEASE_MASK | GDK_BUTTON1_MOTION_MASK);
 	// Set "configure" handler.
-	g_signal_connect(
-			G_OBJECT(draw), "configure-event", G_CALLBACK(configure), this);
+	g_signal_connect(G_OBJECT(draw), "resize", G_CALLBACK(configure), this);
 	// Set "expose-event" - "draw" handler.
-	g_signal_connect(G_OBJECT(draw), "draw", G_CALLBACK(expose), this);
+	gtk_drawing_area_set_draw_func(
+			GTK_DRAWING_AREA(draw), expose, this, nullptr);
 	// Set mouse click handler.
+	GtkEventController* click_ctlr
+			= GTK_EVENT_CONTROLLER(gtk_gesture_click_new());
+	gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click_ctlr), 0);
+	gtk_widget_add_controller(GTK_WIDGET(draw), click_ctlr);
 	g_signal_connect(
-			G_OBJECT(draw), "button-press-event", G_CALLBACK(mouse_press),
-			this);
+			G_OBJECT(click_ctlr), "pressed", G_CALLBACK(mouse_press), this);
 	g_signal_connect(
-			G_OBJECT(draw), "button-release-event", G_CALLBACK(Mouse_release),
-			this);
+			G_OBJECT(click_ctlr), "released", G_CALLBACK(Mouse_release), this);
 	// Mouse motion.
+	GtkEventController* drag_source
+			= GTK_EVENT_CONTROLLER(gtk_drag_source_new());
 	g_signal_connect(
-			G_OBJECT(draw), "drag-begin", G_CALLBACK(drag_begin), this);
-	g_signal_connect(
-			G_OBJECT(draw), "motion-notify-event", G_CALLBACK(drag_motion),
-			this);
-	g_signal_connect(
-			G_OBJECT(draw), "drag-data-get", G_CALLBACK(drag_data_get), this);
+			G_OBJECT(drag_source), "prepare", G_CALLBACK(drag_prepare), this);
+	g_signal_connect(drag_source, "drag-begin", G_CALLBACK(drag_begin), this);
+	gtk_widget_add_controller(draw, drag_source);
 	gtk_container_add(GTK_CONTAINER(frame), draw);
 	widget_set_margins(
 			draw, 2 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);

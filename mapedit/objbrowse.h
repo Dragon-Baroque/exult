@@ -37,10 +37,8 @@ protected:
 	//   currently rendered.
 	int index0 = 0;    // Index of top-leftmost in
 	//   displayed list.
-	GtkWidget*          vscroll = nullptr;    // Vertical scrollbar.
-	GtkWidget*          hscroll = nullptr;    // Horizontal scrollbar.
-	GtkEventController* vscroll_ctlr
-			= nullptr;                          // Vertical scroll in browser.
+	GtkWidget*       vscroll = nullptr;         // Vertical scrollbar.
+	GtkWidget*       hscroll = nullptr;         // Horizontal scrollbar.
 	Shape_group*     group;                     // Non-null to use filter.
 	GtkWidget*       popup_widget = nullptr;    // Popup menu in draw area.
 	Shape_file_info* file_info;                 // Our creator (or null).

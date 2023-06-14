@@ -292,7 +292,6 @@ static void Setup_equip(
 		gtk_widget_set_hexpand(frame, true);
 		gtk_widget_set_valign(frame, GTK_ALIGN_FILL);
 		gtk_widget_set_hexpand(frame, true);
-		gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_IN);
 
 		GtkWidget* drawingarea = gtk_drawing_area_new();
 		gtk_widget_set_visible(drawingarea, true);
@@ -544,6 +543,12 @@ C_EXPORT gboolean on_shinfo_animation_type_changed(
 /*
  *  Animation frame count menu changed.
  */
+#define GtkToggleButton GtkCheckButton
+#undef GTK_TOGGLE_BUTTON
+#define GTK_TOGGLE_BUTTON(w)               GTK_CHECK_BUTTON((w))
+#define gtk_toggle_button_get_active(w)    gtk_check_button_get_active((w))
+#define gtk_toggle_button_set_active(w, v) gtk_check_button_set_active((w), (v))
+
 C_EXPORT gboolean on_shinfo_animation_frtype_toggled(
 		GtkToggleButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);
