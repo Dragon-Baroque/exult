@@ -106,7 +106,7 @@ class Chunk_chooser : public Object_browser, public Shape_draw {
 	void           setup_vscrollbar();                // Set new scroll amounts.
 	void           goto_index(unsigned index);        // Get desired index in view.
 	void           enable_controls();                 // Enable/disable controls after selection has changed.
-	GtkWidget*     create_popup() override;           // Popup menu.
+	GMenu*         create_popup() override;           // Popup menu.
 public:
 	Chunk_chooser(Vga_file* i, std::istream& cfile, unsigned char* palbuf, int w, int h, Shape_group* g = nullptr);
 	~Chunk_chooser() override;
@@ -131,20 +131,20 @@ public:
 	// Configure when created/resized.
 	gint configure(GdkEventConfigure* event);
 	// Blit to screen.
-	static gint expose(GtkWidget* widget, cairo_t* cairo, gpointer data);
+	static gint expose(GtkWidget* widget, cairo_t* cairo, gpointer user_data);
 	// Handle mouse press.
-	gint mouse_press(GtkWidget* widget, GdkEventButton* event);
+	gint mouse_press(GtkWidget* widget, GdkEvent* event);
 	// Give dragged chunk.
 	static void drag_data_get(
-			GtkWidget* widget, GdkDragContext* context, GtkSelectionData* seldata, guint info, guint time, gpointer data);
-	static gint drag_begin(GtkWidget* widget, GdkDragContext* context, gpointer data);
+			GtkWidget* widget, GdkDragContext* context, GtkSelectionData* seldata, guint info, guint time, gpointer user_data);
+	static gint drag_begin(GtkWidget* widget, GdkDragContext* context, gpointer user_data);
 	// Handler for drop.
 	static void drag_data_received(
 			GtkWidget* widget, GdkDragContext* context, gint x, gint y, GtkSelectionData* seldata, guint info, guint time,
-			gpointer udata);
+			gpointer user_data);
 	void enable_drop();
 	// Handle scrollbar.
-	static void vscrolled(GtkAdjustment* adj, gpointer data);
+	static void vscrolled(GtkAdjustment* adj, gpointer user_data);
 	void        locate(int dir);    // Locate terrain on game map.
 	void        locate(bool upwards) override;
 	void        locate_response(const unsigned char* data, int datalen);
@@ -154,7 +154,7 @@ public:
 	void        delete_response(const unsigned char* data, int datalen);
 	void        move(bool upwards) override;    // Move current selected chunk.
 	void        swap_response(const unsigned char* data, int datalen);
-	static gint drag_motion(GtkWidget* widget, GdkEventMotion* event, gpointer data);
+	static gint drag_motion(GtkWidget* widget, GdkEvent* event, gpointer user_data);
 };
 
 #endif

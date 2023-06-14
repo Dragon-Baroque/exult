@@ -75,7 +75,7 @@ C_EXPORT void on_cont_apply_clicked(GtkButton* btn, gpointer user_data) {
 C_EXPORT void on_cont_cancel_clicked(GtkButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(btn, user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
-	GtkWindow*   parent = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(btn)));
+	GtkWindow*   parent = GTK_WINDOW(widget_get_top(GTK_WIDGET(btn)));
 	if (studio->is_cont_window_dirty() && !studio->prompt_for_discard(studio->cont_window_dirty, "Container", parent)) {
 		return;    // User chose not to discard
 	}
@@ -90,8 +90,8 @@ C_EXPORT void on_cont_show_gump_clicked(GtkButton* btn, gpointer user_data) {
 	cout << "In on_cont_show_gump_clicked()" << endl;
 	unsigned char data[Exult_server::maxlength];
 	// Get container address.
-	auto addr = reinterpret_cast<uintptr>(g_object_get_data(G_OBJECT(gtk_widget_get_toplevel(GTK_WIDGET(btn))), "user_data"));
-	unsigned char* ptr = &data[0];
+	auto           addr = reinterpret_cast<uintptr>(g_object_get_data(G_OBJECT(widget_get_top(GTK_WIDGET(btn))), "user_data"));
+	unsigned char* ptr  = &data[0];
 	Serial_out     io(ptr);
 	io << addr;
 
@@ -123,7 +123,7 @@ C_EXPORT gboolean on_cont_window_delete_event(GtkWidget* widget, GdkEvent* event
 /*
  *  Container shape/frame # changed, so update shape displayed.
  */
-C_EXPORT gboolean on_cont_pos_changed(GtkWidget* widget, GdkEventFocus* event, gpointer user_data) {
+C_EXPORT gboolean on_cont_pos_changed(GtkWidget* widget, GdkEvent* event, gpointer user_data) {
 	ignore_unused_variable_warning(widget, event, user_data);
 	//++++Maybe later, change pos. immediately?
 	return true;
