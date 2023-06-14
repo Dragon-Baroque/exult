@@ -484,6 +484,14 @@ C_EXPORT void on_groups_del_clicked(
 	ExultStudio::get_instance()->del_group();
 }
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+C_EXPORT gboolean
+		on_groups_new_name_key_press(GtkEntry* entry, gpointer user_data) {
+	ignore_unused_variable_warning(entry, user_data);
+	ExultStudio::get_instance()->add_group();
+	return true;
+}
+#else     // GTK 4
 C_EXPORT gboolean on_groups_new_name_key_press(
 		GtkEntry* entry, GdkEvent* event, gpointer user_data) {
 	ignore_unused_variable_warning(entry, user_data);
@@ -495,6 +503,7 @@ C_EXPORT gboolean on_groups_new_name_key_press(
 	}
 	return false;    // Let parent handle it.
 }
+#endif    // GTK 4
 
 C_EXPORT void on_open_builtin_group_clicked(
 		GtkButton* button, gpointer user_data) {
@@ -606,6 +615,12 @@ void ExultStudio::setup_groups() {
 		g_object_set_data_full(
 				G_OBJECT(model), "row-changed", new gulong(delsig),
 				gulong_deleter);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+		g_signal_connect(
+				G_OBJECT(get_widget("groups_new_name")), "activate",
+				G_CALLBACK(on_groups_new_name_key_press), this);
+#else     // GTK 4
+#endif    // GTK 4
 	} else {
 		model  = GTK_TREE_STORE(oldmod);
 		addsig = *static_cast<gulong*>(
@@ -856,18 +871,26 @@ void ExultStudio::open_builtin_group_window() {
  */
 
 void ExultStudio::open_group_window(Shape_group* grp) {
-	GError*      error = nullptr;
-	GtkBuilder*  xml   = gtk_builder_new();
+	GError*     error = nullptr;
+	GtkBuilder* xml   = gtk_builder_new();
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	const gchar* objects[] = {"group_window", nullptr};
+	if (!gtk_builder_add_objects_from_file(xml, glade_path, objects, &error)) {
+#else     // GTK 4
 	const gchar* objects[]
 			= {"group_window_goup_img", "group_window_godown_img",
 			   "group_window_remove_img", "group_window", nullptr};
 	if (!gtk_builder_add_objects_from_file(
 				xml, glade_path, const_cast<gchar**>(objects), &error)) {
+#endif    // GTK 4
 		g_warning("Couldn't load group window: %s", error->message);
 		g_error_free(error);
 		exit(1);
 	}
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_builder_connect_signals(xml, nullptr);
+#endif                            // GTK 4
 	GtkWidget*      grpwin = get_widget(xml, "group_window");
 	Object_browser* chooser
 			= curfile->create_browser(vgafile, palbuf.get(), grp);
@@ -888,9 +911,15 @@ void ExultStudio::open_group_window(Shape_group* grp) {
 	gtk_box_pack_start(
 			GTK_BOX(browser_box), chooser->get_widget(), true, true, 0);
 	// Auto-connect doesn't seem to work.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	g_signal_connect(
+			G_OBJECT(grpwin), "close-request",
+			G_CALLBACK(on_group_window_delete_event), this);
+#else     // GTK 4
 	g_signal_connect(
 			G_OBJECT(grpwin), "delete-event",
 			G_CALLBACK(on_group_window_delete_event), this);
+#endif    // GTK 4
 	group_windows.push_back(GTK_WINDOW(grpwin));
 	gtk_widget_set_visible(grpwin, true);
 }

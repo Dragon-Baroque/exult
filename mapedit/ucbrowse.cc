@@ -65,9 +65,12 @@ const char* ExultStudio::browse_usecode(bool want_objfun, GtkWidget* parent) {
 	}
 	ucbrowsewin->show(true, parent);
 	while (gtk_widget_get_visible(
-			GTK_WIDGET(ucbrowsewin->get_win()))) {    // Spin.
-		gtk_main_iteration();                         // (Blocks).
-	}
+			GTK_WIDGET(ucbrowsewin->get_win())))    // Spin.
+#if GTK_CHECK_VERSION(4, 0, 0)                      // GTK 4
+		g_main_context_iteration(nullptr, true);    // (Blocks).
+#else                                               // GTK 4
+		gtk_main_iteration();    // (Blocks).
+#endif                                              // GTK 4
 	const char* choice = ucbrowsewin->get_choice();
 	return choice;
 }
