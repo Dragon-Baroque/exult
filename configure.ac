@@ -714,7 +714,7 @@ if test x$enable_exult_studio = xyes; then
 # Icu
 	PKG_CHECK_MODULES(ICU, icu-uc, have_icu=yes, have_icu=no)
 # Gtk
-	PKG_CHECK_MODULES(GTK, gtk+-3.0 >= 3.16, have_gtk=yes, have_gtk=no)
+	PKG_CHECK_MODULES(GTK, gtk4, have_gtk=yes, have_gtk=no)
 # Freetype2 (optional, used in ExultStudio, shapes/fontgen.cc)
 	PKG_CHECK_MODULES(CHKFREETYPE, freetype2, chk_freetype=yes, chk_freetype=no)
 	if test x$chk_freetype = xyes; then
@@ -1377,7 +1377,7 @@ else
 	fi
 	if test x$enable_exult_studio = xyes; then
 		echo GLIB....................... : `$PKG_CONFIG --modversion glib-2.0`
-		echo GTK+....................... : `$PKG_CONFIG --modversion gtk+-3.0`
+		echo GTK+....................... : `$PKG_CONFIG --modversion gtk4`
 	fi
 	if test x$enable_gnome_shp_thumbnailer = xyes; then
 		echo GDK-Pixbuf................. : `$PKG_CONFIG --modversion gdk-pixbuf-2.0`
