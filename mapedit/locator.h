@@ -50,8 +50,8 @@ class Locator {
 public:
 	Locator();
 	~Locator();
-	void            show(bool tf);    // Show/hide.
-	static gboolean on_loc_draw_expose_event(GtkWidget* widget, cairo_t* cairo, gpointer user_data);
+	void        show(bool tf);    // Show/hide.
+	static void on_loc_draw_expose_event(GtkDrawingArea* widget, cairo_t* cairo, int x, int y, gpointer user_data);
 	// Configure when created/resized.
 	void configure(GtkWidget* widget);
 	void render(GdkRectangle* area = nullptr);
@@ -71,9 +71,9 @@ public:
 	static void vscrolled(GtkAdjustment* adj, gpointer user_data);
 	static void hscrolled(GtkAdjustment* adj, gpointer user_data);
 	// Handle mouse.
-	gboolean mouse_press(GtkWidget* widget, GdkEvent* event);
-	gboolean mouse_release(GtkWidget* widget, GdkEvent* event);
-	gboolean mouse_motion(GtkWidget* widget, GdkEvent* event);
+	gboolean mouse_press(GtkGestureSingle* gesture, int n_press, double x, double y);
+	gboolean mouse_release(GtkGestureSingle* gesture, int n_press, double x, double y);
+	gboolean mouse_motion(GtkEventController* event, double x, double y);
 };
 
 #endif
