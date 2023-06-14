@@ -532,7 +532,7 @@ Combo_editor::Combo_editor(
 Combo_editor::~Combo_editor() {
 	delete combo;
 	if ((G_IS_OBJECT(click_ctlr)) && (G_OBJECT(click_ctlr)->ref_count > 0)) {
-		g_object_unref(click_ctlr);
+		//		g_object_unref(click_ctlr);
 	}
 	click_ctlr = nullptr;
 }
