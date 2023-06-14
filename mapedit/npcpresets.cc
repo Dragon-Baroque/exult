@@ -458,18 +458,16 @@ void ExultStudio::save_npc_to_preset(const char* preset_name) {
 	// Set flag buttons.
 	GtkContainer* ftable = GTK_CONTAINER(get_widget("npc_flags_table"));
 	// Get flag checkboxes.
-	GList* children = g_list_first(gtk_container_get_children(ftable));
-	for (GList* list = children; list; list = g_list_next(list)) {
+	for (GtkWidget* child = gtk_widget_get_first_child(ftable); child; child = gtk_widget_get_next_sibling(child)) {
 		GtkCheckButton* cbox;
 		unsigned long*  bits;
 		int             fnum;
-		if (Get_flag_cbox(list->data, &oflags, &xflags, &type_flags, cbox, bits, fnum)) {
-			if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbox))) {
+		if (Get_flag_cbox(child, &oflags, &xflags, &type_flags, cbox, bits, fnum)) {
+			if (gtk_check_button_get_active(GTK_CHECK_BUTTON(cbox))) {
 				*bits |= (1 << fnum);
 			}
 		}
 	}
-	g_list_free(children);
 
 	preset->set_value("oflags", std::to_string(oflags));
 	preset->set_value("xflags", std::to_string(xflags));
@@ -569,16 +567,14 @@ void ExultStudio::load_npc_preset_to_npc(const char* preset_name) {
 	// Set flag buttons.
 	GtkContainer* ftable = GTK_CONTAINER(get_widget("npc_flags_table"));
 	// Set flag checkboxes.
-	GList* children = g_list_first(gtk_container_get_children(ftable));
-	for (GList* list = children; list; list = g_list_next(list)) {
+	for (GtkWidget* child = gtk_widget_get_first_child(ftable); child; child = gtk_widget_get_next_sibling(child)) {
 		GtkCheckButton* cbox;
 		unsigned long*  bits;
 		int             fnum;
-		if (Get_flag_cbox(list->data, &oflags, &xflags, &type_flags, cbox, bits, fnum)) {
-			gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cbox), (*bits & (1 << fnum)) != 0);
+		if (Get_flag_cbox(child, &oflags, &xflags, &type_flags, cbox, bits, fnum)) {
+			gtk_check_button_set_active(GTK_CHECK_BUTTON(cbox), (*bits & (1 << fnum)) != 0);
 		}
 	}
-	g_list_free(children);
 
 	// Set schedules (only the activity type for each time slot 0-7)
 	for (int time = 0; time < 8; time++) {
@@ -657,12 +653,10 @@ void ExultStudio::export_npc_preset() {
 			"Export NPC Preset to File", GTK_WINDOW(get_widget("npc_window")), GTK_FILE_CHOOSER_ACTION_SAVE, "_Cancel",
 			GTK_RESPONSE_CANCEL, "_Save", GTK_RESPONSE_ACCEPT, nullptr);
 
-	gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(dialog), true);
-
 	// Set default folder to patch directory
 	if (is_system_path_defined("<PATCH>")) {
 		const std::string patchdir = get_system_path("<PATCH>");
-		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), patchdir.c_str());
+		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), g_file_new_for_path(patchdir.c_str()), nullptr);
 	}
 
 	// Add filter for .pre files
@@ -674,7 +668,7 @@ void ExultStudio::export_npc_preset() {
 	const gint response = gtk_dialog_run(GTK_DIALOG(dialog));
 	char*      filename = nullptr;
 	if (response == GTK_RESPONSE_ACCEPT) {
-		filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+		filename = g_file_get_path(gtk_file_chooser_get_file(GTK_FILE_CHOOSER(dialog)));
 	}
 	gtk_widget_destroy(dialog);
 
@@ -711,7 +705,7 @@ void ExultStudio::import_npc_presets() {
 	// Set default folder to patch directory
 	if (is_system_path_defined("<PATCH>")) {
 		const std::string patchdir = get_system_path("<PATCH>");
-		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), patchdir.c_str());
+		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), g_file_new_for_path(patchdir.c_str()), nullptr);
 	}
 
 	// Add filter for .pre files
@@ -723,7 +717,7 @@ void ExultStudio::import_npc_presets() {
 	const gint response = gtk_dialog_run(GTK_DIALOG(dialog));
 	char*      filename = nullptr;
 	if (response == GTK_RESPONSE_ACCEPT) {
-		filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+		filename = g_file_get_path(gtk_file_chooser_get_file(GTK_FILE_CHOOSER(dialog)));
 	}
 	gtk_widget_destroy(dialog);
 

@@ -8,7 +8,7 @@
 			${env:BUILD_DIR}
 		</destination>
 		<gtk>
-			gtk+-3.0
+			gtk4
 		</gtk>
 		<run-install-name-tool/>
 	</meta>
@@ -60,7 +60,7 @@
 	<data>
 		${prefix}/share/glib-2.0/schemas
 	</data>
-	<translations  name="gtk30">
-		${prefix}/share/locale/en
+	<translations  name="gtk40">
+		${prefix}/share/locale
 	</translations>
 </app-bundle>

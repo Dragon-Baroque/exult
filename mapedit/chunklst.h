@@ -129,20 +129,17 @@ public:
 
 	int get_count();    // Get # chunks we can display.
 	// Configure when created/resized.
-	gint configure(GdkEventConfigure* event);
+	gint configure(int width, int height);
 	// Blit to screen.
-	static gint expose(GtkWidget* widget, cairo_t* cairo, gpointer user_data);
+	static void expose(GtkDrawingArea* widget, cairo_t* cairo, int x, int y, gpointer user_data);
 	// Handle mouse press.
-	gint mouse_press(GtkWidget* widget, GdkEvent* event);
+	gint mouse_press(GtkGestureClick* click_ctlr, int n_press, double x, double y);
 	// Give dragged chunk.
-	static void drag_data_get(
-			GtkWidget* widget, GdkDragContext* context, GtkSelectionData* seldata, guint info, guint time, gpointer user_data);
-	static gint drag_begin(GtkWidget* widget, GdkDragContext* context, gpointer user_data);
+	static GdkContentProvider* drag_prepare(GtkDragSource* source, double x, double y, gpointer user_data);
+	static void                drag_begin(GtkDragSource* source, GdkDrag* drag, gpointer user_data);
 	// Handler for drop.
-	static void drag_data_received(
-			GtkWidget* widget, GdkDragContext* context, gint x, gint y, GtkSelectionData* seldata, guint info, guint time,
-			gpointer user_data);
-	void enable_drop();
+	static gboolean drag_data_received(GtkDropTarget* dest, GValue* value, gdouble x, gdouble y, gpointer user_data);
+	void            enable_drop();
 	// Handle scrollbar.
 	static void vscrolled(GtkAdjustment* adj, gpointer user_data);
 	void        locate(int dir);    // Locate terrain on game map.
@@ -154,7 +151,6 @@ public:
 	void        delete_response(const unsigned char* data, int datalen);
 	void        move(bool upwards) override;    // Move current selected chunk.
 	void        swap_response(const unsigned char* data, int datalen);
-	static gint drag_motion(GtkWidget* widget, GdkEvent* event, gpointer user_data);
 };
 
 #endif
