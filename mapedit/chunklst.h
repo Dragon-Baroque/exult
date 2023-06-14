@@ -112,7 +112,20 @@ public:
 		sel_changed = fun;
 	}
 
-	int get_count();    // Get # chunks we can display.
+	int get_count();              // Get # chunks we can display.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	// Configure when created/resized.
+	static gint configure(
+			GtkWidget* widget, int width, int height, gpointer user_data);
+	// Blit to screen.
+	static void expose(
+			GtkDrawingArea* widget, cairo_t* cairo, int x, int y,
+			gpointer user_data);
+	// Handle mouse press.
+	static gint mouse_press(
+			GtkGestureClick* click_ctlr, int n_press, double x, double y,
+			gpointer user_data);
+#else                             // GTK 4
 	// Configure when created/resized.
 	static gint configure(
 			GtkWidget* widget, GdkEvent* event, gpointer user_data);
@@ -121,6 +134,19 @@ public:
 	// Handle mouse press.
 	static gint mouse_press(
 			GtkWidget* widget, GdkEvent* event, gpointer user_data);
+#endif                            // GTK 4
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	// Give dragged chunk.
+	static GdkContentProvider* drag_prepare(
+			GtkDragSource* source, double x, double y, gpointer user_data);
+	static void drag_begin(
+			GtkDragSource* source, GdkDrag* drag, gpointer user_data);
+	// Handler for drop.
+	static gboolean drag_data_received(
+			GtkDropTarget* dest, GValue* value, gdouble x, gdouble y,
+			gpointer user_data);
+	void enable_drop();
+#else     // GTK 4
 	// Give dragged chunk.
 	static void drag_data_get(
 			GtkWidget* widget, GdkDragContext* context,
@@ -134,6 +160,7 @@ public:
 			GtkSelectionData* seldata, guint info, guint time,
 			gpointer user_data);
 	void enable_drop();
+#endif    // GTK 4
 	// Handle scrollbar.
 	static void scrolled(GtkAdjustment* adj, gpointer user_data);
 	void        locate(int dir);    // Locate terrain on game map.
@@ -145,8 +172,11 @@ public:
 	void        delete_response(const unsigned char* data, int datalen);
 	void        move(bool upwards) override;    // Move current selected chunk.
 	void        swap_response(const unsigned char* data, int datalen);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	static gint drag_motion(
 			GtkWidget* widget, GdkEvent* event, gpointer user_data);
+#endif                            // GTK 4
 };
 
 #endif
