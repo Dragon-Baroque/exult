@@ -206,9 +206,9 @@ C_EXPORT void on_equip_cancel_clicked(GtkButton* btn, gpointer user_data) {
 /*
  *  Equip window's close button.
  */
-C_EXPORT gboolean on_equip_window_delete_event(
-		GtkWidget* widget, GdkEvent* event, gpointer user_data) {
-	ignore_unused_variable_warning(widget, event, user_data);
+C_EXPORT gboolean
+		on_equip_window_delete_event(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(widget, user_data);
 	ExultStudio::get_instance()->close_equip_window();
 	return true;
 }
@@ -293,7 +293,6 @@ static void Setup_equip(
 		gtk_widget_set_hexpand(frame, true);
 		gtk_widget_set_valign(frame, GTK_ALIGN_FILL);
 		gtk_widget_set_hexpand(frame, true);
-		gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_IN);
 
 		GtkWidget* drawingarea = gtk_drawing_area_new();
 		gtk_widget_set_visible(drawingarea, true);
@@ -525,9 +524,9 @@ C_EXPORT void on_shinfo_cancel_clicked(GtkButton* btn, gpointer user_data) {
 /*
  *  Shape window's close button.
  */
-C_EXPORT gboolean on_shape_window_delete_event(
-		GtkWidget* widget, GdkEvent* event, gpointer user_data) {
-	ignore_unused_variable_warning(widget, event, user_data);
+C_EXPORT gboolean
+		on_shape_window_delete_event(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
 	if (!studio->prompt_for_discard(
 				studio->shape_window_dirty, "Shape", GTK_WINDOW(widget))) {
@@ -623,6 +622,12 @@ C_EXPORT gboolean on_shinfo_animation_type_changed(
 /*
  *  Animation frame count menu changed.
  */
+#define GtkToggleButton GtkCheckButton
+#undef GTK_TOGGLE_BUTTON
+#define GTK_TOGGLE_BUTTON(w)               GTK_CHECK_BUTTON((w))
+#define gtk_toggle_button_get_active(w)    gtk_check_button_get_active((w))
+#define gtk_toggle_button_set_active(w, v) gtk_check_button_set_active((w), (v))
+
 C_EXPORT gboolean on_shinfo_animation_frtype_toggled(
 		GtkToggleButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);
@@ -4354,51 +4359,47 @@ static void connect_shape_dirty_signals(GtkWidget* shapewin) {
 	});
 
 	// Get the main container and recursively connect to all editing widgets
-	GtkWidget* main_box = gtk_bin_get_child(GTK_BIN(shapewin));
+	GtkWidget* main_box = gtk_widget_get_first_child(shapewin);
 	if (main_box) {
-		std::function<void(GtkWidget*)> connect_recursive
-				= [&](GtkWidget* widget) {
-					  const char* widget_name = gtk_widget_get_name(widget);
+		std::function<void(GtkWidget*)> connect_recursive =
+				[&](GtkWidget* widget) {
+					const char* widget_name = gtk_widget_get_name(widget);
 
-					  // Skip excluded widgets (frame navigation, audio
-					  // controls, notebook/tabs, entire preset widget)
-					  if (widget_name
-						  && (strstr(widget_name, "_play") != nullptr
-							  || strstr(widget_name, "_stop") != nullptr
-							  || strstr(widget_name, "frame_inc") != nullptr
-							  || strstr(widget_name, "frame_dec") != nullptr
-							  || strcmp(widget_name, "shinfo_presets_box")
-										 == 0)) {
-						  // Skip these widgets completely (don't recurse)
-						  return;
-					  } else if (GTK_IS_NOTEBOOK(widget)) {
-						  // Don't connect to notebook's switch-page signal
-						  // But still recurse into its pages
-					  } else if (GTK_IS_SPIN_BUTTON(widget)) {
-						  g_signal_connect(
-								  widget, "value-changed", mark_dirty_cb,
-								  nullptr);
-					  } else if (GTK_IS_ENTRY(widget)) {
-						  g_signal_connect(
-								  widget, "changed", mark_dirty_cb, nullptr);
-					  } else if (GTK_IS_TOGGLE_BUTTON(widget)) {
-						  g_signal_connect(
-								  widget, "toggled", mark_dirty_cb, nullptr);
-					  } else if (GTK_IS_COMBO_BOX(widget)) {
-						  g_signal_connect(
-								  widget, "changed", mark_dirty_cb, nullptr);
-					  }
+					// Skip excluded widgets (frame navigation, audio
+					// controls, notebook/tabs, entire preset widget)
+					if (widget_name
+						&& (strstr(widget_name, "_play") != nullptr
+							|| strstr(widget_name, "_stop") != nullptr
+							|| strstr(widget_name, "frame_inc") != nullptr
+							|| strstr(widget_name, "frame_dec") != nullptr
+							|| strcmp(widget_name, "shinfo_presets_box")
+									   == 0)) {
+						// Skip these widgets completely (don't recurse)
+						return;
+					} else if (GTK_IS_NOTEBOOK(widget)) {
+						// Don't connect to notebook's switch-page signal
+						// But still recurse into its pages
+					} else if (GTK_IS_SPIN_BUTTON(widget)) {
+						g_signal_connect(
+								widget, "value-changed", mark_dirty_cb,
+								nullptr);
+					} else if (GTK_IS_ENTRY(widget)) {
+						g_signal_connect(
+								widget, "changed", mark_dirty_cb, nullptr);
+					} else if (GTK_IS_TOGGLE_BUTTON(widget)) {
+						g_signal_connect(
+								widget, "toggled", mark_dirty_cb, nullptr);
+					} else if (GTK_IS_COMBO_BOX(widget)) {
+						g_signal_connect(
+								widget, "changed", mark_dirty_cb, nullptr);
+					}
 
-					  // Recurse into containers
-					  if (GTK_IS_CONTAINER(widget)) {
-						  GList* children = gtk_container_get_children(
-								  GTK_CONTAINER(widget));
-						  for (GList* l = children; l != nullptr; l = l->next) {
-							  connect_recursive(GTK_WIDGET(l->data));
-						  }
-						  g_list_free(children);
-					  }
-				  };
+					// Recurse into containers
+					for (GtkWidget* child = gtk_widget_get_first_child(widget);
+						 child; child = gtk_widget_get_next_sibling(child)) {
+						connect_recursive(child);
+					}
+				};
 		connect_recursive(main_box);
 	}
 }

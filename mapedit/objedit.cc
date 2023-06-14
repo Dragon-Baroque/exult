@@ -150,6 +150,9 @@ void ExultStudio::open_obj_window(
 		return;
 	}
 	gtk_widget_set_visible(objwin, true);
+	// Attempt to bring this window above Exult on macOS : does not work
+	// gtk_widget_show(objwin);
+	// gtk_window_present(GTK_WINDOW(objwin));
 }
 
 /*

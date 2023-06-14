@@ -775,12 +775,14 @@ if test x$enable_exult_studio = xyes; then
 # Icu
 	PKG_CHECK_MODULES(ICU, icu-uc, have_icu=yes, have_icu=no)
 # Gtk
-	PKG_CHECK_MODULES(GTK, gtk+-3.0 >= 3.16, have_gtk=yes, have_gtk=no)
+	PKG_CHECK_MODULES(GTK, gtk4, have_gtk=yes, have_gtk=no)
 # Freetype2 (optional, used in ExultStudio, shapes/fontgen.cc)
 	PKG_CHECK_MODULES(FREETYPE2, freetype2, have_freetype=yes, have_freetype=no)
 	if test x$have_freetype = xyes; then
 		AC_DEFINE(HAVE_FREETYPE2, 1, [Have freetype2])
 	fi
+	USE_STRICT_GTK=1
+	AC_SUBST(USE_STRICT_GTK)
 else
 	AC_MSG_RESULT(no)
 fi
@@ -1479,7 +1481,7 @@ else
 	fi
 	if test x$enable_exult_studio = xyes; then
 		echo GLIB....................... : `$PKG_CONFIG --modversion glib-2.0`
-		echo GTK+....................... : `$PKG_CONFIG --modversion gtk+-3.0`
+		echo GTK+....................... : `$PKG_CONFIG --modversion gtk4`
 	fi
 	if test x$have_freetype = xyes; then
 		echo FreeType2.................. : `$PKG_CONFIG --modversion freetype2`
