@@ -144,13 +144,36 @@ public:
 										   : info.size())
 			   - rows[rownum].index0;
 	}
-
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	// Configure when created/resized.
+	gint configure(int width, int height);
+	// Blit to screen.
+	static void expose(
+			GtkDrawingArea* widget, cairo_t* cairo, int width, int height,
+			gpointer user_data);
+	// Handle mouse press.
+	gint mouse_press(
+			GtkGestureClick* click_ctlr, int n_press, double x, double y);
+#else                             // GTK 4
 	// Configure when created/resized.
 	gint configure(GdkEvent* event);
 	// Blit to screen.
 	static gint expose(GtkWidget* widget, cairo_t* cairo, gpointer user_data);
 	// Handle mouse press.
 	gint mouse_press(GtkWidget* widget, GdkEvent* event);
+#endif                            // GTK 4
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	// Give dragged shape.
+	static GdkContentProvider* drag_prepare(
+			GtkDragSource* source, double x, double y, gpointer user_data);
+	static void drag_begin(
+			GtkDragSource* source, GdkDrag* drag, gpointer user_data);
+	// Handler for drop.
+	static gboolean drag_data_received(
+			GtkDropTarget* dest, GValue* value, gdouble x, gdouble y,
+			gpointer user_data);
+	void enable_drop();
+#else     // GTK 4
 	// Give dragged shape.
 	static void drag_data_get(
 			GtkWidget* widget, GdkDragContext* context,
@@ -164,6 +187,7 @@ public:
 			GtkSelectionData* seldata, guint info, guint time,
 			gpointer user_data);
 	void enable_drop();
+#endif    // GTK 4
 	void edit_npc();
 	// Handle scrollbar.
 	static void vscrolled(GtkAdjustment* adj, gpointer user_data);
@@ -171,8 +195,11 @@ public:
 	// Handle spin-button for frames.
 	static void frame_changed(GtkAdjustment* adj, gpointer user_data);
 	static void all_frames_toggled(GtkToggleButton* btn, gpointer user_data);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	static gint drag_motion(
 			GtkWidget* widget, GdkEvent* event, gpointer user_data);
+#endif                            // GTK 4
 };
 
 #endif
