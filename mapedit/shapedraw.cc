@@ -252,31 +252,22 @@ void Shape_draw::configure() {
  *  Shape was dropped.
  */
 
-void Shape_draw::drag_data_received(
-		GtkWidget* widget, GdkDragContext* context, gint x, gint y,
-		GtkSelectionData* seldata, guint info, guint time,
-		gpointer user_data    // ->Shape_draw.
-) {
-	ignore_unused_variable_warning(widget, context, x, y, info, time);
+gboolean Shape_draw::drag_data_received(
+		GtkDropTarget* dest, GValue* value, double x, double y,
+		gpointer user_data) {
+	ignore_unused_variable_warning(dest, x, y);
+	const unsigned char* seldata
+			= reinterpret_cast<const unsigned char*>(g_value_get_string(value));
 	auto* draw = static_cast<Shape_draw*>(user_data);
-	cout << "In DRAG_DATA_RECEIVED of Shape for '"
-		 << gdk_atom_name(gtk_selection_data_get_data_type(seldata)) << "'"
-		 << endl;
-	auto seltype = gtk_selection_data_get_data_type(seldata);
-	if (draw->drop_callback
-		&& ((seltype == gdk_atom_intern(U7_TARGET_SHAPEID_NAME, 0))
-			|| (seltype == gdk_atom_intern(U7_TARGET_DROPTEXT_NAME_MIME, 0))
-			|| (seltype == gdk_atom_intern(U7_TARGET_DROPTEXT_NAME_GENERIC, 0)))
-		&& Is_u7_shapeid(gtk_selection_data_get_data(seldata))
-		&& gtk_selection_data_get_format(seldata) == 8
-		&& gtk_selection_data_get_length(seldata) > 0) {
+	cout << "In DRAG_DATA_RECEIVED of Shape for '" << seldata << "'" << endl;
+	if (draw->drop_callback && Is_u7_shapeid(seldata) == true) {
 		int file;
 		int shape;
 		int frame;
-		Get_u7_shapeid(
-				gtk_selection_data_get_data(seldata), file, shape, frame);
+		Get_u7_shapeid(seldata, file, shape, frame);
 		(*draw->drop_callback)(file, shape, frame, draw->drop_user_data);
 	}
+	return true;
 }
 
 /*
@@ -287,26 +278,15 @@ gulong Shape_draw::enable_drop(
 		Drop_callback callback,    // Call this when shape dropped.
 		void*         user_data    // Passed to callback.
 ) {
-	gtk_widget_realize(draw);    //???????
-	drop_callback  = callback;
-	drop_user_data = user_data;
-	GtkTargetEntry tents[3];
-	tents[0].target = const_cast<char*>(U7_TARGET_SHAPEID_NAME);
-	tents[1].target = const_cast<char*>(U7_TARGET_DROPTEXT_NAME_MIME);
-	tents[2].target = const_cast<char*>(U7_TARGET_DROPTEXT_NAME_GENERIC);
-	tents[0].flags  = 0;
-	tents[1].flags  = 0;
-	tents[2].flags  = 0;
-	tents[0].info   = U7_TARGET_SHAPEID;
-	tents[1].info   = U7_TARGET_SHAPEID + 100;
-	tents[2].info   = U7_TARGET_SHAPEID + 200;
-	gtk_drag_dest_set(
-			draw, GTK_DEST_DEFAULT_ALL, tents, 3,
+	drop_callback       = callback;
+	drop_user_data      = user_data;
+	GtkDropTarget* dest = gtk_drop_target_new(
+			G_TYPE_STRING,
 			static_cast<GdkDragAction>(GDK_ACTION_COPY | GDK_ACTION_MOVE));
-
-	return g_signal_connect(
-			G_OBJECT(draw), "drag-data-received",
-			G_CALLBACK(drag_data_received), this);
+	gulong handler = g_signal_connect(
+			dest, "drop", G_CALLBACK(drag_data_received), this);
+	gtk_widget_add_controller(draw, GTK_EVENT_CONTROLLER(dest));
+	return handler;
 }
 
 /*
@@ -314,13 +294,13 @@ gulong Shape_draw::enable_drop(
  */
 
 void Shape_draw::set_drag_icon(
-		GdkDragContext* context,
-		Shape_frame*    shape    // Shape to use for the icon.
+		GdkDrag*     drag,
+		Shape_frame* shape    // Shape to use for the icon.
 ) {
-	const int     w      = shape->get_width();
-	const int     h      = shape->get_height();
-	const int     xright = shape->get_xright();
-	const int     ybelow = shape->get_ybelow();
+	int           w      = shape->get_width();
+	int           h      = shape->get_height();
+	int           xright = shape->get_xright();
+	int           ybelow = shape->get_ybelow();
 	Image_buffer8 tbuf(w, h);    // Create buffer to render to.
 	tbuf.fill8(0xff);            // Fill with 'transparent' pixel.
 	unsigned char* tbits = tbuf.get_bits();
@@ -328,55 +308,25 @@ void Shape_draw::set_drag_icon(
 	// Put shape on a pixmap.
 	GdkPixbuf* pixbuf  = gdk_pixbuf_new(GDK_COLORSPACE_RGB, true, 8, w, h);
 	guchar*    pixels  = gdk_pixbuf_get_pixels(pixbuf);
-	const int  rstride = gdk_pixbuf_get_rowstride(pixbuf);
-	const int  pstride = gdk_pixbuf_get_n_channels(pixbuf);
+	int        rstride = gdk_pixbuf_get_rowstride(pixbuf);
+	int        pstride = gdk_pixbuf_get_n_channels(pixbuf);
 	for (int y = 0; y < h; y++) {
 		for (int x = 0; x < w; x++) {
-			guchar*       t = pixels + y * rstride + x * pstride;
-			const guchar  s = tbits[y * w + x];
-			const guint32 c = palette->colors[s];
-			t[0]            = (s == 255 ? 0 : (c >> 16) & 255);
-			t[1]            = (s == 255 ? 0 : (c >> 8) & 255);
-			t[2]            = (s == 255 ? 0 : (c >> 0) & 255);
-			t[3]            = (s == 255 ? 0 : 255);
+			guchar* t = pixels + y * rstride + x * pstride;
+			guchar  s = tbits[y * w + x];
+			guint32 c = palette->colors[s];
+			t[0]      = (s == 255 ? 0 : (c >> 16) & 255);
+			t[1]      = (s == 255 ? 0 : (c >> 8) & 255);
+			t[2]      = (s == 255 ? 0 : (c >> 0) & 255);
+			t[3]      = (s == 255 ? 0 : 255);
 		}
 	}
 	// This will be the shape dragged.
-	gtk_drag_set_icon_pixbuf(context, pixbuf, w - 2 - xright, h - 2 - ybelow);
+	GdkTexture* icon = gdk_texture_new_for_pixbuf(pixbuf);
+	gtk_drag_icon_set_from_paintable(
+			drag, GDK_PAINTABLE(icon), w - 2 - xright, h - 2 - ybelow);
 	g_object_unref(pixbuf);
-}
-
-/*
- *  Start dragging from here.
- *
- *  Note:   Sets 'dragging', which is only cleared by 'mouse_up()'.
- */
-
-void Shape_draw::start_drag(
-		const char* target,    // Target (ie, U7_TARGET_SHAPEID_NAME).
-		int         id,        // ID (ie, U7_TARGET_SHAPEID).
-		GdkEvent*   event      // Event that started this.
-) {
-	if (dragging) {
-		return;
-	}
-	dragging = true;
-	GtkTargetEntry tents[3];    // Set up for dragging.
-	tents[0].target      = const_cast<char*>(target);
-	tents[1].target      = const_cast<char*>(U7_TARGET_DROPTEXT_NAME_MIME);
-	tents[2].target      = const_cast<char*>(U7_TARGET_DROPTEXT_NAME_GENERIC);
-	tents[0].flags       = 0;
-	tents[1].flags       = 0;
-	tents[2].flags       = 0;
-	tents[0].info        = id;
-	tents[1].info        = id + 100;
-	tents[2].info        = id + 200;
-	GtkTargetList* tlist = gtk_target_list_new(&tents[0], 3);
-	gtk_drag_begin_with_coordinates(
-			draw, tlist,
-			static_cast<GdkDragAction>(GDK_ACTION_COPY | GDK_ACTION_MOVE), 1,
-			event, -1, -1);
-	gtk_target_list_unref(tlist);
+	g_object_unref(icon);
 }
 
 /*
@@ -417,9 +367,9 @@ Shape_single::Shape_single(
 				G_OBJECT(frame), "changed",
 				G_CALLBACK(Shape_single::on_frame_changed), this);
 	}
-	draw_connect = g_signal_connect(
-			G_OBJECT(draw), "draw",
-			G_CALLBACK(Shape_single::on_draw_expose_event), this);
+	gtk_drawing_area_set_draw_func(
+			GTK_DRAWING_AREA(draw), Shape_single::on_draw_expose_event, this,
+			nullptr);
 	if (vganum >= 0) {
 		drop_connect = enable_drop(Shape_single::on_shape_dropped, this);
 	}
@@ -518,12 +468,13 @@ void Shape_single::on_state_changed(
 	single->render();
 }
 
-gboolean Shape_single::on_draw_expose_event(
-		GtkWidget* widget, cairo_t* cairo, gpointer user_data) {
+void Shape_single::on_draw_expose_event(
+		GtkDrawingArea* widget, cairo_t* cairo, int width, int height,
+		gpointer user_data) {
 	ignore_unused_variable_warning(widget);
 	auto*        single = static_cast<Shape_single*>(user_data);
-	GdkRectangle area   = {0, 0, 0, 0};
-	gdk_cairo_get_clip_rectangle(cairo, &area);
+	GdkRectangle area   = {0, 0, width, height};
+	//	gdk_cairo_get_clip_rectangle(cairo, &area);
 	single->set_graphic_context(cairo);
 	single->configure();
 	int shnum = 0, frnum = 0;
@@ -544,7 +495,6 @@ gboolean Shape_single::on_draw_expose_event(
 			ZoomDown(area.x), ZoomDown(area.y), ZoomDown(area.width),
 			ZoomDown(area.height));
 	single->set_graphic_context(nullptr);
-	return true;
 }
 
 void Shape_single::on_shape_dropped(

@@ -84,14 +84,11 @@ public:
 
 	void configure();    // Configure when created/resized.
 	// Handler for drop.
-	static void drag_data_received(
-			GtkWidget* widget, GdkDragContext* context, gint x, gint y,
-			GtkSelectionData* seldata, guint info, guint time,
+	static gboolean drag_data_received(
+			GtkDropTarget* dest, GValue* value, gdouble x, gdouble y,
 			gpointer user_data);
 	gulong enable_drop(Drop_callback callback, void* user_data);
-	void   set_drag_icon(GdkDragContext* context, Shape_frame* shape);
-	// Start/end dragging from here.
-	void start_drag(const char* target, int id, GdkEvent* event);
+	void   set_drag_icon(GdkDrag* drag, Shape_frame* shape);
 
 	void mouse_up() {
 		dragging = false;
@@ -129,10 +126,11 @@ public:
 								  // constructor.
 			bool hdd = false);    // Whether the Shape should be hidden.
 	~Shape_single() override;
-	static void     on_shape_changed(GtkWidget* widget, gpointer user_data);
-	static void     on_frame_changed(GtkWidget* widget, gpointer user_data);
-	static gboolean on_draw_expose_event(
-			GtkWidget* widget, cairo_t* cairo, gpointer user_data);
+	static void on_shape_changed(GtkWidget* widget, gpointer user_data);
+	static void on_frame_changed(GtkWidget* widget, gpointer user_data);
+	static void on_draw_expose_event(
+			GtkDrawingArea* widget, cairo_t* cairo, int width, int height,
+			gpointer user_data);
 	static void on_shape_dropped(
 			int filenum, int shapenum, int framenum, gpointer user_data);
 	static void on_state_changed(

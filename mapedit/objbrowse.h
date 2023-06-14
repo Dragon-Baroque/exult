@@ -40,11 +40,14 @@ protected:
 	GtkWidget*          vscroll = nullptr;    // Vertical scrollbar.
 	GtkWidget*          hscroll = nullptr;    // Horizontal scrollbar.
 	GtkEventController* vscroll_ctlr
-			= nullptr;                          // Vertical scroll in browser.
-	Shape_group*     group;                     // Non-null to use filter.
-	GtkWidget*       popup_widget = nullptr;    // Popup menu in draw area.
-	Shape_file_info* file_info;                 // Our creator (or null).
-	GtkWidget*       find_text = nullptr;       // For searching.
+			= nullptr;                            // Vertical scroll in browser.
+	GtkEventController* key_ctlr    = nullptr;    // Keyboard action in browser.
+	GtkEventController* click_ctlr  = nullptr;    // Mouse click in browser.
+	GtkEventController* drag_source = nullptr;    // Drag emitter in browser.
+	Shape_group*        group;                    // Non-null to use filter.
+	GtkWidget*          popup_widget = nullptr;    // Popup menu in draw area.
+	Shape_file_info*    file_info;                 // Our creator (or null).
+	GtkWidget*          find_text = nullptr;       // For searching.
 	GtkWidget *loc_down = nullptr, *loc_up = nullptr;    // 'Locate' buttons.
 	GtkWidget* loc_q = nullptr;    // 'Locate' quality/quantity.
 	GtkWidget* loc_f = nullptr;    // 'Locate' frame

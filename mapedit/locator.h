@@ -31,28 +31,31 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *  The 'locator' window:
  */
 class Locator {
-	GtkWidget*     win;                   // Main window.
-	GtkWidget*     draw;                  // GTK draw area to display.
-	cairo_t*       drawgc = nullptr;      // For drawing in 'draw'.
-	GtkAdjustment *hadj, *vadj;           // For horiz., vert. scales.
-	int            tx = 0, ty = 0;        // Current Exult win. info. in tiles.
-	int            txs = 40, tys = 25;    // Current Exult win. info. in tiles.
-	GdkRectangle   viewbox;               // Where view box was last drawn.
-	bool           dragging = false;      // True if dragging view box.
-	int            drag_relx, drag_rely;     // Mouse pos. rel to view box.
-	int         send_location_timer = -1;    // For sending new loc. to Exult.
-	void        send_location();             // Send location/size to Exult.
-	void        query_location();
-	static gint delayed_send_location(gpointer user_data);
+	GtkWidget*          win;                      // Main window.
+	GtkWidget*          draw;                     // GTK draw area to display.
+	GtkEventController* click_ctlr  = nullptr;    // Mouse clicks.
+	GtkEventController* motion_ctlr = nullptr;    // Mouse motion.
+	cairo_t*            drawgc      = nullptr;    // For drawing in 'draw'.
+	GtkAdjustment *     hadj, *vadj;              // For horiz., vert. scales.
+	int                 tx = 0, ty = 0;    // Current Exult win. info. in tiles.
+	int          txs = 40, tys = 25;       // Current Exult win. info. in tiles.
+	GdkRectangle viewbox;                  // Where view box was last drawn.
+	bool         dragging = false;         // True if dragging view box.
+	int          drag_relx, drag_rely;     // Mouse pos. rel to view box.
+	int          send_location_timer = -1;    // For sending new loc. to Exult.
+	void         send_location();             // Send location/size to Exult.
+	void         query_location();
+	static gint  delayed_send_location(gpointer user_data);
 	// Set view to mouse location.
 	void goto_mouse(int mx, int my, bool delay_send = false);
 
 public:
 	Locator();
 	~Locator();
-	void            show(bool tf);    // Show/hide.
-	static gboolean on_loc_draw_expose_event(
-			GtkWidget* widget, cairo_t* cairo, gpointer user_data);
+	void        show(bool tf);    // Show/hide.
+	static void on_loc_draw_expose_event(
+			GtkDrawingArea* widget, cairo_t* cairo, int x, int y,
+			gpointer user_data);
 	// Configure when created/resized.
 	void configure(GtkWidget* widget);
 	void render(GdkRectangle* area = nullptr);
@@ -72,9 +75,11 @@ public:
 	static void vscrolled(GtkAdjustment* adj, gpointer user_data);
 	static void hscrolled(GtkAdjustment* adj, gpointer user_data);
 	// Handle mouse.
-	gboolean mouse_press(GtkWidget* widget, GdkEvent* event);
-	gboolean mouse_release(GtkWidget* widget, GdkEvent* event);
-	gboolean mouse_motion(GtkWidget* widget, GdkEvent* event);
+	gboolean mouse_press(
+			GtkGestureSingle* gesture, int n_press, double x, double y);
+	gboolean mouse_release(
+			GtkGestureSingle* gesture, int n_press, double x, double y);
+	gboolean mouse_motion(GtkEventController* event, double x, double y);
 };
 
 #endif
