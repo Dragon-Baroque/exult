@@ -95,11 +95,15 @@ public:
  *  The 'combo editor' window:
  */
 class Combo_editor : public Shape_draw {
-	GtkWidget* win;                 // Main window.
-	Combo*     combo;               // Combo being edited.
-	int        selected;            // Index of selected item in combo.
-	bool       setting_controls;    // To avoid callbacks when setting.
-	int        file_index;          // Entry # in 'combos.flx', or -1 if
+	GtkWidget* win;                    // Main window.
+	Combo*     combo;                  // Combo being edited.
+#if GTK_CHECK_VERSION(4, 0, 0)         // GTK 4
+	GtkEventController* click_ctlr;    // Mouse clicks.
+#else                                  // GTK 4
+#endif                                 // GTK 4
+	int  selected;                     // Index of selected item in combo.
+	bool setting_controls;             // To avoid callbacks when setting.
+	int  file_index;                   // Entry # in 'combos.flx', or -1 if
 	//   new.
 	// Set to edit existing combo.
 	void set_combo(Combo* newcombo, int findex);
@@ -108,8 +112,14 @@ public:
 	friend class Combo_chooser;
 	Combo_editor(Shapes_vga_file* svga, unsigned char* palbuf);
 	~Combo_editor() override;
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	static void on_combo_draw_expose_event(
+			GtkDrawingArea* widget, cairo_t* cairo, int x, int y,
+			gpointer user_data);
+#else                      // GTK 4
 	static gboolean on_combo_draw_expose_event(
 			GtkWidget* widget, cairo_t* cairo, gpointer user_data);
+#endif                     // GTK 4
 	void show(bool tf);    // Show/hide.
 	void render_area(GdkRectangle* area);
 
@@ -117,9 +127,14 @@ public:
 		render_area(nullptr);
 	}
 
-	void set_controls();    // Set controls to selected entry.
-	// Handle mouse.
+	void set_controls();          // Set controls to selected entry.
+								  // Handle mouse.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	gint mouse_press(
+			GtkGestureClick* click_ctlr, int n_press, double x, double y);
+#else                       // GTK 4
 	gint mouse_press(GtkWidget* widget, GdkEvent* event);
+#endif                      // GTK 4
 	void set_order();       // Set selected to desired order.
 	void set_position();    // Set selected to desired position.
 	// Add object/shape picked from Exult.
@@ -209,6 +224,19 @@ public:
 	int  add(Combo* newcombo, int index);    // Add new combo.
 	void remove();                           // Remove selected.
 	void edit();                             // Edit selected.
+#if GTK_CHECK_VERSION(4, 0, 0)               // GTK 4
+	// Configure when created/resized.
+	static gint configure(
+			GtkWidget* widget, int width, int height, gpointer user_data);
+	// Blit to screen.
+	static void expose(
+			GtkDrawingArea* widget, cairo_t* cairo, int x, int y,
+			gpointer user_data);
+	// Handle mouse press.
+	static gint mouse_press(
+			GtkGestureClick* click_ctlr, int n_press, double x, double y,
+			gpointer user_data);
+#else                             // GTK 4
 	// Configure when created/resized.
 	static gint configure(
 			GtkWidget* widget, GdkEvent* event, gpointer user_data);
@@ -217,6 +245,14 @@ public:
 	// Handle mouse press.
 	static gint mouse_press(
 			GtkWidget* widget, GdkEvent* event, gpointer user_data);
+#endif                            // GTK 4
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	// Give dragged combo.
+	static GdkContentProvider* drag_prepare(
+			GtkDragSource* source, double x, double y, gpointer user_data);
+	static void drag_begin(
+			GtkDragSource* source, GdkDrag* drag, gpointer user_data);
+#else     // GTK 4
 	// Give dragged combo.
 	static void drag_data_get(
 			GtkWidget* widget, GdkDragContext* context,
@@ -224,12 +260,16 @@ public:
 			gpointer user_data);
 	static gint drag_begin(
 			GtkWidget* widget, GdkDragContext* context, gpointer user_data);
+#endif    // GTK 4
 	// Handle scrollbar.
 	static void scrolled(GtkAdjustment* adj, gpointer user_data);
 	void        move(bool upwards) override;    // Move current selected combo.
 	void        search(const char* srch, int dir) override;
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	static gint drag_motion(
 			GtkWidget* widget, GdkEvent* event, gpointer user_data);
+#endif                            // GTK 4
 };
 
 #endif /* INCL_COMBO_H */
