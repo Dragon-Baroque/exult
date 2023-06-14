@@ -112,9 +112,9 @@ TIMIDITY_CFLAGS:=-DUSE_TIMIDITY_MIDI
 
 ### GTK+ libs and includes, for Exult Studio.
 # If this doesn't work, insert output of `pkg-config --cflags gtk+-win32-2.0` manually
-GTK_INCLUDES:=$(shell pkg-config --cflags gtk+-3.0)
+GTK_INCLUDES:=$(shell pkg-config --cflags gtk4)
 # If this doesn't work, insert output of `pkg-config --libs gtk+-win32-2.0` manually
-GTK_LIBS:=$(shell pkg-config --libs "gtk+-3.0 >= 3.16")
+GTK_LIBS:=$(shell pkg-config --libs gtk4)
 
 ### FREETYPE2 libs and includes, for Exult Studio.
 # If this doesn't work, insert output of 'pkg-config --cflags freetype2' manually
