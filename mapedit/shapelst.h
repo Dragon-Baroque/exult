@@ -150,7 +150,20 @@ public:
 										   : info.size())
 			   - rows[rownum].index0;
 	}
-
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	// Configure when created/resized.
+	gint configure(int width, int height);
+	// Blit to screen.
+	static void expose(
+			GtkDrawingArea* widget, cairo_t* cairo, int width, int height,
+			gpointer user_data);
+	static void on_new_shape_font_color_draw_expose_event(
+			GtkDrawingArea* widget, cairo_t* cairo, int width, int height,
+			gpointer user_data);
+	// Handle mouse press.
+	gint mouse_press(
+			GtkGestureClick* click_ctlr, int n_press, double x, double y);
+#else     // GTK 4
 	// Configure when created/resized.
 	gint configure(GdkEvent* event);
 	// Blit to screen.
@@ -159,6 +172,7 @@ public:
 			GtkWidget* widget, cairo_t* cairo, gpointer user_data);
 	// Handle mouse press.
 	gint mouse_press(GtkWidget* widget, GdkEvent* event);
+#endif    // GTK 4
 	// Export current frame as a PNG.
 	time_t export_png(const char* fname);
 	// Export given image as a PNG.
@@ -189,6 +203,13 @@ public:
 	void        new_shape();
 	void        create_new_shape();
 	void        del_frame();
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	// Give dragged shape.
+	static GdkContentProvider* drag_prepare(
+			GtkDragSource* source, double x, double y, gpointer user_data);
+	static void drag_begin(
+			GtkDragSource* source, GdkDrag* drag, gpointer user_data);
+#else     // GTK 4
 	// Give dragged shape.
 	static void drag_data_get(
 			GtkWidget* widget, GdkDragContext* context,
@@ -196,14 +217,18 @@ public:
 			gpointer user_data);
 	static gint drag_begin(
 			GtkWidget* widget, GdkDragContext* context, gpointer user_data);
+#endif    // GTK 4
 	// Handle scrollbar.
 	static void vscrolled(GtkAdjustment* adj, gpointer user_data);
 	static void hscrolled(GtkAdjustment* adj, gpointer user_data);
 	// Handle spin-button for frames.
 	static void frame_changed(GtkAdjustment* adj, gpointer user_data);
 	static void all_frames_toggled(GtkToggleButton* btn, gpointer user_data);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	static gint drag_motion(
 			GtkWidget* widget, GdkEvent* event, gpointer user_data);
+#endif                            // GTK 4
 	// Menu items:
 	static void shp_info_action(
 			GSimpleAction* action, GVariant* parameter, gpointer user_data);
