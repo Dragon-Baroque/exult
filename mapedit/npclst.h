@@ -142,28 +142,24 @@ public:
 	}
 
 	// Configure when created/resized.
-	gint configure(GdkEvent* event);
+	gint configure(int width, int height);
 	// Blit to screen.
-	static gint expose(GtkWidget* widget, cairo_t* cairo, gpointer user_data);
+	static void expose(GtkDrawingArea* widget, cairo_t* cairo, int width, int height, gpointer user_data);
 	// Handle mouse press.
-	gint mouse_press(GtkWidget* widget, GdkEvent* event);
+	gint mouse_press(GtkGestureClick* click_ctlr, int n_press, double x, double y);
 	// Give dragged shape.
-	static void drag_data_get(
-			GtkWidget* widget, GdkDragContext* context, GtkSelectionData* seldata, guint info, guint time, gpointer user_data);
-	static gint drag_begin(GtkWidget* widget, GdkDragContext* context, gpointer user_data);
+	static GdkContentProvider* drag_prepare(GtkDragSource* source, double x, double y, gpointer user_data);
+	static void                drag_begin(GtkDragSource* source, GdkDrag* drag, gpointer user_data);
 	// Handler for drop.
-	static void drag_data_received(
-			GtkWidget* widget, GdkDragContext* context, gint x, gint y, GtkSelectionData* seldata, guint info, guint time,
-			gpointer user_data);
-	void enable_drop();
-	void edit_npc();
+	static gboolean drag_data_received(GtkDropTarget* dest, GValue* value, gdouble x, gdouble y, gpointer user_data);
+	void            enable_drop();
+	void            edit_npc();
 	// Handle scrollbar.
 	static void vscrolled(GtkAdjustment* adj, gpointer user_data);
 	static void hscrolled(GtkAdjustment* adj, gpointer user_data);
 	// Handle spin-button for frames.
 	static void frame_changed(GtkAdjustment* adj, gpointer user_data);
 	static void all_frames_toggled(GtkToggleButton* btn, gpointer user_data);
-	static gint drag_motion(GtkWidget* widget, GdkEvent* event, gpointer user_data);
 };
 
 #endif

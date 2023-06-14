@@ -206,8 +206,8 @@ C_EXPORT void on_equip_cancel_clicked(GtkButton* btn, gpointer user_data) {
 /*
  *  Equip window's close button.
  */
-C_EXPORT gboolean on_equip_window_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data) {
-	ignore_unused_variable_warning(widget, event, user_data);
+C_EXPORT gboolean on_equip_window_delete_event(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(widget, user_data);
 	ExultStudio::get_instance()->close_equip_window();
 	return true;
 }
@@ -290,7 +290,6 @@ static void Setup_equip(
 		gtk_widget_set_hexpand(frame, true);
 		gtk_widget_set_valign(frame, GTK_ALIGN_FILL);
 		gtk_widget_set_hexpand(frame, true);
-		gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_IN);
 
 		GtkWidget* drawingarea = gtk_drawing_area_new();
 		gtk_widget_set_visible(drawingarea, true);
@@ -497,8 +496,8 @@ C_EXPORT void on_shinfo_cancel_clicked(GtkButton* btn, gpointer user_data) {
 /*
  *  Shape window's close button.
  */
-C_EXPORT gboolean on_shape_window_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data) {
-	ignore_unused_variable_warning(widget, event, user_data);
+C_EXPORT gboolean on_shape_window_delete_event(GtkWidget* widget, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
 	if (!studio->prompt_for_discard(studio->shape_window_dirty, "Shape", GTK_WINDOW(widget))) {
 		return true;    // Block window close
@@ -585,6 +584,12 @@ C_EXPORT gboolean on_shinfo_animation_type_changed(GtkWidget* widget, gpointer u
 /*
  *  Animation frame count menu changed.
  */
+#define GtkToggleButton GtkCheckButton
+#undef GTK_TOGGLE_BUTTON
+#define GTK_TOGGLE_BUTTON(w)               GTK_CHECK_BUTTON((w))
+#define gtk_toggle_button_get_active(w)    gtk_check_button_get_active((w))
+#define gtk_toggle_button_set_active(w, v) gtk_check_button_set_active((w), (v))
+
 C_EXPORT gboolean on_shinfo_animation_frtype_toggled(GtkToggleButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);
 	const bool   on     = !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btn));
@@ -3879,7 +3884,7 @@ static void connect_shape_dirty_signals(GtkWidget* shapewin) {
 	static const int num_excluded = sizeof(excluded_names) / sizeof(excluded_names[0]);
 
 	// Get the main container and use studio's connect_widget_signals function
-	GtkWidget* main_box = gtk_bin_get_child(GTK_BIN(shapewin));
+	GtkWidget* main_box = gtk_widget_get_first_child(shapewin);
 	if (main_box) {
 		ExultStudio::get_instance()->connect_widget_signals(main_box, mark_dirty_cb, nullptr, excluded_names, num_excluded);
 	}
