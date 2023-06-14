@@ -40,19 +40,18 @@ protected:
 	GtkWidget*          vscroll = nullptr;    // Vertical scrollbar.
 	GtkWidget*          hscroll = nullptr;    // Horizontal scrollbar.
 	GtkEventController* vscroll_ctlr
-			= nullptr;                       // Vertical scroll in browser.
-	Shape_group*     group;                  // Non-null to use filter.
-	GtkWidget*       popup = nullptr;        // Popup menu in draw area.
-	Shape_file_info* file_info;              // Our creator (or null).
-	GtkWidget*       find_text = nullptr;    // For searching.
+			= nullptr;                          // Vertical scroll in browser.
+	Shape_group*     group;                     // Non-null to use filter.
+	GtkWidget*       popup_widget = nullptr;    // Popup menu in draw area.
+	Shape_file_info* file_info;                 // Our creator (or null).
+	GtkWidget*       find_text = nullptr;       // For searching.
 	GtkWidget *loc_down = nullptr, *loc_up = nullptr;    // 'Locate' buttons.
 	GtkWidget* loc_q = nullptr;    // 'Locate' quality/quantity.
 	GtkWidget* loc_f = nullptr;    // 'Locate' frame
 	// 'Move' buttons:
 	GtkWidget *move_down = nullptr, *move_up = nullptr;
-	int config_width = 0, config_height = 0;    // For storing prev. dims.
-
-	void        set_widget(GtkWidget* w);
+	int  config_width = 0, config_height = 0;    // For storing prev. dims.
+	void set_widget(GtkWidget* w);
 	static bool search_name(const char* nm, const char* srch);
 
 public:
@@ -104,13 +103,16 @@ public:
 	virtual void end_terrain_editing();
 	virtual void set_background_color(guint32 c);
 	// Menu items:
-	static void on_browser_group_add(GtkMenuItem* item, gpointer udata);
+	static void obj_group_add_action(
+			GSimpleAction* action, GVariant* parameter, gpointer user_data);
 	// Add 'Add to group...' submenu.
-	void        add_group_submenu(GtkWidget* popup);
-	static void on_browser_file_save(GtkMenuItem* item, gpointer udata);
-	static void on_browser_file_revert(GtkMenuItem* item, gpointer udata);
+	void        add_group_submenu(GMenu* popup);
+	static void obj_file_save_action(
+			GSimpleAction* action, GVariant* parameter, gpointer user_data);
+	static void obj_file_revert_action(
+			GSimpleAction* action, GVariant* parameter, gpointer user_data);
 
-	virtual GtkWidget* create_popup() {
+	virtual GMenu* create_popup() {
 		return create_popup_internal(true);
 	}
 
@@ -118,10 +120,10 @@ public:
 	void        enable_draw_vscroll(GtkWidget* draw);
 	static void draw_vscrolled(
 			GtkEventControllerScroll* self, gdouble dx, gdouble dy,
-			gpointer data);
+			gpointer user_data);
 
 protected:
-	GtkWidget* create_popup_internal(bool files);    // Popup menu.
+	GMenu* create_popup_internal(bool files);    // Popup menu.
 
 public:
 	enum {    // Create controls at bottom.
