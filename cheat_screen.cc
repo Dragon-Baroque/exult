@@ -478,64 +478,61 @@ bool CheatScreen::SharedInput(
 			if (event.type != SDL_EVENT_KEY_DOWN) {
 				continue;
 			}
-			const SDL_Keysym& key = event.key.keysym;
+			const SDL_Keycode key_sym = event.key.key;
+			const SDL_Keymod  key_mod = event.key.mod;
 
-			if ((key.sym == SDLK_s) && (key.mod & SDL_KMOD_ALT)
-				&& (key.mod & SDL_KMOD_CTRL)) {
+			if ((key_sym == SDLK_s) && (key_mod & SDL_KMOD_ALT)
+				&& (key_mod & SDL_KMOD_CTRL)) {
 				make_screenshot(true);
 				return false;
 			}
 
 			if (mode == CP_NorthSouth) {
-				if (!input[0] && (key.sym == 'n' || key.sym == 's')) {
-					input[0] = key.sym;
+				if (!input[0] && (key_sym == 'n' || key_sym == 's')) {
+					input[0] = key_sym;
 					activate = true;
 				}
 			} else if (mode == CP_WestEast) {
-				if (!input[0] && (key.sym == 'w' || key.sym == 'e')) {
-					input[0] = key.sym;
+				if (!input[0] && (key_sym == 'w' || key_sym == 'e')) {
+					input[0] = key_sym;
 					activate = true;
 				}
 			} else if (mode >= CP_HexXCoord) {    // Want hex input
 				// Activate (if possible)
-				if (key.sym == SDLK_RETURN || key.sym == SDLK_KP_ENTER) {
+				if (key_sym == SDLK_RETURN || key_sym == SDLK_KP_ENTER) {
 					activate = true;
 				} else if (
-						(key.sym == '-' || key.sym == SDLK_KP_MINUS)
+						(key_sym == '-' || key_sym == SDLK_KP_MINUS)
 						&& !input[0]) {
 					input[0] = '-';
-				} else if (
-						key.sym < 256 && key.sym >= 0
-						&& std::isxdigit(key.sym)) {
+				} else if (key_sym < 256 && std::isxdigit(key_sym)) {
 					const int curlen = std::strlen(input);
 					if (curlen < (len - 1)) {
-						input[curlen]     = std::tolower(key.sym);
+						input[curlen]     = std::tolower(key_sym);
 						input[curlen + 1] = 0;
 					}
-				} else if (
-						(key.sym >= SDLK_KP_1 && key.sym <= SDLK_KP_9)
-						|| key.sym == SDLK_KP_0) {
+				} else if (SDLScanCodeToInt(key_sym) != -1) {    // KP_0 to 9
 					const int curlen = std::strlen(input);
 					if (curlen < (len - 1)) {
-						const int sym     = SDLScanCodeToInt(key.sym);
+						const int sym     = SDLScanCodeToInt(key_sym);
 						input[curlen]     = sym;
 						input[curlen + 1] = 0;
 					}
-				} else if (key.sym == SDLK_BACKSPACE) {
+				} else if (key_sym == SDLK_BACKSPACE) {
 					const int curlen = std::strlen(input);
 					if (curlen) {
 						input[curlen - 1] = 0;
 					}
 				}
 			} else if (mode >= CP_Name) {    // Want Text input (len chars)
-				if (key.sym == SDLK_RETURN || key.sym == SDLK_KP_ENTER) {
+				if (key_sym == SDLK_RETURN || key_sym == SDLK_KP_ENTER) {
 					activate = true;
 				} else if (
-						(key.sym < 256 && key.sym >= 0 && std::isalnum(key.sym))
-						|| key.sym == ' ') {
+						(key_sym < 256 && std::isalnum(key_sym))
+						|| key_sym == ' ') {
 					const int curlen = std::strlen(input);
-					char      chr    = key.sym;
-					if (key.mod & SDL_KMOD_SHIFT) {
+					char      chr    = key_sym;
+					if (key_mod & SDL_KMOD_SHIFT) {
 						chr = static_cast<char>(
 								std::toupper(static_cast<unsigned char>(chr)));
 					}
@@ -543,7 +540,7 @@ bool CheatScreen::SharedInput(
 						input[curlen]     = chr;
 						input[curlen + 1] = 0;
 					}
-				} else if (key.sym == SDLK_BACKSPACE) {
+				} else if (key_sym == SDLK_BACKSPACE) {
 					const int curlen = std::strlen(input);
 					if (curlen) {
 						input[curlen - 1] = 0;
@@ -552,37 +549,33 @@ bool CheatScreen::SharedInput(
 			} else if (mode >= CP_ChooseNPC) {    // Need to grab numerical
 												  // input
 				// Browse shape
-				if (mode == CP_Shape && !input[0] && key.sym == 'b') {
+				if (mode == CP_Shape && !input[0] && key_sym == 'b') {
 					cheat.shape_browser();
 					input[0] = 'b';
 					activate = true;
 				}
 
 				// Activate (if possible)
-				if (key.sym == SDLK_RETURN || key.sym == SDLK_KP_ENTER) {
+				if (key_sym == SDLK_RETURN || key_sym == SDLK_KP_ENTER) {
 					activate = true;
 				} else if (
-						(key.sym == '-' || key.sym == SDLK_KP_MINUS)
+						(key_sym == '-' || key_sym == SDLK_KP_MINUS)
 						&& !input[0]) {
 					input[0] = '-';
-				} else if (
-						key.sym < 256 && key.sym >= 0
-						&& std::isdigit(key.sym)) {
+				} else if (key_sym < 256 && std::isdigit(key_sym)) {
 					const int curlen = std::strlen(input);
 					if (curlen < (len - 1)) {
-						input[curlen]     = key.sym;
+						input[curlen]     = key_sym;
 						input[curlen + 1] = 0;
 					}
-				} else if (
-						(key.sym >= SDLK_KP_1 && key.sym <= SDLK_KP_9)
-						|| key.sym == SDLK_KP_0) {
+				} else if (SDLScanCodeToInt(key_sym) != -1) {    // KP_0 to 9
 					const int curlen = std::strlen(input);
 					if (curlen < (len - 1)) {
-						const int sym     = SDLScanCodeToInt(key.sym);
+						const int sym     = SDLScanCodeToInt(key_sym);
 						input[curlen]     = sym;
 						input[curlen + 1] = 0;
 					}
-				} else if (key.sym == SDLK_BACKSPACE) {
+				} else if (key_sym == SDLK_BACKSPACE) {
 					const int curlen = std::strlen(input);
 					if (curlen) {
 						input[curlen - 1] = 0;
@@ -595,7 +588,7 @@ bool CheatScreen::SharedInput(
 				}
 				command = 0;
 			} else {    // Need the key pressed
-				command = key.sym;
+				command = key_sym;
 				return true;
 			}
 			return false;

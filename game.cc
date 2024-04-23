@@ -644,7 +644,7 @@ int wait_delay(int ms, int startcol, int ncol, int rotspd) {
 		while (SDL_PollEvent(&event)) {
 			switch (event.type) {
 			case SDL_EVENT_KEY_DOWN:
-				switch (event.key.keysym.sym) {
+				switch (event.key.key) {
 				case SDLK_RSHIFT:
 				case SDLK_LSHIFT:
 				case SDLK_RCTRL:
@@ -658,8 +658,8 @@ int wait_delay(int ms, int startcol, int ncol, int rotspd) {
 				case SDLK_SCROLLLOCK:
 					break;
 				case SDLK_s:
-					if ((event.key.keysym.mod & SDL_KMOD_ALT)
-						&& (event.key.keysym.mod & SDL_KMOD_CTRL)) {
+					if ((event.key.mod & SDL_KMOD_ALT)
+						&& (event.key.mod & SDL_KMOD_CTRL)) {
 						make_screenshot(true);
 					}
 					break;

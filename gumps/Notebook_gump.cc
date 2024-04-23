@@ -641,9 +641,8 @@ void Notebook_gump::up_arrow() {
 bool Notebook_gump::handle_kbd_event(void* vev) {
 	SDL_Event& ev      = *static_cast<SDL_Event*>(vev);
 	uint16     unicode = 0;    // Unicode is way different in SDL2
-	Gump_manager::translate_numpad(
-			ev.key.keysym.sym, unicode, ev.key.keysym.mod);
-	int chr = ev.key.keysym.sym;
+	Gump_manager::translate_numpad(ev.key.key, unicode, ev.key.mod);
+	int chr = ev.key.key;
 
 	if (ev.type == SDL_EVENT_KEY_UP) {
 		return true;    // Ignoring key-up at present.
@@ -721,7 +720,7 @@ bool Notebook_gump::handle_kbd_event(void* vev) {
 		if (chr >= 256 || !isascii(chr)) {
 			return false;
 		}
-		if (ev.key.keysym.mod & (SDL_KMOD_SHIFT | SDL_KMOD_CAPS)) {
+		if (ev.key.mod & (SDL_KMOD_SHIFT | SDL_KMOD_CAPS)) {
 			chr = toupper(chr);
 		}
 		note->insert(chr, cursor.offset);

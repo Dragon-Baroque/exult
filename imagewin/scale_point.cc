@@ -56,7 +56,7 @@ void Image_window::show_scaled8to16_point(
 			static_cast<uint8*>(draw_surface->pixels), x, y, w, h,
 			ibuf->line_width, ibuf->height + guard_band,
 			static_cast<uint16*>(display_surface->pixels),
-			display_surface->pitch / display_surface->format->BytesPerPixel,
+			display_surface->pitch / display_surface->format->bytes_per_pixel,
 			manip, scale);
 	UpdateRect(display_surface, scale * x, scale * y, scale * w, scale * h);
 }
@@ -70,7 +70,7 @@ void Image_window::show_scaled8to555_point(
 			static_cast<uint8*>(draw_surface->pixels), x, y, w, h,
 			ibuf->line_width, ibuf->height + guard_band,
 			static_cast<uint16*>(display_surface->pixels),
-			display_surface->pitch / display_surface->format->BytesPerPixel,
+			display_surface->pitch / display_surface->format->bytes_per_pixel,
 			manip, scale);
 	UpdateRect(display_surface, scale * x, scale * y, scale * w, scale * h);
 }
@@ -84,7 +84,7 @@ void Image_window::show_scaled8to565_point(
 			static_cast<uint8*>(draw_surface->pixels), x, y, w, h,
 			ibuf->line_width, ibuf->height + guard_band,
 			static_cast<uint16*>(display_surface->pixels),
-			display_surface->pitch / display_surface->format->BytesPerPixel,
+			display_surface->pitch / display_surface->format->bytes_per_pixel,
 			manip, scale);
 	UpdateRect(display_surface, scale * x, scale * y, scale * w, scale * h);
 }
@@ -98,7 +98,7 @@ void Image_window::show_scaled8to32_point(
 			static_cast<uint8*>(draw_surface->pixels), x, y, w, h,
 			ibuf->line_width, ibuf->height + guard_band,
 			static_cast<uint32*>(display_surface->pixels),
-			display_surface->pitch / display_surface->format->BytesPerPixel,
+			display_surface->pitch / display_surface->format->bytes_per_pixel,
 			manip, scale);
 	UpdateRect(display_surface, scale * x, scale * y, scale * w, scale * h);
 }
