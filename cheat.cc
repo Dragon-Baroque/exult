@@ -975,10 +975,15 @@ void Cheat::cursor_teleport() const {
 		return;
 	}
 
-	int x;
-	int y;
-	SDL_GetMouseState(&x, &y);
-	gwin->get_win()->screen_to_game_hdpi(x, y, gwin->get_fastmouse(), x, y);
+	SDL_Renderer* renderer
+			= SDL_GetRenderer(gwin->get_win()->get_screen_window());
+	int   x, y;
+	float fx, fy, logic_x, logic_y;
+	SDL_GetMouseState(&fx, &fy);
+	SDL_RenderCoordinatesFromWindow(renderer, fx, fy, &logic_x, &logic_y);
+	x = int(logic_x);
+	y = int(logic_y);
+	gwin->get_win()->screen_to_game(x, y, gwin->get_fastmouse(), x, y);
 	Tile_coord t(
 			gwin->get_scrolltx() + x / c_tilesize,
 			gwin->get_scrollty() + y / c_tilesize, 0);
@@ -1042,10 +1047,16 @@ void Cheat::delete_object() {
 		return;
 	}
 
-	int x;
-	int y;
-	SDL_GetMouseState(&x, &y);
-	gwin->get_win()->screen_to_game_hdpi(x, y, gwin->get_fastmouse(), x, y);
+	int           x;
+	int           y;
+	float         fx, fy, logic_x, logic_y;
+	SDL_Renderer* renderer
+			= SDL_GetRenderer(gwin->get_win()->get_screen_window());
+	SDL_GetMouseState(&fx, &fy);
+	SDL_RenderCoordinatesFromWindow(renderer, fx, fy, &logic_x, &logic_y);
+	x = int(logic_x);
+	y = int(logic_y);
+	gwin->get_win()->screen_to_game(x, y, gwin->get_fastmouse(), x, y);
 
 	Game_object* obj;
 	Gump*        gump = gwin->get_gump_man()->find_gump(x, y);
