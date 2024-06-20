@@ -324,8 +324,8 @@ void Shape_draw::set_drag_icon(
 	}
 	// This will be the shape dragged.
 	GdkTexture* icon = gdk_texture_new_for_pixbuf(pixbuf);
-	gtk_drag_icon_set_from_paintable(
-			drag, GDK_PAINTABLE(icon), w - 2 - xright, h - 2 - ybelow);
+	// Discard the Origin, space the pointer and the Shape for macOS
+	gtk_drag_icon_set_from_paintable(drag, GDK_PAINTABLE(icon), w + 2, h + 2);
 	g_object_unref(pixbuf);
 	g_object_unref(icon);
 }
