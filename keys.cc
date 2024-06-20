@@ -420,11 +420,23 @@ bool KeyBinder::DoAction(const ActionType& a, bool press) const {
 }
 
 KeyMap::const_iterator KeyBinder::TranslateEvent(const SDL_Event& ev) const {
-	ExultKey key{ev.key.key, ev.key.mod};
-
 	if (ev.type != SDL_EVENT_KEY_DOWN && ev.type != SDL_EVENT_KEY_UP) {
 		return bindings.end();
 	}
+
+	ExultKey key{
+			SDL_GetKeyFromScancode(
+					ev.key.scancode,
+					ev.key.mod
+							& (SDL_KMOD_SHIFT | SDL_KMOD_NUM | SDL_KMOD_CAPS
+							   | SDL_KMOD_MODE | SDL_KMOD_SCROLL)),
+			ev.key.mod};
+
+	fprintf(stderr,
+			". In KeyBinder::TranslateEvent, key %08x ( %08x ), scan %08x,"
+			" raw %08x, mod %08x, type %08x\n",
+			ev.key.key, key.key, ev.key.scancode, ev.key.raw, ev.key.mod,
+			ev.type);
 
 	key.mod = SDL_KMOD_NONE;
 	if (ev.key.mod & SDL_KMOD_SHIFT) {

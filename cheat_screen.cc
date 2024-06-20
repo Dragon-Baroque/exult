@@ -151,11 +151,12 @@ void CheatScreen::show_screen() {
 #else
 	maxy = gwin->get_height();
 #endif
-	centerx = maxx / 2;
-	centery = maxy / 2;
+	centerx            = maxx / 2;
+	centery            = maxy / 2;
+	SDL_Window* window = gwin->get_win()->get_screen_window();
 	if (touchui != nullptr) {
 		touchui->hideGameControls();
-		SDL_StartTextInput();
+		SDL_StartTextInput(window);
 	}
 
 	// Pause the game
@@ -180,8 +181,8 @@ void CheatScreen::show_screen() {
 		if (!gumpman->gump_mode()) {
 			touchui->showGameControls();
 		}
-		if (SDL_TextInputActive()) {
-			SDL_StopTextInput();
+		if (SDL_TextInputActive(window)) {
+			SDL_StopTextInput(window);
 		}
 	}
 }
@@ -468,10 +469,11 @@ bool CheatScreen::SharedInput(
 		while (SDL_PollEvent(&event)) {
 			// Touch on the cheat screen will bring up the keyboard
 			if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
-				if (SDL_TextInputActive()) {
-					SDL_StopTextInput();
+				SDL_Window* window = gwin->get_win()->get_screen_window();
+				if (SDL_TextInputActive(window)) {
+					SDL_StopTextInput(window);
 				} else {
-					SDL_StartTextInput();
+					SDL_StartTextInput(window);
 				}
 			}
 
