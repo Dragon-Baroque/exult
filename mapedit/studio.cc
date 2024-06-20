@@ -1054,6 +1054,7 @@ void ExultStudio::activate() {    // GtkApplication over GApplication.
 			this);
 	gtk_application_set_menubar(
 			application, G_MENU_MODEL(get_gobject("main_menu_bar")));
+
 #if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
 	GtkWidget* main_pane = get_widget("hpaned1");
 	gtk_paned_set_resize_start_child(GTK_PANED(main_pane), false);
