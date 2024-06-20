@@ -797,7 +797,7 @@
                                                 </data>
                                               </object>
                                             </property>
-                                            <!-- <property name="active">0</property> -->
+                                            <property name="active">0</property>
                                             <child>
                                               <object class="GtkCellRendererText" id="cellrenderertext28"/>
                                               <attributes>
@@ -1258,7 +1258,7 @@
                             </data>
                           </object>
                         </property>
-                        <!-- <property name="active">0</property> -->
+                        <property name="active">0</property>
                         <child>
                           <object class="GtkCellRendererText" id="cellrenderertext29"/>
                           <attributes>
@@ -1746,7 +1746,7 @@
                                 </data>
                               </object>
                             </property>
-                            <!-- <property name="active">0</property> -->
+                            <property name="active">0</property>
                             <child>
                               <object class="GtkCellRendererText" id="cellrenderertext30"/>
                               <attributes>
@@ -1812,7 +1812,7 @@
                                 </data>
                               </object>
                             </property>
-                            <!-- <property name="active">0</property> -->
+                            <property name="active">0</property>
                             <child>
                               <object class="GtkCellRendererText" id="cellrenderertext3"/>
                               <attributes>
@@ -2720,7 +2720,7 @@
                             </data>
                           </object>
                         </property>
-                        <!-- <property name="active">0</property> -->
+                        <property name="active">0</property>
                         <child>
                           <object class="GtkCellRendererText" id="cellrenderertext4"/>
                           <attributes>
@@ -3211,7 +3211,7 @@ Coordinates</property>
                             </data>
                           </object>
                         </property>
-                        <!-- <property name="active">0</property> -->
+                        <property name="active">0</property>
                         <child>
                           <object class="GtkCellRendererText" id="cellrenderertext5"/>
                           <attributes>
@@ -3778,7 +3778,7 @@ Coordinates</property>
             <!-- <property name="layout-style">spread</property> -->
             <child>
               <object class="GtkButton" id="egg_apply_btn">
-                <!-- <property name="label">_Apply</property> -->
+                <property name="label">_Apply</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -3791,42 +3791,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img63</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_egg_apply_btn_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Apply</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">0</property>
@@ -3834,7 +3800,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="egg_cancel_btn">
-                <!-- <property name="label">_Cancel</property> -->
+                <property name="label">_Cancel</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -3847,42 +3813,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">cancel_img64</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_egg_cancel_btn_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-cancel</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Cancel</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">1</property>
@@ -4470,7 +4402,7 @@ Coordinates</property>
                         </data>
                       </object>
                     </property>
-                    <!-- <property name="active">0</property> -->
+                    <property name="active">0</property>
                     <child>
                       <object class="GtkCellRendererText" id="cellrenderertext1"/>
                       <attributes>
@@ -4554,7 +4486,7 @@ Coordinates</property>
                         </data>
                       </object>
                     </property>
-                    <!-- <property name="active">0</property> -->
+                    <property name="active">0</property>
                     <child>
                       <object class="GtkCellRendererText" id="cellrenderertext2"/>
                       <attributes>
@@ -8106,7 +8038,7 @@ Coordinates</property>
             <!-- <property name="layout-style">spread</property> -->
             <child>
               <object class="GtkButton" id="npc_apply_btn">
-                <!-- <property name="label">_Apply</property> -->
+                <property name="label">_Apply</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -8119,42 +8051,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img38</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_npc_apply_btn_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Apply</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">0</property>
@@ -8162,7 +8060,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="npc_cancel_btn">
-                <!-- <property name="label">_Cancel</property> -->
+                <property name="label">_Cancel</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -8175,42 +8073,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">cancel_img39</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_npc_cancel_btn_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-cancel</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Cancel</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">1</property>
@@ -9271,7 +9135,7 @@ Coordinates</property>
         <!-- <property name="layout-style">spread</property> -->
         <child>
           <object class="GtkButton" id="schedule_cancel">
-            <!-- <property name="label">_Cancel</property> -->
+            <property name="label">_Cancel</property>
             <property name="visible">True</property>
             <!-- <property name="can-focus">True</property> -->
             <!-- <property name="can-default">True</property> -->
@@ -9284,42 +9148,8 @@ Coordinates</property>
             <property name="margin-bottom">0</property>
             <property name="hexpand">False</property>
             <property name="vexpand">False</property>
-            <!-- <property name="image">cancel_img40</property> -->
             <property name="use-underline">True</property>
-            <!-- <property name="always-show-image">True</property> -->
             <signal name="clicked" handler="exult_widget_hide" object="schedule_dialog" swapped="yes"/>
-            <child>
-              <object class="GtkBox">
-                <property name="visible">True</property>
-                <!-- <property name="can-focus">False</property> -->
-                <property name="orientation">horizontal</property>
-                <child>
-                  <object class="GtkImage">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="icon-name">gtk-cancel</property>
-                    <property name="use-fallback">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="halign">center</property>
-                    <property name="valign">fill</property>
-                    <property name="margin-start">2</property>
-                    <property name="margin-end">2</property>
-                    <property name="margin-top">0</property>
-                    <property name="margin-bottom">0</property>
-                    <property name="hexpand">True</property>
-                    <property name="vexpand">False</property>
-                    <property name="label" translatable="yes">_Cancel</property>
-                    <property name="use-underline">True</property>
-                    <property name="justify">center</property>
-                  </object>
-                </child>
-              </object>
-            </child>
           </object>
           <!-- <packing>
 <property name="position">0</property>
@@ -9816,7 +9646,7 @@ Coordinates</property>
             <!-- <property name="layout-style">spread</property> -->
             <child>
               <object class="GtkButton" id="obj_okay">
-                <!-- <property name="label">_OK</property> -->
+                <property name="label">_OK</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -9829,42 +9659,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img1</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_obj_okay_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_OK</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">0</property>
@@ -9872,7 +9668,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="obj_apply">
-                <!-- <property name="label">_Apply</property> -->
+                <property name="label">_Apply</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -9885,42 +9681,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img2</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_obj_apply_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Apply</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">1</property>
@@ -9928,7 +9690,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="obj_cancel">
-                <!-- <property name="label">_Cancel</property> -->
+                <property name="label">_Cancel</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -9941,42 +9703,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">cancel_img3</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_obj_cancel_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-cancel</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Cancel</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">2</property>
@@ -10447,7 +10175,7 @@ Coordinates</property>
                                 </data>
                               </object>
                             </property>
-                            <!-- <property name="active">0</property> -->
+                            <property name="active">0</property>
                             <signal name="changed" handler="on_shinfo_shape_class_changed" swapped="no"/>
                             <child>
                               <object class="GtkCellRendererText" id="cellrenderertext31"/>
@@ -10903,7 +10631,7 @@ Coordinates</property>
                                 </data>
                               </object>
                             </property>
-                            <!-- <property name="active">0</property> -->
+                            <property name="active">0</property>
                             <signal name="changed" handler="on_shinfo_ready_spot_changed" swapped="no"/>
                             <child>
                               <object class="GtkCellRendererText" id="cellrenderertext34"/>
@@ -10985,7 +10713,7 @@ Coordinates</property>
                                 </data>
                               </object>
                             </property>
-                            <!-- <property name="active">0</property> -->
+                            <property name="active">0</property>
                             <signal name="changed" handler="on_shinfo_ready_spot_changed" swapped="no"/>
                             <child>
                               <object class="GtkCellRendererText" id="cellrenderertext35"/>
@@ -11067,7 +10795,7 @@ Coordinates</property>
                                 </data>
                               </object>
                             </property>
-                            <!-- <property name="active">0</property> -->
+                            <property name="active">0</property>
                             <signal name="changed" handler="on_shinfo_ready_spot_changed" swapped="no"/>
                             <child>
                               <object class="GtkCellRendererText" id="cellrenderertext36"/>
@@ -12828,7 +12556,7 @@ Coordinates</property>
                                         </data>
                                       </object>
                                     </property>
-                                    <!-- <property name="active">0</property> -->
+                                    <property name="active">0</property>
                                     <child>
                                       <object class="GtkCellRendererText" id="cellrenderertext37"/>
                                       <attributes>
@@ -12903,7 +12631,7 @@ Coordinates</property>
                                         </data>
                                       </object>
                                     </property>
-                                    <!-- <property name="active">0</property> -->
+                                    <property name="active">0</property>
                                     <child>
                                       <object class="GtkCellRendererText" id="cellrenderertext6"/>
                                       <attributes>
@@ -12989,7 +12717,7 @@ Coordinates</property>
                                             </data>
                                           </object>
                                         </property>
-                                        <!-- <property name="active">0</property> -->
+                                        <property name="active">0</property>
                                         <signal name="changed" handler="on_shinfo_weapon_ammo_changed" swapped="no"/>
                                         <child>
                                           <object class="GtkCellRendererText" id="cellrenderertext7"/>
@@ -13123,7 +12851,7 @@ Coordinates</property>
                                             </data>
                                           </object>
                                         </property>
-                                        <!-- <property name="active">0</property> -->
+                                        <property name="active">0</property>
                                         <signal name="changed" handler="on_shinfo_weapon_sprite_changed" swapped="no"/>
                                         <child>
                                           <object class="GtkCellRendererText" id="cellrenderertext8"/>
@@ -13420,7 +13148,7 @@ Coordinates</property>
                                         </data>
                                       </object>
                                     </property>
-                                    <!-- <property name="active">0</property> -->
+                                    <property name="active">0</property>
                                     <child>
                                       <object class="GtkCellRendererText" id="cellrenderertext9"/>
                                       <attributes>
@@ -13495,7 +13223,7 @@ Coordinates</property>
                                         </data>
                                       </object>
                                     </property>
-                                    <!-- <property name="active">0</property> -->
+                                    <property name="active">0</property>
                                     <child>
                                       <object class="GtkCellRendererText" id="cellrenderertext10"/>
                                       <attributes>
@@ -13627,7 +13355,7 @@ Coordinates</property>
                                         </data>
                                       </object>
                                     </property>
-                                    <!-- <property name="active">0</property> -->
+                                    <property name="active">0</property>
                                     <child>
                                       <object class="GtkCellRendererText" id="cellrenderertext11"/>
                                       <attributes>
@@ -14519,7 +14247,7 @@ Coordinates</property>
                                             </data>
                                           </object>
                                         </property>
-                                        <!-- <property name="active">0</property> -->
+                                        <property name="active">0</property>
                                         <signal name="changed" handler="on_shinfo_ammo_sprite_changed" swapped="no"/>
                                         <child>
                                           <object class="GtkCellRendererText" id="cellrenderertext12"/>
@@ -14657,7 +14385,7 @@ Coordinates</property>
                                         </data>
                                       </object>
                                     </property>
-                                    <!-- <property name="active">0</property> -->
+                                    <property name="active">0</property>
                                     <child>
                                       <object class="GtkCellRendererText" id="cellrenderertext13"/>
                                       <attributes>
@@ -15236,7 +14964,7 @@ Coordinates</property>
                                                 </data>
                                               </object>
                                             </property>
-                                            <!-- <property name="active">0</property> -->
+                                            <property name="active">0</property>
                                             <child>
                                               <object class="GtkCellRendererText" id="cellrenderertext14"/>
                                               <attributes>
@@ -15903,7 +15631,7 @@ Coordinates</property>
                                       <object class="GtkImage">
                                         <property name="visible">True</property>
                                         <!-- <property name="can-focus">False</property> -->
-                                        <property name="icon-name">gtk-edit</property>
+                                        <property name="icon-name">document-edit</property>
                                         <property name="use-fallback">True</property>
                                       </object>
                                     </child>
@@ -16355,7 +16083,7 @@ Coordinates</property>
                                 </data>
                               </object>
                             </property>
-                            <!-- <property name="active">0</property> -->
+                            <property name="active">0</property>
                             <child>
                               <object class="GtkCellRendererText" id="cellrenderertext15"/>
                               <attributes>
@@ -16505,7 +16233,7 @@ Coordinates</property>
                                 </data>
                               </object>
                             </property>
-                            <!-- <property name="active">0</property> -->
+                            <property name="active">0</property>
                             <child>
                               <object class="GtkCellRendererText" id="cellrenderertext16"/>
                               <attributes>
@@ -18258,7 +17986,7 @@ Coordinates</property>
                                         </data>
                                       </object>
                                     </property>
-                                    <!-- <property name="active">0</property> -->
+                                    <property name="active">0</property>
                                     <signal name="changed" handler="on_shinfo_animation_freezefirst_changed" swapped="no"/>
                                     <child>
                                       <object class="GtkCellRendererText" id="cellrenderertext18"/>
@@ -18469,7 +18197,7 @@ Coordinates</property>
                                     </data>
                                   </object>
                                 </property>
-                                <!-- <property name="active">0</property> -->
+                                <property name="active">0</property>
                                 <signal name="changed" handler="on_shinfo_animation_type_changed" swapped="no"/>
                                 <child>
                                   <object class="GtkCellRendererText" id="cellrenderertext17"/>
@@ -18707,7 +18435,7 @@ Coordinates</property>
                                 </data>
                               </object>
                             </property>
-                            <!-- <property name="active">0</property> -->
+                            <property name="active">0</property>
                             <child>
                               <object class="GtkCellRendererText" id="cellrenderertext19"/>
                               <attributes>
@@ -19323,7 +19051,7 @@ Coordinates</property>
                                 </data>
                               </object>
                             </property>
-                            <!-- <property name="active">0</property> -->
+                            <property name="active">0</property>
                             <child>
                               <object class="GtkCellRendererText" id="cellrenderertext20"/>
                               <attributes>
@@ -19447,7 +19175,7 @@ Coordinates</property>
                                     </data>
                                   </object>
                                 </property>
-                                <!-- <property name="active">0</property> -->
+                                <property name="active">0</property>
                                 <child>
                                   <object class="GtkCellRendererText" id="cellrenderertext21"/>
                                   <attributes>
@@ -20813,7 +20541,7 @@ Coordinates</property>
                                     </data>
                                   </object>
                                 </property>
-                                <!-- <property name="active">0</property> -->
+                                <property name="active">0</property>
                                 <child>
                                   <object class="GtkCellRendererText" id="cellrenderertext22"/>
                                   <attributes>
@@ -23264,7 +22992,7 @@ Coordinates</property>
                                                 </data>
                                               </object>
                                             </property>
-                                            <!-- <property name="active">0</property> -->
+                                            <property name="active">0</property>
                                             <signal name="changed" handler="on_shinfo_framenames_name_type_changed" swapped="no"/>
                                             <child>
                                               <object class="GtkCellRendererText" id="cellrenderertext23"/>
@@ -23464,7 +23192,7 @@ Coordinates</property>
                                                         </data>
                                                       </object>
                                                     </property>
-                                                    <!-- <property name="active">0</property> -->
+                                                    <property name="active">0</property>
                                                     <signal name="changed" handler="on_shinfo_framenames_comp_msg_type_changed" swapped="no"/>
                                                     <child>
                                                       <object class="GtkCellRendererText" id="cellrenderertext26"/>
@@ -24493,7 +24221,7 @@ Coordinates</property>
                                             </data>
                                           </object>
                                         </property>
-                                        <!-- <property name="active">0</property> -->
+                                        <property name="active">0</property>
                                         <signal name="changed" handler="on_shinfo_objpaperdoll_spot_changed" swapped="no"/>
                                         <child>
                                           <object class="GtkCellRendererText" id="cellrenderertext27"/>
@@ -26101,7 +25829,7 @@ Coordinates</property>
             <!-- <property name="layout-style">spread</property> -->
             <child>
               <object class="GtkButton" id="shinfo_okay">
-                <!-- <property name="label">_OK</property> -->
+                <property name="label">_OK</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -26115,42 +25843,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img60</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_shinfo_okay_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_OK</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">0</property>
@@ -26158,7 +25852,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="shinfo_apply">
-                <!-- <property name="label">_Apply</property> -->
+                <property name="label">_Apply</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -26171,42 +25865,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img61</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_shinfo_apply_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Apply</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">1</property>
@@ -26214,7 +25874,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="shinfo_cancel">
-                <!-- <property name="label">_Cancel</property> -->
+                <property name="label">_Cancel</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -26227,42 +25887,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">cancel_img62</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_shinfo_cancel_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-cancel</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Cancel</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">2</property>
@@ -26445,7 +26071,7 @@ Coordinates</property>
             <!-- <property name="layout-style">spread</property> -->
             <child>
               <object class="GtkButton" id="equip_okay">
-                <!-- <property name="label">_OK</property> -->
+                <property name="label">_OK</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -26458,42 +26084,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img15</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_equip_okay_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_OK</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">0</property>
@@ -26501,7 +26093,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="equip_apply">
-                <!-- <property name="label">_Apply</property> -->
+                <property name="label">_Apply</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -26514,42 +26106,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img16</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_equip_apply_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Apply</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">1</property>
@@ -26557,7 +26115,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="equip_cancel">
-                <!-- <property name="label">_Cancel</property> -->
+                <property name="label">_Cancel</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -26570,42 +26128,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">cancel_img17</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_equip_cancel_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-cancel</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Cancel</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">2</property>
@@ -27359,7 +26883,7 @@ Coordinates</property>
                       <object class="GtkImage">
                         <property name="visible">True</property>
                         <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-close</property>
+                        <property name="icon-name">window-close</property>
                         <property name="use-fallback">True</property>
                       </object>
                     </child>
@@ -27783,7 +27307,7 @@ Coordinates</property>
                         </data>
                       </object>
                     </property>
-                    <!-- <property name="active">0</property> -->
+                    <property name="active">0</property>
                     <child>
                       <object class="GtkCellRendererText" id="cellrenderertext32"/>
                       <attributes>
@@ -27827,7 +27351,7 @@ Coordinates</property>
             <!-- <property name="layout-style">spread</property> -->
             <child>
               <object class="GtkButton" id="prefs_okay">
-                <!-- <property name="label">_OK</property> -->
+                <property name="label">_OK</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -27840,42 +27364,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img34</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_prefs_okay_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_OK</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">0</property>
@@ -27883,7 +27373,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="prefs_apply">
-                <!-- <property name="label">_Apply</property> -->
+                <property name="label">_Apply</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -27896,42 +27386,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img35</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_prefs_apply_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Apply</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">1</property>
@@ -27939,7 +27395,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="prefs_cancel">
-                <!-- <property name="label">_Cancel</property> -->
+                <property name="label">_Cancel</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -27952,42 +27408,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">cancel_img36</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_prefs_cancel_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-cancel</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Cancel</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">2</property>
@@ -28454,7 +27876,7 @@ Coordinates</property>
             <!-- <property name="layout-style">spread</property> -->
             <child>
               <object class="GtkButton" id="new_shape_okay">
-                <!-- <property name="label">_OK</property> -->
+                <property name="label">_OK</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -28467,42 +27889,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img11</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_new_shape_okay_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_OK</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">0</property>
@@ -28510,7 +27898,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="new_shape_cancel">
-                <!-- <property name="label">_Cancel</property> -->
+                <property name="label">_Cancel</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -28523,42 +27911,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">cancel_img12</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="exult_widget_hide" object="new_shape_window" swapped="yes"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-cancel</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Cancel</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">1</property>
@@ -28816,7 +28170,7 @@ Coordinates</property>
             <!-- <property name="layout-style">spread</property> -->
             <child>
               <object class="GtkButton" id="export_tiles_okay">
-                <!-- <property name="label">_OK</property> -->
+                <property name="label">_OK</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -28829,42 +28183,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img9</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_export_tiles_okay_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_OK</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">0</property>
@@ -28872,7 +28192,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="export_tiles_cancel">
-                <!-- <property name="label">_Cancel</property> -->
+                <property name="label">_Cancel</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -28885,42 +28205,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">cancel_img10</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="exult_widget_hide" object="export_tiles_window" swapped="yes"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-cancel</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Cancel</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">1</property>
@@ -29324,7 +28610,7 @@ Coordinates</property>
                 <!-- <property name="layout-style">spread</property> -->
                 <child>
                   <object class="GtkButton" id="combo_ok">
-                    <!-- <property name="label">_OK</property> -->
+                    <property name="label">_OK</property>
                     <property name="visible">True</property>
                     <!-- <property name="can-focus">True</property> -->
                     <!-- <property name="can-default">True</property> -->
@@ -29337,42 +28623,8 @@ Coordinates</property>
                     <property name="margin-bottom">0</property>
                     <property name="hexpand">False</property>
                     <property name="vexpand">False</property>
-                    <!-- <property name="image">ok_img6</property> -->
                     <property name="use-underline">True</property>
-                    <!-- <property name="always-show-image">True</property> -->
                     <signal name="clicked" handler="on_combo_ok_clicked" swapped="no"/>
-                    <child>
-                      <object class="GtkBox">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="orientation">horizontal</property>
-                        <child>
-                          <object class="GtkImage">
-                            <property name="visible">True</property>
-                            <!-- <property name="can-focus">False</property> -->
-                            <property name="icon-name">gtk-ok</property>
-                            <property name="use-fallback">True</property>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <!-- <property name="can-focus">False</property> -->
-                            <property name="halign">center</property>
-                            <property name="valign">fill</property>
-                            <property name="margin-start">2</property>
-                            <property name="margin-end">2</property>
-                            <property name="margin-top">0</property>
-                            <property name="margin-bottom">0</property>
-                            <property name="hexpand">True</property>
-                            <property name="vexpand">False</property>
-                            <property name="label" translatable="yes">_OK</property>
-                            <property name="use-underline">True</property>
-                            <property name="justify">center</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
                   </object>
                   <!-- <packing>
 <property name="position">0</property>
@@ -29380,7 +28632,7 @@ Coordinates</property>
                 </child>
                 <child>
                   <object class="GtkButton" id="combo_apply">
-                    <!-- <property name="label">_Apply</property> -->
+                    <property name="label">_Apply</property>
                     <property name="visible">True</property>
                     <!-- <property name="can-focus">True</property> -->
                     <!-- <property name="can-default">True</property> -->
@@ -29393,42 +28645,8 @@ Coordinates</property>
                     <property name="margin-bottom">0</property>
                     <property name="hexpand">False</property>
                     <property name="vexpand">False</property>
-                    <!-- <property name="image">ok_img7</property> -->
                     <property name="use-underline">True</property>
-                    <!-- <property name="always-show-image">True</property> -->
                     <signal name="clicked" handler="on_combo_apply_clicked" swapped="no"/>
-                    <child>
-                      <object class="GtkBox">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="orientation">horizontal</property>
-                        <child>
-                          <object class="GtkImage">
-                            <property name="visible">True</property>
-                            <!-- <property name="can-focus">False</property> -->
-                            <property name="icon-name">gtk-ok</property>
-                            <property name="use-fallback">True</property>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <!-- <property name="can-focus">False</property> -->
-                            <property name="halign">center</property>
-                            <property name="valign">fill</property>
-                            <property name="margin-start">2</property>
-                            <property name="margin-end">2</property>
-                            <property name="margin-top">0</property>
-                            <property name="margin-bottom">0</property>
-                            <property name="hexpand">True</property>
-                            <property name="vexpand">False</property>
-                            <property name="label" translatable="yes">_Apply</property>
-                            <property name="use-underline">True</property>
-                            <property name="justify">center</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
                   </object>
                   <!-- <packing>
 <property name="position">1</property>
@@ -29436,7 +28654,7 @@ Coordinates</property>
                 </child>
                 <child>
                   <object class="GtkButton" id="combo_cancel">
-                    <!-- <property name="label">_Cancel</property> -->
+                    <property name="label">_Cancel</property>
                     <property name="visible">True</property>
                     <!-- <property name="can-focus">True</property> -->
                     <!-- <property name="can-default">True</property> -->
@@ -29449,42 +28667,8 @@ Coordinates</property>
                     <property name="margin-bottom">0</property>
                     <property name="hexpand">False</property>
                     <property name="vexpand">False</property>
-                    <!-- <property name="image">cancel_img8</property> -->
                     <property name="use-underline">True</property>
-                    <!-- <property name="always-show-image">True</property> -->
                     <signal name="clicked" handler="exult_widget_hide" object="combo_win" swapped="yes"/>
-                    <child>
-                      <object class="GtkBox">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="orientation">horizontal</property>
-                        <child>
-                          <object class="GtkImage">
-                            <property name="visible">True</property>
-                            <!-- <property name="can-focus">False</property> -->
-                            <property name="icon-name">gtk-cancel</property>
-                            <property name="use-fallback">True</property>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <!-- <property name="can-focus">False</property> -->
-                            <property name="halign">center</property>
-                            <property name="valign">fill</property>
-                            <property name="margin-start">2</property>
-                            <property name="margin-end">2</property>
-                            <property name="margin-top">0</property>
-                            <property name="margin-bottom">0</property>
-                            <property name="hexpand">True</property>
-                            <property name="vexpand">False</property>
-                            <property name="label" translatable="yes">_Cancel</property>
-                            <property name="use-underline">True</property>
-                            <property name="justify">center</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
                   </object>
                   <!-- <packing>
 <property name="position">2</property>
@@ -29577,7 +28761,7 @@ Coordinates</property>
                       <object class="GtkImage">
                         <property name="visible">True</property>
                         <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-close</property>
+                        <property name="icon-name">window-close</property>
                         <property name="use-fallback">True</property>
                       </object>
                     </child>
@@ -30187,7 +29371,7 @@ Coordinates</property>
         <!-- <property name="layout-style">spread</property> -->
         <child>
           <object class="GtkButton" id="newmap_ok">
-            <!-- <property name="label">_OK</property> -->
+            <property name="label">_OK</property>
             <property name="visible">True</property>
             <!-- <property name="can-focus">True</property> -->
             <!-- <property name="can-default">True</property> -->
@@ -30200,42 +29384,8 @@ Coordinates</property>
             <property name="margin-bottom">0</property>
             <property name="hexpand">False</property>
             <property name="vexpand">False</property>
-            <!-- <property name="image">ok_img4</property> -->
             <property name="use-underline">True</property>
-            <!-- <property name="always-show-image">True</property> -->
             <signal name="clicked" handler="on_newmap_ok_clicked" swapped="no"/>
-            <child>
-              <object class="GtkBox">
-                <property name="visible">True</property>
-                <!-- <property name="can-focus">False</property> -->
-                <property name="orientation">horizontal</property>
-                <child>
-                  <object class="GtkImage">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="icon-name">gtk-ok</property>
-                    <property name="use-fallback">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="halign">center</property>
-                    <property name="valign">fill</property>
-                    <property name="margin-start">2</property>
-                    <property name="margin-end">2</property>
-                    <property name="margin-top">0</property>
-                    <property name="margin-bottom">0</property>
-                    <property name="hexpand">True</property>
-                    <property name="vexpand">False</property>
-                    <property name="label" translatable="yes">_OK</property>
-                    <property name="use-underline">True</property>
-                    <property name="justify">center</property>
-                  </object>
-                </child>
-              </object>
-            </child>
           </object>
           <!-- <packing>
 <property name="position">0</property>
@@ -30243,7 +29393,7 @@ Coordinates</property>
         </child>
         <child>
           <object class="GtkButton" id="newmap_cancel">
-            <!-- <property name="label">_Cancel</property> -->
+            <property name="label">_Cancel</property>
             <property name="visible">True</property>
             <!-- <property name="can-focus">True</property> -->
             <!-- <property name="can-default">True</property> -->
@@ -30256,42 +29406,8 @@ Coordinates</property>
             <property name="margin-bottom">0</property>
             <property name="hexpand">False</property>
             <property name="vexpand">False</property>
-            <!-- <property name="image">cancel_img5</property> -->
             <property name="use-underline">True</property>
-            <!-- <property name="always-show-image">True</property> -->
             <signal name="clicked" handler="exult_widget_hide" object="newmap_dialog" swapped="yes"/>
-            <child>
-              <object class="GtkBox">
-                <property name="visible">True</property>
-                <!-- <property name="can-focus">False</property> -->
-                <property name="orientation">horizontal</property>
-                <child>
-                  <object class="GtkImage">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="icon-name">gtk-cancel</property>
-                    <property name="use-fallback">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="halign">center</property>
-                    <property name="valign">fill</property>
-                    <property name="margin-start">2</property>
-                    <property name="margin-end">2</property>
-                    <property name="margin-top">0</property>
-                    <property name="margin-bottom">0</property>
-                    <property name="hexpand">True</property>
-                    <property name="vexpand">False</property>
-                    <property name="label" translatable="yes">_Cancel</property>
-                    <property name="use-underline">True</property>
-                    <property name="justify">center</property>
-                  </object>
-                </child>
-              </object>
-            </child>
           </object>
           <!-- <packing>
 <property name="position">1</property>
@@ -30537,7 +29653,7 @@ Coordinates</property>
                         </data>
                       </object>
                     </property>
-                    <!-- <property name="active">0</property> -->
+                    <property name="active">0</property>
                     <child>
                       <object class="GtkCellRendererText" id="cellrenderertext33"/>
                       <attributes>
@@ -30579,7 +29695,7 @@ Coordinates</property>
             <!-- <property name="layout-style">spread</property> -->
             <child>
               <object class="GtkButton" id="barge_apply_btn">
-                <!-- <property name="label">_Apply</property> -->
+                <property name="label">_Apply</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -30592,42 +29708,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img21</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_barge_apply_btn_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Apply</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">0</property>
@@ -30635,7 +29717,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="barge_cancel_btn">
-                <!-- <property name="label">_Cancel</property> -->
+                <property name="label">_Cancel</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -30648,42 +29730,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">cancel_img22</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_barge_cancel_btn_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-cancel</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Cancel</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">1</property>
@@ -31365,7 +30413,7 @@ Coordinates</property>
             <!-- <property name="layout-style">spread</property> -->
             <child>
               <object class="GtkButton" id="cont_ok">
-                <!-- <property name="label">_OK</property> -->
+                <property name="label">_OK</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -31378,42 +30426,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img18</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_cont_okay_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_OK</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">0</property>
@@ -31421,7 +30435,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="cont_apply">
-                <!-- <property name="label">_Apply</property> -->
+                <property name="label">_Apply</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -31434,42 +30448,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img19</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_cont_apply_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Apply</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">1</property>
@@ -31477,7 +30457,7 @@ Coordinates</property>
             </child>
             <child>
               <object class="GtkButton" id="cont_cancel">
-                <!-- <property name="label">_Cancel</property> -->
+                <property name="label">_Cancel</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -31490,42 +30470,8 @@ Coordinates</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">cancel_img20</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_cont_cancel_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-cancel</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Cancel</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">2</property>
@@ -31847,7 +30793,7 @@ will be added automatically</property>
         <!-- <property name="layout-style">spread</property> -->
         <child>
           <object class="GtkButton" id="gameselect_ok">
-            <!-- <property name="label">_OK</property> -->
+            <property name="label">_OK</property>
             <property name="visible">True</property>
             <!-- <property name="can-focus">True</property> -->
             <!-- <property name="can-default">True</property> -->
@@ -31860,42 +30806,8 @@ will be added automatically</property>
             <property name="margin-bottom">0</property>
             <property name="hexpand">False</property>
             <property name="vexpand">False</property>
-            <!-- <property name="image">ok_img29</property> -->
             <property name="use-underline">True</property>
-            <!-- <property name="always-show-image">True</property> -->
             <signal name="clicked" handler="on_gameselect_ok_clicked" swapped="no"/>
-            <child>
-              <object class="GtkBox">
-                <property name="visible">True</property>
-                <!-- <property name="can-focus">False</property> -->
-                <property name="orientation">horizontal</property>
-                <child>
-                  <object class="GtkImage">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="icon-name">gtk-ok</property>
-                    <property name="use-fallback">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="halign">center</property>
-                    <property name="valign">fill</property>
-                    <property name="margin-start">2</property>
-                    <property name="margin-end">2</property>
-                    <property name="margin-top">0</property>
-                    <property name="margin-bottom">0</property>
-                    <property name="hexpand">True</property>
-                    <property name="vexpand">False</property>
-                    <property name="label" translatable="yes">_OK</property>
-                    <property name="use-underline">True</property>
-                    <property name="justify">center</property>
-                  </object>
-                </child>
-              </object>
-            </child>
           </object>
           <!-- <packing>
 <property name="position">0</property>
@@ -31903,7 +30815,7 @@ will be added automatically</property>
         </child>
         <child>
           <object class="GtkButton" id="gameselect_cancel">
-            <!-- <property name="label">_Cancel</property> -->
+            <property name="label">_Cancel</property>
             <property name="visible">True</property>
             <!-- <property name="can-focus">True</property> -->
             <!-- <property name="can-default">True</property> -->
@@ -31916,42 +30828,8 @@ will be added automatically</property>
             <property name="margin-bottom">0</property>
             <property name="hexpand">False</property>
             <property name="vexpand">False</property>
-            <!-- <property name="image">cancel_img30</property> -->
             <property name="use-underline">True</property>
-            <!-- <property name="always-show-image">True</property> -->
             <signal name="clicked" handler="exult_widget_hide" object="game_selection" swapped="yes"/>
-            <child>
-              <object class="GtkBox">
-                <property name="visible">True</property>
-                <!-- <property name="can-focus">False</property> -->
-                <property name="orientation">horizontal</property>
-                <child>
-                  <object class="GtkImage">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="icon-name">gtk-cancel</property>
-                    <property name="use-fallback">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="halign">center</property>
-                    <property name="valign">fill</property>
-                    <property name="margin-start">2</property>
-                    <property name="margin-end">2</property>
-                    <property name="margin-top">0</property>
-                    <property name="margin-bottom">0</property>
-                    <property name="hexpand">True</property>
-                    <property name="vexpand">False</property>
-                    <property name="label" translatable="yes">_Cancel</property>
-                    <property name="use-underline">True</property>
-                    <property name="justify">center</property>
-                  </object>
-                </child>
-              </object>
-            </child>
           </object>
           <!-- <packing>
 <property name="position">1</property>
@@ -32292,7 +31170,7 @@ will be added automatically</property>
         <!-- <property name="layout-style">spread</property> -->
         <child>
           <object class="GtkButton" id="usecodes_cancel">
-            <!-- <property name="label">_Cancel</property> -->
+            <property name="label">_Cancel</property>
             <property name="visible">True</property>
             <!-- <property name="can-focus">True</property> -->
             <!-- <property name="can-default">True</property> -->
@@ -32305,42 +31183,8 @@ will be added automatically</property>
             <property name="margin-bottom">0</property>
             <property name="hexpand">False</property>
             <property name="vexpand">False</property>
-            <!-- <property name="image">cancel_img41</property> -->
             <property name="use-underline">True</property>
-            <!-- <property name="always-show-image">True</property> -->
             <signal name="clicked" handler="on_usecodes_cancel_clicked" swapped="no"/>
-            <child>
-              <object class="GtkBox">
-                <property name="visible">True</property>
-                <!-- <property name="can-focus">False</property> -->
-                <property name="orientation">horizontal</property>
-                <child>
-                  <object class="GtkImage">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="icon-name">gtk-cancel</property>
-                    <property name="use-fallback">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="halign">center</property>
-                    <property name="valign">fill</property>
-                    <property name="margin-start">2</property>
-                    <property name="margin-end">2</property>
-                    <property name="margin-top">0</property>
-                    <property name="margin-bottom">0</property>
-                    <property name="hexpand">True</property>
-                    <property name="vexpand">False</property>
-                    <property name="label" translatable="yes">_Cancel</property>
-                    <property name="use-underline">True</property>
-                    <property name="justify">center</property>
-                  </object>
-                </child>
-              </object>
-            </child>
           </object>
           <!-- <packing>
 <property name="position">0</property>
@@ -32348,7 +31192,7 @@ will be added automatically</property>
         </child>
         <child>
           <object class="GtkButton" id="usecodes_ok">
-            <!-- <property name="label">_OK</property> -->
+            <property name="label">_OK</property>
             <property name="visible">True</property>
             <!-- <property name="can-focus">True</property> -->
             <!-- <property name="can-default">True</property> -->
@@ -32361,42 +31205,8 @@ will be added automatically</property>
             <property name="margin-bottom">0</property>
             <property name="hexpand">False</property>
             <property name="vexpand">False</property>
-            <!-- <property name="image">ok_img42</property> -->
             <property name="use-underline">True</property>
-            <!-- <property name="always-show-image">True</property> -->
             <signal name="clicked" handler="on_usecodes_ok_clicked" swapped="no"/>
-            <child>
-              <object class="GtkBox">
-                <property name="visible">True</property>
-                <!-- <property name="can-focus">False</property> -->
-                <property name="orientation">horizontal</property>
-                <child>
-                  <object class="GtkImage">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="icon-name">gtk-ok</property>
-                    <property name="use-fallback">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="halign">center</property>
-                    <property name="valign">fill</property>
-                    <property name="margin-start">2</property>
-                    <property name="margin-end">2</property>
-                    <property name="margin-top">0</property>
-                    <property name="margin-bottom">0</property>
-                    <property name="hexpand">True</property>
-                    <property name="vexpand">False</property>
-                    <property name="label" translatable="yes">_OK</property>
-                    <property name="use-underline">True</property>
-                    <property name="justify">center</property>
-                  </object>
-                </child>
-              </object>
-            </child>
           </object>
           <!-- <packing>
 <property name="position">1</property>
@@ -32608,7 +31418,7 @@ will be added automatically</property>
                             </data>
                           </object>
                         </property>
-                        <!-- <property name="active">0</property> -->
+                        <property name="active">0</property>
                         <signal name="changed" handler="on_gameinfo_charset_changed" swapped="no"/>
                         <child>
                           <object class="GtkCellRendererText" id="cellrenderertext38"/>
@@ -32700,7 +31510,7 @@ will be added automatically</property>
             <!-- <property name="layout-style">spread</property> -->
             <child>
               <object class="GtkButton" id="gameinfo_apply">
-                <!-- <property name="label">_Apply</property> -->
+                <property name="label">_Apply</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -32713,42 +31523,8 @@ will be added automatically</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">ok_img27</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="on_gameinfo_apply_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-ok</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Apply</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">0</property>
@@ -32756,7 +31532,7 @@ will be added automatically</property>
             </child>
             <child>
               <object class="GtkButton" id="gameinfo_cancel">
-                <!-- <property name="label">_Cancel</property> -->
+                <property name="label">_Cancel</property>
                 <property name="visible">True</property>
                 <!-- <property name="can-focus">True</property> -->
                 <!-- <property name="can-default">True</property> -->
@@ -32769,42 +31545,8 @@ will be added automatically</property>
                 <property name="margin-bottom">0</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <!-- <property name="image">cancel_img28</property> -->
                 <property name="use-underline">True</property>
-                <!-- <property name="always-show-image">True</property> -->
                 <signal name="clicked" handler="exult_widget_hide" object="game_information" swapped="yes"/>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <!-- <property name="can-focus">False</property> -->
-                    <property name="orientation">horizontal</property>
-                    <child>
-                      <object class="GtkImage">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="icon-name">gtk-cancel</property>
-                        <property name="use-fallback">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <!-- <property name="can-focus">False</property> -->
-                        <property name="halign">center</property>
-                        <property name="valign">fill</property>
-                        <property name="margin-start">2</property>
-                        <property name="margin-end">2</property>
-                        <property name="margin-top">0</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">False</property>
-                        <property name="label" translatable="yes">_Cancel</property>
-                        <property name="use-underline">True</property>
-                        <property name="justify">center</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
               <!-- <packing>
 <property name="position">1</property>
