@@ -648,6 +648,36 @@ void Chunk_chooser::drag_begin(
 	if (chooser->selected < 0) {
 		return;
 	}
+	// Get ->chunk.
+	Chunk_info&   shinfo = chooser->info[chooser->selected];
+	const int     w      = c_tiles_per_chunk * c_tilesize;
+	const int     h      = c_tiles_per_chunk * c_tilesize;
+	Image_buffer8 tbuf(w, h);    // Create buffer to render to.
+	tbuf.fill8(0xff);            // Fill with 'transparent' pixel.
+	unsigned char* tbits = tbuf.get_bits();
+	chooser->render_chunk(shinfo.num, &tbuf, 0, 0);
+	// Put shape on a pixmap.
+	GdkPixbuf* pixbuf  = gdk_pixbuf_new(GDK_COLORSPACE_RGB, true, 8, w, h);
+	guchar*    pixels  = gdk_pixbuf_get_pixels(pixbuf);
+	const int  rstride = gdk_pixbuf_get_rowstride(pixbuf);
+	const int  pstride = gdk_pixbuf_get_n_channels(pixbuf);
+	for (int y = 0; y < h; y++) {
+		for (int x = 0; x < w; x++) {
+			guchar*       t = pixels + y * rstride + x * pstride;
+			const guchar  s = tbits[y * w + x];
+			const guint32 c = chooser->palette->colors[s];
+			t[0]            = (s == 255 ? 0 : (c >> 16) & 255);
+			t[1]            = (s == 255 ? 0 : (c >> 8) & 255);
+			t[2]            = (s == 255 ? 0 : (c >> 0) & 255);
+			t[3]            = (s == 255 ? 0 : 255);
+		}
+	}
+	// This will be the chunk dragged.
+	GdkTexture* icon = gdk_texture_new_for_pixbuf(pixbuf);
+	// Discard the Origin, space the pointer and the Shape for macOS
+	gtk_drag_icon_set_from_paintable(drag, GDK_PAINTABLE(icon), w + 2, h + 2);
+	g_object_unref(pixbuf);
+	g_object_unref(icon);
 	return;
 }
 
