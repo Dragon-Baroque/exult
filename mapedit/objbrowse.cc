@@ -42,20 +42,20 @@ Object_browser::~Object_browser() {
 	popup_widget = nullptr;
 	if ((G_IS_OBJECT(vscroll_ctlr))
 		&& (G_OBJECT(vscroll_ctlr)->ref_count > 0)) {
-		g_object_unref(vscroll_ctlr);
+		//		g_object_unref(vscroll_ctlr);
 	}
 	vscroll_ctlr = nullptr;
 #if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
 	if ((G_IS_OBJECT(key_ctlr)) && (G_OBJECT(key_ctlr)->ref_count > 0)) {
-		g_object_unref(key_ctlr);
+		//		g_object_unref(key_ctlr);
 	}
 	key_ctlr = nullptr;
 	if ((G_IS_OBJECT(click_ctlr)) && (G_OBJECT(click_ctlr)->ref_count > 0)) {
-		g_object_unref(click_ctlr);
+		//		g_object_unref(click_ctlr);
 	}
 	click_ctlr = nullptr;
 	if ((G_IS_OBJECT(drag_source)) && (G_OBJECT(drag_source)->ref_count > 0)) {
-		g_object_unref(drag_source);
+		//		g_object_unref(drag_source);
 	}
 	drag_source = nullptr;
 #else     // GTK 4
