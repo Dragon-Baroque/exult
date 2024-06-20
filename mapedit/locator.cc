@@ -268,11 +268,11 @@ Locator::~Locator() {
 	gtk_widget_destroy(win);
 #if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
 	if ((G_IS_OBJECT(click_ctlr)) && (G_OBJECT(click_ctlr)->ref_count > 0)) {
-		g_object_unref(click_ctlr);
+		//		g_object_unref(click_ctlr);
 	}
 	click_ctlr = nullptr;
 	if ((G_IS_OBJECT(motion_ctlr)) && (G_OBJECT(motion_ctlr)->ref_count > 0)) {
-		g_object_unref(motion_ctlr);
+		//		g_object_unref(motion_ctlr);
 	}
 	motion_ctlr = nullptr;
 #else     // GTK 4
