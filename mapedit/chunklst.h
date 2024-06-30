@@ -88,12 +88,12 @@ class Chunk_chooser : public Object_browser, public Shape_draw {
 	unsigned char* get_chunk(int chunknum);
 	void           update_num_chunks(int new_num_chunks);
 	void           set_chunk(const unsigned char* data, int datalen);
-	void           render_chunk(int chunknum, int xoff, int yoff);
-	void           scroll(int newpixel);    // Scroll.
-	void           scroll(bool upwards);
-	void           enable_controls();    // Enable/disable controls after sel.
+	void render_chunk(int chunknum, Image_buffer8* rwin, int xoff, int yoff);
+	void scroll(int newpixel);    // Scroll.
+	void scroll(bool upwards);
+	void enable_controls();    // Enable/disable controls after sel.
 	//   has changed.
-	GtkWidget* create_popup() override;    // Popup menu.
+	GMenu* create_popup() override;    // Popup menu.
 public:
 	Chunk_chooser(
 			Vga_file* i, std::istream& cfile, unsigned char* palbuf, int w,
@@ -112,28 +112,57 @@ public:
 		sel_changed = fun;
 	}
 
-	int get_count();    // Get # chunks we can display.
+	int get_count();              // Get # chunks we can display.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
 	// Configure when created/resized.
 	static gint configure(
-			GtkWidget* widget, GdkEventConfigure* event, gpointer data);
+			GtkWidget* widget, int width, int height, gpointer user_data);
 	// Blit to screen.
-	static gint expose(GtkWidget* widget, cairo_t* cairo, gpointer data);
+	static void expose(
+			GtkDrawingArea* widget, cairo_t* cairo, int x, int y,
+			gpointer user_data);
 	// Handle mouse press.
 	static gint mouse_press(
-			GtkWidget* widget, GdkEventButton* event, gpointer data);
+			GtkGestureClick* click_ctlr, int n_press, double x, double y,
+			gpointer user_data);
+#else                             // GTK 4
+	// Configure when created/resized.
+	static gint configure(
+			GtkWidget* widget, GdkEvent* event, gpointer user_data);
+	// Blit to screen.
+	static gint expose(GtkWidget* widget, cairo_t* cairo, gpointer user_data);
+	// Handle mouse press.
+	static gint mouse_press(
+			GtkWidget* widget, GdkEvent* event, gpointer user_data);
+#endif                            // GTK 4
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	// Give dragged chunk.
+	static GdkContentProvider* drag_prepare(
+			GtkDragSource* source, double x, double y, gpointer user_data);
+	static void drag_begin(
+			GtkDragSource* source, GdkDrag* drag, gpointer user_data);
+	// Handler for drop.
+	static gboolean drag_data_received(
+			GtkDropTarget* dest, GValue* value, gdouble x, gdouble y,
+			gpointer user_data);
+	void enable_drop();
+#else     // GTK 4
 	// Give dragged chunk.
 	static void drag_data_get(
 			GtkWidget* widget, GdkDragContext* context,
-			GtkSelectionData* seldata, guint info, guint time, gpointer data);
+			GtkSelectionData* seldata, guint info, guint time,
+			gpointer user_data);
 	static gint drag_begin(
-			GtkWidget* widget, GdkDragContext* context, gpointer data);
+			GtkWidget* widget, GdkDragContext* context, gpointer user_data);
 	// Handler for drop.
 	static void drag_data_received(
 			GtkWidget* widget, GdkDragContext* context, gint x, gint y,
-			GtkSelectionData* seldata, guint info, guint time, gpointer udata);
+			GtkSelectionData* seldata, guint info, guint time,
+			gpointer user_data);
 	void enable_drop();
+#endif    // GTK 4
 	// Handle scrollbar.
-	static void scrolled(GtkAdjustment* adj, gpointer data);
+	static void scrolled(GtkAdjustment* adj, gpointer user_data);
 	void        locate(int dir);    // Locate terrain on game map.
 	void        locate(bool upwards) override;
 	void        locate_response(const unsigned char* data, int datalen);
@@ -143,8 +172,11 @@ public:
 	void        delete_response(const unsigned char* data, int datalen);
 	void        move(bool upwards) override;    // Move current selected chunk.
 	void        swap_response(const unsigned char* data, int datalen);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	static gint drag_motion(
-			GtkWidget* widget, GdkEventMotion* event, gpointer data);
+			GtkWidget* widget, GdkEvent* event, gpointer user_data);
+#endif                            // GTK 4
 };
 
 #endif
