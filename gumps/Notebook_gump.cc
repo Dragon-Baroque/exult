@@ -642,10 +642,10 @@ void Notebook_gump::up_arrow() {
  *  Handle keystroke.
  */
 bool Notebook_gump::handle_kbd_event(void* vev) {
-	SDL_Event& ev      = *static_cast<SDL_Event*>(vev);
-	uint16     unicode = 0;    // Unicode is way different in SDL2
-	Gump_manager::translate_numpad(ev.key.key, unicode, ev.key.mod);
-	int chr = ev.key.key;
+	SDL_Event&  ev      = *static_cast<SDL_Event*>(vev);
+	SDL_Keycode unicode = 0;    // Unicode is way different in SDL2
+	SDL_Keycode chr     = 0;
+	Translate_keyboard(ev, chr, unicode, true);
 
 	if (ev.type == SDL_EVENT_KEY_UP) {
 		return true;    // Ignoring key-up at present.
@@ -660,7 +660,6 @@ bool Notebook_gump::handle_kbd_event(void* vev) {
 	One_note*           note  = notes[pinfo.notenum];
 	switch (chr) {
 	case SDLK_RETURN:
-	case SDLK_KP_ENTER:
 		note->insert('\n', cursor.offset);
 		++cursor.offset;
 		paint();    // (Not very efficient...)
@@ -717,16 +716,15 @@ bool Notebook_gump::handle_kbd_event(void* vev) {
 		change_page(1);
 		break;
 	default:
-		if (chr < ' ') {
-			return false;    // Ignore other special chars.
+		if (unicode < ' ') {
+			//			return false;    // Ignore other special chars.
+			return true;    // Ignore other special chars.
 		}
-		if (chr >= 256 || !isascii(chr)) {
-			return false;
+		if (unicode >= 256 || !isascii(unicode)) {
+			//			return false;
+			return true;
 		}
-		if (ev.key.mod & (SDL_KMOD_SHIFT | SDL_KMOD_CAPS)) {
-			chr = toupper(chr);
-		}
-		note->insert(chr, cursor.offset);
+		note->insert(unicode, cursor.offset);
 		++cursor.offset;
 		paint();    // (Not very efficient...)
 		if (need_next_page()) {
