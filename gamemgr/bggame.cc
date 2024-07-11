@@ -2220,6 +2220,10 @@ bool BG_Game::new_game(Vga_file& shapes) {
 	oldpal->create_palette_map(pal, transto);
 	delete oldpal;
 	pal->apply(true);
+	SDL_Window* window = gwin->get_win()->get_screen_window();
+	if (!SDL_TextInputActive(window)) {
+		SDL_StartTextInput(window);
+	}
 	do {
 		Delay();
 		if (redraw) {
@@ -2416,6 +2420,9 @@ bool BG_Game::new_game(Vga_file& shapes) {
 			}
 		}
 	} while (editing);
+	if (SDL_TextInputActive(window)) {
+		SDL_StopTextInput(window);
+	}
 
 	delete[] transto;
 	gwin->clear_screen();
