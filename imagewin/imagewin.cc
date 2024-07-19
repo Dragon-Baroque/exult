@@ -380,13 +380,12 @@ void Image_window::static_init() {
 	cout << std::endl;
 
 	/* Get available fullscreen/hardware modes */
-	const SDL_DisplayMode** modes
+	const SDL_DisplayMode* const * modes
 			= SDL_GetFullscreenDisplayModes(SDL_GetPrimaryDisplay(), nullptr);
 	for (int j = 0; modes[j]; j++) {
 		const Resolution res = {modes[j]->w, modes[j]->h};
 		p_resolutions[(res.width << 16) | res.height] = res;
 	}
-	SDL_free(static_cast<void*>(modes));
 
 	// It's empty, so add in some basic resolutions that would be nice to
 	// support
@@ -600,6 +599,7 @@ void Image_window::create_surface(unsigned int w, unsigned int h) {
 		if (screen_texture == nullptr) {
 			cout << "Couldn't create texture: " << SDL_GetError() << std::endl;
 		}
+		SDL_SetTextureBlendMode(screen_texture, SDL_BLENDMODE_NONE);
 
 		inter_surface = draw_surface = paletted_surface = display_surface;
 		inter_width                                     = w / scale;
@@ -739,6 +739,7 @@ bool Image_window::create_scale_surfaces(int w, int h, int bpp) {
 	if (screen_texture == nullptr) {
 		cout << "Couldn't create texture: " << SDL_GetError() << std::endl;
 	}
+	SDL_SetTextureBlendMode(screen_texture, SDL_BLENDMODE_NONE);
 	if (!display_surface) {
 		cerr << "Unable to set video mode to" << w << "x" << h << " " << hwdepth
 			 << " bpp" << endl;
@@ -1437,7 +1438,7 @@ int Image_window::VideoModeOK(int width, int height, bool fullscreen, int bpp) {
 		return 0;
 	}
 
-	const SDL_DisplayMode** modes
+	const SDL_DisplayMode* const * modes
 			= SDL_GetFullscreenDisplayModes(SDL_GetPrimaryDisplay(), nullptr);
 	for (int j = 0; modes[j]; j++) {
 		int    nbpp;
@@ -1451,11 +1452,9 @@ int Image_window::VideoModeOK(int width, int height, bool fullscreen, int bpp) {
 			&& modes[j]->w == width && modes[j]->h == height
 			&& ((bpp == nbpp)
 				|| (bpp == 0 && (nbpp == 8 || nbpp == 16 || nbpp == 32)))) {
-			SDL_free(static_cast<void*>(modes));
 			return nbpp;
 		}
 	}
-	SDL_free(static_cast<void*>(modes));
 	return 0;
 }
 
