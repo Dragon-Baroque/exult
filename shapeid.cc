@@ -262,12 +262,13 @@ void Shape_manager::load() {
 	{
 		const auto& blendsflexspec
 				= GAME_BG ? File_spec(
-						  BUNDLE_CHECK(BUNDLE_EXULT_BG_FLX, EXULT_BG_FLX),
-						  EXULT_BG_FLX_BLENDS_DAT)
+									BUNDLE_CHECK(
+											BUNDLE_EXULT_BG_FLX, EXULT_BG_FLX),
+									EXULT_BG_FLX_BLENDS_DAT)
 						  : File_spec(
-								  BUNDLE_CHECK(
-										  BUNDLE_EXULT_SI_FLX, EXULT_SI_FLX),
-								  EXULT_SI_FLX_BLENDS_DAT);
+									BUNDLE_CHECK(
+											BUNDLE_EXULT_SI_FLX, EXULT_SI_FLX),
+									EXULT_SI_FLX_BLENDS_DAT);
 		const U7multiobject in(BLENDS, blendsflexspec, PATCH_BLENDS, 0);
 		size_t              len;
 		ptr = in.retrieve(len);
@@ -566,11 +567,12 @@ uint8* ShapeID::Get_palette_transform_table(uint8 table[256]) const {
 	return table;
 }
 
-ImageBufferPaintable::ImageBufferPaintable() : x(0),y(0) {
+ImageBufferPaintable::ImageBufferPaintable() : x(0), y(0) {
 	auto gwin = Game_window::get_instance();
 	auto iwin = gwin->get_win();
-	buffer = iwin->create_buffer(iwin->get_full_width(), iwin->get_full_height());
-	iwin->get(buffer.get(),x, y);
+	buffer    = iwin->create_buffer(
+            iwin->get_full_width(), iwin->get_full_height());
+	iwin->get(buffer.get(), x, y);
 }
 
 void ImageBufferPaintable::paint() {
