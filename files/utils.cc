@@ -44,7 +44,7 @@
 #include <string>
 #include <vector>
 
-#ifdef __IPHONEOS__
+#ifdef SDL_PLATFORM_IOS
 #	include "ios_utils.h"
 #endif
 
@@ -55,7 +55,7 @@
 #	include <io.h>
 #endif
 
-#if defined(MACOSX) || defined(__IPHONEOS__)
+#if defined(MACOSX) || defined(SDL_PLATFORM_IOS)
 #	include <CoreFoundation/CoreFoundation.h>
 #	include <sys/param.h>    // for MAXPATHLEN
 #endif
@@ -747,7 +747,7 @@ string Get_home() {
 	return home_directory;
 }
 
-#if defined(MACOSX) || defined(__IPHONEOS__)
+#if defined(MACOSX) || defined(SDL_PLATFORM_IOS)
 struct CFDeleter {
 	void operator()(CFTypeRef ptr) const {
 		if (ptr) {
@@ -789,7 +789,7 @@ void setup_app_bundle_resource() {
 #endif
 
 void setup_data_dir(const std::string& data_path, const char* runpath) {
-#if defined(MACOSX) || defined(__IPHONEOS__)
+#if defined(MACOSX) || defined(SDL_PLATFORM_IOS)
 	// Can we try from the bundle?
 	setup_app_bundle_resource();
 	if (is_system_path_defined("<APP_BUNDLE_RES>")) {
@@ -801,7 +801,7 @@ void setup_data_dir(const std::string& data_path, const char* runpath) {
 		}
 	}
 #endif
-#ifdef __IPHONEOS__
+#ifdef SDL_PLATFORM_IOS
 	if (is_system_path_defined("<BUNDLE>")) {
 		// We have the flxfiles in the bundle, so lets use it.
 		// But lets use <DATA> in the iTunes file sharing.
@@ -826,9 +826,9 @@ void setup_data_dir(const std::string& data_path, const char* runpath) {
 		}
 	}
 
-	// Due to SDL_RWops internally using SDL_OpenFPFromBundleOrFallback in OSX
-	// (which looks for the file inside the bundle before looking in CWD), there
-	// is no reason ever to check CWD if we found the bundle path above.
+	// Due to SDL_IOStream internally using SDL_OpenFPFromBundleOrFallback in
+	// OSX (which looks for the file inside the bundle before looking in CWD),
+	// there is no reason ever to check CWD if we found the bundle path above.
 	if (!is_system_path_defined("<BUNDLE>")) {
 		// Try "data" subdirectory for current working directory:
 		add_system_path("<DATA>", "data");
@@ -872,14 +872,14 @@ void setup_data_dir(const std::string& data_path, const char* runpath) {
 }
 
 static string Get_config_dir(const string& home_dir) {
-#ifdef __IPHONEOS__
+#ifdef SDL_PLATFORM_IOS
 	ignore_unused_variable_warning(home_dir);
 	return IOSGetDocumentsDir();
 #elif defined(MACOSX)
 	string config_dir(home_dir);
 	config_dir += "/Library/Preferences";
 	return config_dir;
-#elif defined(__HAIKU__)
+#elif defined(SDL_PLATFORM_HAIKU)
 	string config_dir(home_dir);
 	config_dir += "/config/settings/exult";
 	return config_dir;
@@ -890,7 +890,7 @@ static string Get_config_dir(const string& home_dir) {
 
 static string Get_savehome_dir(
 		const string& home_dir, const string& config_dir) {
-#ifdef __IPHONEOS__
+#ifdef SDL_PLATFORM_IOS
 	ignore_unused_variable_warning(home_dir);
 	string savehome_dir(config_dir);
 	savehome_dir += "/save";
@@ -900,7 +900,7 @@ static string Get_savehome_dir(
 	string savehome_dir(home_dir);
 	savehome_dir += "/Library/Application Support/Exult";
 	return savehome_dir;
-#elif defined(__HAIKU__)
+#elif defined(SDL_PLATFORM_HAIKU)
 	ignore_unused_variable_warning(config_dir);
 	string savehome_dir(home_dir);
 	savehome_dir += "/config/settings/exult";
@@ -918,7 +918,7 @@ static string Get_savehome_dir(
 
 static string Get_gamehome_dir(
 		const string& home_dir, const string& config_dir) {
-#ifdef __IPHONEOS__
+#ifdef SDL_PLATFORM_IOS
 	ignore_unused_variable_warning(home_dir);
 	string gamehome_dir(config_dir);
 	gamehome_dir += "/game";
@@ -926,7 +926,7 @@ static string Get_gamehome_dir(
 #elif defined(MACOSX)
 	ignore_unused_variable_warning(home_dir, config_dir);
 	return "/Library/Application Support/Exult";
-#elif defined(__HAIKU__)
+#elif defined(SDL_PLATFORM_HAIKU)
 	ignore_unused_variable_warning(config_dir);
 	string gamehome_dir(home_dir);
 	gamehome_dir += "/config/non-packaged/data/exult";
