@@ -48,10 +48,10 @@ class Actor;
  *  Open npc window.
  */
 
-C_EXPORT void on_open_npc_activate(GtkMenuItem* menuitem, gpointer user_data) {
-	ignore_unused_variable_warning(menuitem, user_data);
-	ExultStudio* studio = ExultStudio::get_instance();
-	studio->open_npc_window();
+C_EXPORT void app_open_npc_action(
+		GSimpleAction* action, GVariant* parameter, gpointer user_data) {
+	ignore_unused_variable_warning(action, parameter);
+	(static_cast<ExultStudio*>(user_data))->open_npc_window();
 }
 
 /*
@@ -80,7 +80,7 @@ C_EXPORT void on_npc_show_gump_clicked(GtkButton* btn, gpointer user_data) {
 	unsigned char data[Exult_server::maxlength];
 	// Get container address.
 	auto           addr = reinterpret_cast<uintptr>(g_object_get_data(
-            G_OBJECT(gtk_widget_get_toplevel(GTK_WIDGET(btn))), "user_data"));
+            G_OBJECT(widget_get_top(GTK_WIDGET(btn))), "user_data"));
 	unsigned char* ptr  = &data[0];
 	Serial_out     io(ptr);
 	io << addr;
@@ -107,7 +107,8 @@ C_EXPORT void on_npc_usecode_browse_clicked(
 		GtkButton* button, gpointer user_data) {
 	ignore_unused_variable_warning(button, user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
-	const char*  uc     = studio->browse_usecode(true);
+	const char*  uc
+			= studio->browse_usecode(true, studio->get_widget("npc_window"));
 	if (*uc) {
 		studio->set_entry("npc_usecode_entry", uc, true);
 	}
@@ -147,18 +148,33 @@ static void Set_schedule_line(
 	char*   locname = g_strdup_printf("sched_loc%d", time);
 	GtkBox* box     = GTK_BOX(studio->get_widget(locname));
 	g_free(locname);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	GtkWidget* spin = gtk_widget_get_first_child(GTK_WIDGET(box));
+#else     // GTK 4
 	GList* children
 			= g_list_first(gtk_container_get_children(GTK_CONTAINER(box)));
 	GList*     list = children;
 	GtkWidget* spin = GTK_WIDGET(list->data);
+#endif    // GTK 4
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), tx);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	spin = gtk_widget_get_next_sibling(spin);
+#else     // GTK 4
 	list = g_list_next(list);
 	spin = GTK_WIDGET(list->data);
+#endif    // GTK 4
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), ty);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	spin = gtk_widget_get_next_sibling(spin);
+#else     // GTK 4
 	list = g_list_next(list);
 	spin = GTK_WIDGET(list->data);
+#endif    // GTK 4
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), tz);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	g_list_free(children);
+#endif                            // GTK 4
 }
 
 /*
@@ -185,19 +201,34 @@ static bool Get_schedule_line(
 	char*   locname = g_strdup_printf("sched_loc%d", time);
 	GtkBox* box     = GTK_BOX(studio->get_widget(locname));
 	g_free(locname);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	GtkWidget* spin = gtk_widget_get_first_child(GTK_WIDGET(box));
+#else     // GTK 4
 	GList* children
 			= g_list_first(gtk_container_get_children(GTK_CONTAINER(box)));
 	GList*     list = children;
 	GtkWidget* spin = GTK_WIDGET(list->data);
-	sched.tx        = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(spin));
-	list            = g_list_next(list);
-	spin            = GTK_WIDGET(list->data);
-	sched.ty        = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(spin));
-	list            = g_list_next(list);
-	spin            = GTK_WIDGET(list->data);
-	sched.tz        = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(spin));
-	sched.time      = time;
+#endif    // GTK 4
+	sched.tx = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(spin));
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	spin = gtk_widget_get_next_sibling(spin);
+#else     // GTK 4
+	list = g_list_next(list);
+	spin = GTK_WIDGET(list->data);
+#endif    // GTK 4
+	sched.ty = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(spin));
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	spin = gtk_widget_get_next_sibling(spin);
+#else     // GTK 4
+	list = g_list_next(list);
+	spin = GTK_WIDGET(list->data);
+#endif    // GTK 4
+	sched.tz   = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(spin));
+	sched.time = time;
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	g_list_free(children);
+#endif                            // GTK 4
 	return true;
 }
 
@@ -270,12 +301,11 @@ void ExultStudio::close_npc_window() {
  */
 
 static bool Get_prop_spin(
-		GList*          list,    // Entry in table of properties.
-		GtkSpinButton*& spin,    // Spin button returned.
-		int&            pnum     // Property number (0-11) returned.
+		gpointer        widget,    // Entry in table of properties.
+		GtkSpinButton*& spin,      // Spin button returned.
+		int&            pnum       // Property number (0-11) returned.
 ) {
-	GtkBin* frame = GTK_BIN(list->data);
-	spin          = GTK_SPIN_BUTTON(gtk_bin_get_child(frame));
+	spin = GTK_SPIN_BUTTON(gtk_bin_get_child(GTK_BIN(widget)));
 	assert(spin != nullptr);
 	const char* name = gtk_buildable_get_name(GTK_BUILDABLE(spin));
 	// Names: npc_prop_nn.
@@ -294,7 +324,7 @@ static bool Get_prop_spin(
  */
 
 static bool Get_flag_cbox(
-		GList*           list,          // Entry in table of flags.
+		gpointer         widget,        // Entry in table of flags.
 		unsigned long*   oflags,        // Object flags.
 		unsigned long*   xflags,        // Extra object flags.
 		unsigned long*   type_flags,    // Type (movement) flags.
@@ -302,7 +332,7 @@ static bool Get_flag_cbox(
 		unsigned long*&  bits,          // ->one of 3 flags above.
 		int&             fnum           // Flag # (0-31) returned.
 ) {
-	cbox = GTK_CHECK_BUTTON(list->data);
+	cbox = GTK_CHECK_BUTTON(widget);
 	assert(cbox != nullptr);
 	const char* name = gtk_buildable_get_name(GTK_BUILDABLE(cbox));
 	// Names: npc_flag_xx_nn, where
@@ -364,25 +394,43 @@ void ExultStudio::init_new_npc() {
 	// Clear flag buttons.
 	GtkContainer* ftable = GTK_CONTAINER(get_widget("npc_flags_table"));
 	// Set flag checkboxes.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	for (GtkWidget* child = gtk_widget_get_first_child(ftable); child;
+		 child            = gtk_widget_get_next_sibling(child)) {
+		gtk_check_button_set_active(GTK_CHECK_BUTTON(child), false);
+	}
+#else     // GTK 4
 	GList* children = g_list_first(gtk_container_get_children(ftable));
 	for (GList* list = children; list; list = g_list_next(list)) {
 		GtkCheckButton* cbox = GTK_CHECK_BUTTON(list->data);
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cbox), false);
 	}
 	g_list_free(children);
+#endif    // GTK 4
 	// Make sure the "default" NPC can walk around.
 	set_toggle("npc_flag_tf_05", true);
 	// Set properties.
 	GtkContainer* ptable = GTK_CONTAINER(get_widget("npc_props_table"));
-	children             = g_list_first(gtk_container_get_children(ptable));
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	for (GtkWidget* child = gtk_widget_get_first_child(ptable); child;
+		 child            = gtk_widget_get_next_sibling(child)) {
+		GtkSpinButton* spin;
+		int            pnum;
+		if (Get_prop_spin(child, spin, pnum)) {
+			gtk_spin_button_set_value(spin, 12);
+		}
+	}
+#else     // GTK 4
+	children = g_list_first(gtk_container_get_children(ptable));
 	for (GList* list = children; list; list = g_list_next(list)) {
 		GtkSpinButton* spin;
 		int            pnum;
-		if (Get_prop_spin(list, spin, pnum)) {
+		if (Get_prop_spin(list->data, spin, pnum)) {
 			gtk_spin_button_set_value(spin, 12);
 		}
 	}
 	g_list_free(children);
+#endif    // GTK 4
 	// Clear schedules.
 	for (int i = 0; i < 24 / 3; i++) {
 		Set_schedule_line(this, i, -1, 0, 0, 0);
@@ -456,29 +504,55 @@ int ExultStudio::init_npc_window(unsigned char* data, int datalen) {
 	// Set flag buttons.
 	GtkContainer* ftable = GTK_CONTAINER(get_widget("npc_flags_table"));
 	// Set flag checkboxes.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	for (GtkWidget* child = gtk_widget_get_first_child(ftable); child;
+		 child            = gtk_widget_get_next_sibling(child)) {
+		GtkCheckButton* cbox;
+		unsigned long*  bits;
+		int             fnum;
+		if (Get_flag_cbox(
+					child, &oflags, &xflags, &type_flags, cbox, bits, fnum)) {
+			gtk_check_button_set_active(
+					GTK_CHECK_BUTTON(cbox), (*bits & (1 << fnum)) != 0);
+		}
+	}
+#else     // GTK 4
 	GList* children = g_list_first(gtk_container_get_children(ftable));
 	for (GList* list = children; list; list = g_list_next(list)) {
 		GtkCheckButton* cbox;
 		unsigned long*  bits;
 		int             fnum;
 		if (Get_flag_cbox(
-					list, &oflags, &xflags, &type_flags, cbox, bits, fnum)) {
+					list->data, &oflags, &xflags, &type_flags, cbox, bits,
+					fnum)) {
 			gtk_toggle_button_set_active(
 					GTK_TOGGLE_BUTTON(cbox), (*bits & (1 << fnum)) != 0);
 		}
 	}
 	g_list_free(children);
+#endif    // GTK 4
 	// Set properties.
 	GtkContainer* ptable = GTK_CONTAINER(get_widget("npc_props_table"));
-	children             = g_list_first(gtk_container_get_children(ptable));
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	for (GtkWidget* child = gtk_widget_get_first_child(ptable); child;
+		 child            = gtk_widget_get_next_sibling(child)) {
+		GtkSpinButton* spin;
+		int            pnum;
+		if (Get_prop_spin(child, spin, pnum)) {
+			gtk_spin_button_set_value(spin, properties[pnum]);
+		}
+	}
+#else     // GTK 4
+	children = g_list_first(gtk_container_get_children(ptable));
 	for (GList* list = children; list; list = g_list_next(list)) {
 		GtkSpinButton* spin;
 		int            pnum;
-		if (Get_prop_spin(list, spin, pnum)) {
+		if (Get_prop_spin(list->data, spin, pnum)) {
 			gtk_spin_button_set_value(spin, properties[pnum]);
 		}
 	}
 	g_list_free(children);
+#endif    // GTK 4
 	// Set schedules.
 	for (int i = 0; i < 24 / 3; i++) {    // First init. to empty.
 		Set_schedule_line(this, i, -1, 0, 0, 0);
@@ -566,30 +640,57 @@ int ExultStudio::save_npc_window() {
 	// Set flag buttons.
 	GtkContainer* ftable = GTK_CONTAINER(get_widget("npc_flags_table"));
 	// Get flags.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	for (GtkWidget* child = gtk_widget_get_first_child(ftable); child;
+		 child            = gtk_widget_get_next_sibling(child)) {
+		GtkCheckButton* cbox;
+		unsigned long*  bits;
+		int             fnum;
+		if (Get_flag_cbox(
+					child, &oflags, &xflags, &type_flags, cbox, bits, fnum)) {
+			if (gtk_check_button_get_active(GTK_CHECK_BUTTON(cbox))) {
+				*bits |= (1 << fnum);
+			}
+		}
+	}
+#else                                // GTK 4
 	GList* children = g_list_first(gtk_container_get_children(ftable));
 	for (GList* list = children; list; list = g_list_next(list)) {
 		GtkCheckButton* cbox;
 		unsigned long*  bits;
 		int             fnum;
 		if (Get_flag_cbox(
-					list, &oflags, &xflags, &type_flags, cbox, bits, fnum)) {
+					list->data, &oflags, &xflags, &type_flags, cbox, bits,
+					fnum)) {
 			if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(cbox))) {
 				*bits |= (1 << fnum);
 			}
 		}
 	}
 	g_list_free(children);
+#endif                               // GTK 4
 	int           properties[12];    // Get properties.
 	GtkContainer* ptable = GTK_CONTAINER(get_widget("npc_props_table"));
-	children             = g_list_first(gtk_container_get_children(ptable));
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	for (GtkWidget* child = gtk_widget_get_first_child(ptable); child;
+		 child            = gtk_widget_get_next_sibling(child)) {
+		GtkSpinButton* spin;
+		int            pnum;
+		if (Get_prop_spin(child, spin, pnum)) {
+			properties[pnum] = gtk_spin_button_get_value_as_int(spin);
+		}
+	}
+#else     // GTK 4
+	children = g_list_first(gtk_container_get_children(ptable));
 	for (GList* list = children; list; list = g_list_next(list)) {
 		GtkSpinButton* spin;
 		int            pnum;
-		if (Get_prop_spin(list, spin, pnum)) {
+		if (Get_prop_spin(list->data, spin, pnum)) {
 			properties[pnum] = gtk_spin_button_get_value_as_int(spin);
 		}
 	}
 	g_list_free(children);
+#endif    // GTK 4
 	short           num_schedules = 0;
 	Serial_schedule schedules[8];
 	for (int i = 0; i < 8; i++) {
@@ -629,15 +730,15 @@ int ExultStudio::save_npc_window() {
  */
 
 void ExultStudio::schedule_btn_clicked(
-		GtkWidget* btn,    // Button on the schedule dialog.
-		gpointer   data    // Dialog itself.
+		GtkWidget* btn,         // Button on the schedule dialog.
+		gpointer   user_data    // Dialog itself.
 ) {
 	ExultStudio* studio = ExultStudio::get_instance();
 	// Get name assigned in Glade.
 	const char* name     = gtk_buildable_get_name(GTK_BUILDABLE(btn));
 	const char* numptr   = name + 5;    // Past "sched".
 	const int   num      = atoi(numptr);
-	auto*       schedwin = static_cast<GtkWidget*>(data);
+	auto*       schedwin = static_cast<GtkWidget*>(user_data);
 	auto*       label    = static_cast<GtkLabel*>(
             g_object_get_data(G_OBJECT(schedwin), "user_data"));
 	// User data = schedule #.
@@ -654,10 +755,10 @@ void ExultStudio::schedule_btn_clicked(
  *  Set signal handler for each schedule button.
  */
 
-static void Set_sched_btn(GtkWidget* btn, gpointer data) {
+static void Set_sched_btn(GtkWidget* btn, gpointer user_data) {
 	g_signal_connect(
 			G_OBJECT(btn), "clicked",
-			G_CALLBACK(ExultStudio::schedule_btn_clicked), data);
+			G_CALLBACK(ExultStudio::schedule_btn_clicked), user_data);
 }
 
 /*
@@ -682,10 +783,19 @@ C_EXPORT void on_npc_set_sched(
 	}
 	if (first) {    // First time?  Set handlers.
 		first = 0;
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+		for (GtkWidget* child = gtk_widget_get_first_child(btns); child;
+			 child            = gtk_widget_get_next_sibling(child)) {
+			Set_sched_btn(child, schedwin);
+		}
+#else     // GTK 4
 		gtk_container_foreach(btns, Set_sched_btn, schedwin);
+#endif    // GTK 4
 	}
 	// Store label as dialog's data.
 	g_object_set_data(G_OBJECT(schedwin), "user_data", label);
+	gtk_window_set_transient_for(
+			GTK_WINDOW(schedwin), GTK_WINDOW(studio->get_widget("npc_window")));
 	gtk_widget_set_visible(schedwin, true);
 }
 
@@ -704,18 +814,33 @@ static void Game_loc_response(
 	const int tx  = little_endian::Read2(data);
 	const int ty  = little_endian::Read2(data);
 	const int tz  = little_endian::Read2(data);
-	GList*    children
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	GtkWidget* spin = gtk_widget_get_first_child(GTK_WIDGET(box));
+#else     // GTK 4
+	GList* children
 			= g_list_first(gtk_container_get_children(GTK_CONTAINER(box)));
 	GList*     list = children;
 	GtkWidget* spin = GTK_WIDGET(list->data);
+#endif    // GTK 4
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), tx);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	spin = gtk_widget_get_next_sibling(spin);
+#else     // GTK 4
 	list = g_list_next(list);
 	spin = GTK_WIDGET(list->data);
+#endif    // GTK 4
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), ty);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	spin = gtk_widget_get_next_sibling(spin);
+#else     // GTK 4
 	list = g_list_next(list);
 	spin = GTK_WIDGET(list->data);
+#endif    // GTK 4
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), tz);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	g_list_free(children);
+#endif                            // GTK 4
 }
 
 /*
