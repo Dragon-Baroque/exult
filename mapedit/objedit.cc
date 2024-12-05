@@ -87,7 +87,7 @@ C_EXPORT gboolean on_obj_window_delete_event(
  *  Object shape/frame # changed, so update shape displayed.
  */
 C_EXPORT gboolean on_obj_pos_changed(
-		GtkWidget* widget, GdkEventFocus* event, gpointer user_data) {
+		GtkWidget* widget, GdkEvent* event, gpointer user_data) {
 	ignore_unused_variable_warning(widget, event, user_data);
 	//++++Maybe later, change pos. immediately?
 	return true;
@@ -120,6 +120,9 @@ void ExultStudio::open_obj_window(
 		return;
 	}
 	gtk_widget_set_visible(objwin, true);
+	// Attempt to bring this window above Exult on macOS : does not work
+	gtk_widget_show(objwin);
+	gtk_window_present(GTK_WINDOW(objwin));
 }
 
 /*
