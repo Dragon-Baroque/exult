@@ -39,8 +39,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <iomanip>
 #include <iostream>
 
-using EStudio::Alert;
-using EStudio::Prompt;
 using std::cout;
 using std::endl;
 using std::ifstream;
@@ -246,13 +244,14 @@ void Palette_edit::double_clicked() {
  *  Configure the viewing window.
  */
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
 gint Palette_edit::configure(
-		GtkWidget*         widget,    // The view window.
-		GdkEventConfigure* event,
-		gpointer           data    // ->Palette_edit
+		GtkWidget* widget,    // The view window.
+		int width, int height,
+		gpointer user_data    // ->Palette_edit
 ) {
-	ignore_unused_variable_warning(event, widget);
-	auto* paled = static_cast<Palette_edit*>(data);
+	ignore_unused_variable_warning(width, height, widget);
+	auto* paled = static_cast<Palette_edit*>(user_data);
 	if (!paled->width) {    // First time?
 		// Foreground = yellow.
 		paled->drawfg = (255 << 16) + (255 << 8);
@@ -260,39 +259,77 @@ gint Palette_edit::configure(
 	paled->render();
 	return true;
 }
+#else     // GTK 4
+gint Palette_edit::configure(
+		GtkWidget* widget,    // The view window.
+		GdkEvent*  event,
+		gpointer   user_data    // ->Palette_edit.
+) {
+	ignore_unused_variable_warning(event, widget);
+	auto* paled = static_cast<Palette_edit*>(user_data);
+	if (!paled->width) {    // First time?
+		// Foreground = yellow.
+		paled->drawfg = (255 << 16) + (255 << 8);
+	}
+	paled->render();
+	return true;
+}
+#endif    // GTK 4
 
 /*
  *  Handle an expose event.
  */
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+void Palette_edit::expose(
+		GtkDrawingArea* widget,    // The view window.
+		cairo_t* cairo, int width, int height,
+		gpointer user_data    // ->Palette_edit.
+) {
+	ignore_unused_variable_warning(widget);
+	auto*        paled = static_cast<Palette_edit*>(user_data);
+	GdkRectangle area  = {0, 0, width, height};
+	//	gdk_cairo_get_clip_rectangle(cairo, &area);
+	paled->set_graphic_context(cairo);
+	paled->show(area.x, area.y, area.width, area.height);
+	paled->set_graphic_context(nullptr);
+}
+#else     // GTK 4
 gint Palette_edit::expose(
 		GtkWidget* widget,    // The view window.
 		cairo_t*   cairo,
-		gpointer   data    // ->Palette_edit.
+		gpointer   user_data    // ->Palette_edit.
 ) {
 	ignore_unused_variable_warning(widget);
-	auto* paled = static_cast<Palette_edit*>(data);
-	paled->set_graphic_context(cairo);
-	GdkRectangle area = {0, 0, 0, 0};
+	auto*        paled = static_cast<Palette_edit*>(user_data);
+	GdkRectangle area  = {0, 0, 0, 0};
 	gdk_cairo_get_clip_rectangle(cairo, &area);
+	paled->set_graphic_context(cairo);
 	paled->show(area.x, area.y, area.width, area.height);
 	paled->set_graphic_context(nullptr);
 	return true;
 }
+#endif    // GTK 4
 
 /*
  *  Handle a mouse button press event.
  */
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
 gint Palette_edit::mouse_press(
-		GtkWidget*      widget,    // The view window.
-		GdkEventButton* event,
-		gpointer        data    // ->Palette_edit.
+		GtkGestureClick* click_ctlr, int n_press, double x, double y,
+		gpointer user_data    // ->Palette_edit.
 ) {
-	ignore_unused_variable_warning(widget);
-	auto* paled = static_cast<Palette_edit*>(data);
+	auto* paled = static_cast<Palette_edit*>(user_data);
 
-	if (event->button == 4 || event->button == 5) {    // mouse wheel
+	guint event_button_button = gtk_gesture_single_get_current_button(
+			GTK_GESTURE_SINGLE(click_ctlr));
+	gdouble    event_button_x = x, event_button_y = y;
+	GtkWidget* widget
+			= gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(click_ctlr));
+
+	if (event_button_button == 4
+		|| event_button_button == 5) {    // mouse wheel
 		return true;
 	}
 
@@ -302,8 +339,8 @@ gint Palette_edit::mouse_press(
 	const int old_selected = paled->selected;
 	const int width        = paled->width;
 	const int height       = paled->height;
-	const int eventx       = static_cast<int>(event->x);
-	const int eventy       = static_cast<int>(event->y);
+	const int eventx       = static_cast<int>(event_button_x);
+	const int eventy       = static_cast<int>(event_button_y);
 	// Figure cell size.
 	const int eachw = width / 16;
 	const int eachh = height / 16;
@@ -328,20 +365,129 @@ gint Palette_edit::mouse_press(
 	paled->selected = sely * 16 + selx;
 	if (paled->selected == old_selected) {
 		// Same square.  Check for dbl-click.
-		if (reinterpret_cast<GdkEvent*>(event)->type == GDK_2BUTTON_PRESS) {
+		if (n_press == 2) {
 			paled->double_clicked();
 		}
 	} else {
 		paled->render();
 	}
-	if (event->button == 3) {
-		gtk_menu_popup_at_pointer(
-				GTK_MENU(paled->create_popup()),
-				reinterpret_cast<GdkEvent*>(event));
+	if (event_button_button == 3) {
+		GMenu* popup = paled->create_popup();
+		paled->popup_widget
+				= gtk_popover_new_from_model(widget, G_MENU_MODEL(popup));
+		g_object_unref(popup);
+		if (paled->selected >= 0) {
+			GdkRectangle target
+					= {paled->selected_box.x, paled->selected_box.y,
+					   paled->selected_box.w, paled->selected_box.h};
+			gtk_popover_set_pointing_to(
+					GTK_POPOVER(paled->popup_widget), &target);
+		}
+		gtk_widget_set_visible(paled->popup_widget, true);
 	}
 	return true;
 }
+#else     // GTK 4
+gint Palette_edit::mouse_press(
+		GtkWidget* widget,    // The view window.
+		GdkEvent*  event,
+		gpointer   user_data    // ->Palette_edit.
+) {
+	auto* paled = static_cast<Palette_edit*>(user_data);
 
+	GdkEventType event_type = gdk_event_get_event_type(event);
+	guint        event_button_button;
+	gdouble      event_button_x, event_button_y;
+	gdk_event_get_button(event, &event_button_button);
+	gdk_event_get_coords(event, &event_button_x, &event_button_y);
+
+	if (event_button_button == 4
+		|| event_button_button == 5) {    // mouse wheel
+		return true;
+	}
+
+	if (paled->colorsel) {
+		return true;    // Already editing a color.
+	}
+	const int old_selected = paled->selected;
+	const int width        = paled->width;
+	const int height       = paled->height;
+	const int eventx       = static_cast<int>(event_button_x);
+	const int eventy       = static_cast<int>(event_button_y);
+	// Figure cell size.
+	const int eachw = width / 16;
+	const int eachh = height / 16;
+	// Figure extra pixels.
+	const int extraw = width % 16;
+	const int extrah = height % 16;
+	const int extrax
+			= extraw * (eachw + 1);    // Total length of extra-sized boxes.
+	const int extray = extrah * (eachh + 1);
+	int       selx;
+	int       sely;    // Gets box indices.
+	if (eventx < extrax) {
+		selx = eventx / (eachw + 1);
+	} else {
+		selx = extraw + (eventx - extrax) / eachw;
+	}
+	if (eventy < extray) {
+		sely = eventy / (eachh + 1);
+	} else {
+		sely = extrah + (eventy - extray) / eachh;
+	}
+	paled->selected = sely * 16 + selx;
+	if (paled->selected == old_selected) {
+		// Same square.  Check for dbl-click.
+		if (event_type == GDK_2BUTTON_PRESS) {
+			paled->double_clicked();
+		}
+	} else {
+		paled->render();
+	}
+	if (event_button_button == 3) {
+		GMenu* popup = paled->create_popup();
+		paled->popup_widget
+				= gtk_popover_new_from_model(widget, G_MENU_MODEL(popup));
+		g_object_unref(popup);
+		if (paled->selected >= 0) {
+			GdkRectangle target
+					= {paled->selected_box.x, paled->selected_box.y,
+					   paled->selected_box.w, paled->selected_box.h};
+			gtk_popover_set_pointing_to(
+					GTK_POPOVER(paled->popup_widget), &target);
+		}
+		gtk_widget_set_visible(paled->popup_widget, true);
+	}
+	return true;
+}
+#endif    // GTK 4
+
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+/*
+ *  Beginning of a drag.
+ */
+
+GdkContentProvider* Palette_edit::drag_prepare(
+		GtkDragSource* source, double x, double y,
+		gpointer user_data    // ->Palette_edit.
+) {
+	ignore_unused_variable_warning(source, x, y, user_data);
+	cout << "In DRAG_PREPARE of Palette" << endl;
+	// Maybe someday.
+	//	Palette_edit *paled = static_cast<Palette_edit *>(user_data);
+	return nullptr;
+}
+
+void Palette_edit::drag_begin(
+		GtkDragSource* source, GdkDrag* drag,
+		gpointer user_data    // ->Palette_edit.
+) {
+	ignore_unused_variable_warning(source, drag, user_data);
+	cout << "In DRAG_BEGIN of Palette" << endl;
+	// Maybe someday.
+	//	Palette_edit *paled = static_cast<Palette_edit *>(user_data);
+}
+#else     // GTK 4
 /*
  *  Someone wants the dragged shape.
  */
@@ -351,10 +497,13 @@ void Palette_edit::drag_data_get(
 		GdkDragContext*   context,
 		GtkSelectionData* seldata,    // Fill this in.
 		guint info, guint time,
-		gpointer data    // ->Palette_edit.
+		gpointer user_data    // ->Palette_edit.
 ) {
-	ignore_unused_variable_warning(widget, context, seldata, info, time, data);
-	cout << "In DRAG_DATA_GET" << endl;
+	ignore_unused_variable_warning(
+			widget, context, seldata, info, time, user_data);
+	cout << "In DRAG_DATA_GET of Palette" << endl;
+	// Maybe someday.
+	//	Palette_edit *paled = static_cast<Palette_edit *>(data);
 }
 
 /*
@@ -364,24 +513,25 @@ void Palette_edit::drag_data_get(
 gint Palette_edit::drag_begin(
 		GtkWidget*      widget,    // The view window.
 		GdkDragContext* context,
-		gpointer        data    // ->Palette_edit.
+		gpointer        user_data    // ->Palette_edit.
 ) {
-	ignore_unused_variable_warning(widget, context, data);
+	ignore_unused_variable_warning(widget, context, user_data);
 	cout << "In DRAG_BEGIN of Palette" << endl;
-	// Palette_edit *paled = static_cast<Palette_edit *>(data);
-	//  Maybe someday.
+	// Maybe someday.
+	//	Palette_edit *paled = static_cast<Palette_edit *>(data);
 	return true;
 }
+#endif    // GTK 4
 
 /*
  *  Handle a change to the 'Palette #' spin button.
  */
 
 void Palette_edit::palnum_changed(
-		GtkAdjustment* adj,    // The adjustment.
-		gpointer       data    // ->Shape_chooser.
+		GtkAdjustment* adj,         // The adjustment.
+		gpointer       user_data    // ->Palette_edit.
 ) {
-	auto*      paled  = static_cast<Palette_edit*>(data);
+	auto*      paled  = static_cast<Palette_edit*>(user_data);
 	const gint newnum = static_cast<gint>(gtk_adjustment_get_value(adj));
 	paled->show_palette(newnum);
 	paled->render();
@@ -465,7 +615,10 @@ GtkWidget* Palette_edit::create_controls() {
 	GtkWidget* hbuttonbox = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);
 	gtk_widget_set_visible(hbuttonbox, true);
 	gtk_container_add(GTK_CONTAINER(frame), hbuttonbox);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_button_box_set_layout(GTK_BUTTON_BOX(hbuttonbox), GTK_BUTTONBOX_START);
+#endif                            // GTK 4
 	gtk_box_set_spacing(GTK_BOX(hbuttonbox), 0);
 
 	insert_btn = gtk_button_new_with_label("New");
@@ -473,14 +626,20 @@ GtkWidget* Palette_edit::create_controls() {
 			insert_btn, 2 * HMARGIN, 1 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
 	gtk_widget_set_visible(insert_btn, true);
 	gtk_container_add(GTK_CONTAINER(hbuttonbox), insert_btn);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_widget_set_can_default(GTK_WIDGET(insert_btn), true);
+#endif                            // GTK 4
 
 	remove_btn = gtk_button_new_with_label("Remove");
 	widget_set_margins(
 			remove_btn, 1 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
 	gtk_widget_set_visible(remove_btn, true);
 	gtk_container_add(GTK_CONTAINER(hbuttonbox), remove_btn);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_widget_set_can_default(GTK_WIDGET(remove_btn), true);
+#endif                            // GTK 4
 
 	g_signal_connect(
 			G_OBJECT(insert_btn), "clicked", G_CALLBACK(on_insert_btn_clicked),
@@ -507,9 +666,16 @@ GtkWidget* Palette_edit::create_controls() {
 			down_btn, 2 * HMARGIN, 1 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
 	gtk_widget_set_visible(down_btn, true);
 	gtk_box_pack_start(GTK_BOX(bbox), down_btn, false, false, 0);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_widget_set_can_default(GTK_WIDGET(down_btn), true);
+#endif                            // GTK 4
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	GtkWidget* arrow = gtk_image_new_from_icon_name("go-down");
+#else     // GTK 4
 	GtkWidget* arrow
 			= gtk_image_new_from_icon_name("go-down", GTK_ICON_SIZE_BUTTON);
+#endif    // GTK 4
 	gtk_button_set_image(GTK_BUTTON(down_btn), arrow);
 
 	up_btn = gtk_button_new();
@@ -517,8 +683,15 @@ GtkWidget* Palette_edit::create_controls() {
 			up_btn, 1 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
 	gtk_widget_set_visible(up_btn, true);
 	gtk_box_pack_start(GTK_BOX(bbox), up_btn, false, false, 0);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_widget_set_can_default(GTK_WIDGET(up_btn), true);
+#endif                            // GTK 4
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	arrow = gtk_image_new_from_icon_name("go-up");
+#else     // GTK 4
 	arrow = gtk_image_new_from_icon_name("go-up", GTK_ICON_SIZE_BUTTON);
+#endif    // GTK 4
 	gtk_button_set_image(GTK_BUTTON(up_btn), arrow);
 
 	g_signal_connect(
@@ -538,7 +711,10 @@ GtkWidget* Palette_edit::create_controls() {
 	hbuttonbox = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);
 	gtk_widget_set_visible(hbuttonbox, true);
 	gtk_container_add(GTK_CONTAINER(frame), hbuttonbox);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_button_box_set_layout(GTK_BUTTON_BOX(hbuttonbox), GTK_BUTTONBOX_START);
+#endif                            // GTK 4
 	gtk_box_set_spacing(GTK_BOX(hbuttonbox), 0);
 
 	GtkWidget* importbtn = gtk_button_new_with_label("Import");
@@ -546,14 +722,20 @@ GtkWidget* Palette_edit::create_controls() {
 			importbtn, 2 * HMARGIN, 1 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
 	gtk_widget_set_visible(importbtn, true);
 	gtk_container_add(GTK_CONTAINER(hbuttonbox), importbtn);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_widget_set_can_default(GTK_WIDGET(importbtn), true);
+#endif                            // GTK 4
 
 	GtkWidget* exportbtn = gtk_button_new_with_label("Export");
 	widget_set_margins(
 			exportbtn, 1 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
 	gtk_widget_set_visible(exportbtn, true);
 	gtk_container_add(GTK_CONTAINER(hbuttonbox), exportbtn);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_widget_set_can_default(GTK_WIDGET(exportbtn), true);
+#endif                            // GTK 4
 
 	g_signal_connect(
 			G_OBJECT(importbtn), "clicked", G_CALLBACK(on_importbtn_clicked),
@@ -596,32 +778,63 @@ void Palette_edit::setup() {
 
 	// A frame looks nice.
 	GtkWidget* frame = gtk_frame_new(nullptr);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_IN);
+#endif                            // GTK 4
 	widget_set_margins(
 			frame, 2 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
 	gtk_widget_set_visible(frame, true);
 	gtk_box_pack_start(GTK_BOX(vbox), frame, true, true, 0);
 
 	draw = gtk_drawing_area_new();    // Create drawing area window.
-	//	gtk_widget_set_size_request(draw, w, h);
-	// Indicate the events we want.
+//	gtk_widget_set_size_request(draw, w, h);
+// Indicate the events we want.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_widget_set_events(
 			draw, GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK
 						  | GDK_BUTTON1_MOTION_MASK);
 	// Set "configure" handler.
+#endif                            // GTK 4
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	g_signal_connect(G_OBJECT(draw), "resize", G_CALLBACK(configure), this);
+#else                             // GTK 4
 	g_signal_connect(
 			G_OBJECT(draw), "configure-event", G_CALLBACK(configure), this);
-	// Set "expose-event" - "draw" handler.
+#endif                            // GTK 4
+								  // Set "expose-event" - "draw" handler.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	gtk_drawing_area_set_draw_func(
+			GTK_DRAWING_AREA(draw), expose, this, nullptr);
+#else                             // GTK 4
 	g_signal_connect(G_OBJECT(draw), "draw", G_CALLBACK(expose), this);
-	// Set mouse click handler.
+#endif                            // GTK 4
+								  // Set mouse click handler.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	click_ctlr = GTK_EVENT_CONTROLLER(gtk_gesture_click_new());
+	gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click_ctlr), 0);
+	gtk_widget_add_controller(GTK_WIDGET(draw), click_ctlr);
+	g_signal_connect(
+			G_OBJECT(click_ctlr), "pressed", G_CALLBACK(mouse_press), this);
+#else                             // GTK 4
 	g_signal_connect(
 			G_OBJECT(draw), "button-press-event", G_CALLBACK(mouse_press),
 			this);
+#endif                            // GTK 4
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	drag_source = GTK_EVENT_CONTROLLER(gtk_drag_source_new());
+	g_signal_connect(
+			G_OBJECT(drag_source), "prepare", G_CALLBACK(drag_prepare), this);
+	g_signal_connect(drag_source, "drag-begin", G_CALLBACK(drag_begin), this);
+//	gtk_widget_add_controller(draw, drag_source);
+#else     // GTK 4
 	// Mouse motion.
 	g_signal_connect(
 			G_OBJECT(draw), "drag-begin", G_CALLBACK(drag_begin), this);
 	g_signal_connect(
 			G_OBJECT(draw), "drag-data-get", G_CALLBACK(drag_data_get), this);
+#endif    // GTK 4
 	gtk_container_add(GTK_CONTAINER(frame), draw);
 	widget_set_margins(
 			draw, 2 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
@@ -797,8 +1010,9 @@ void Palette_edit::remove_palette() {
 	if (cur_pal < 0 || palettes.size() < 2) {
 		return;
 	}
-	if (Prompt("Do you really want to delete the palette you're viewing?",
-			   "Yes", "No")
+	if (EStudio::Prompt(
+				"Do you really want to delete the palette you're viewing?",
+				"Yes", "No")
 		!= 0) {
 		return;
 	}
@@ -823,7 +1037,7 @@ void Palette_edit::export_palette(const char* fname, gpointer user_data) {
 	auto* paled = static_cast<Palette_edit*>(user_data);
 	if (U7exists(fname)) {
 		char* msg = g_strdup_printf("'%s' already exists.  Overwrite?", fname);
-		const int answer = Prompt(msg, "Yes", "No");
+		const int answer = EStudio::Prompt(msg, "Yes", "No");
 		g_free(msg);
 		if (answer != 0) {
 			return;
@@ -858,7 +1072,7 @@ void Palette_edit::export_palette(const char* fname, gpointer user_data) {
 void Palette_edit::import_palette(const char* fname, gpointer user_data) {
 	auto* paled = static_cast<Palette_edit*>(user_data);
 	char* msg = g_strdup_printf("Overwrite current palette from '%s'?", fname);
-	const int answer = Prompt(msg, "Yes", "No");
+	const int answer = EStudio::Prompt(msg, "Yes", "No");
 	g_free(msg);
 	if (answer != 0) {
 		return;
@@ -869,7 +1083,7 @@ void Palette_edit::import_palette(const char* fname, gpointer user_data) {
 	char          buf[256];
 	in.getline(buf, sizeof(buf));    // Skip 1st line.
 	if (!in.good()) {
-		Alert("Error reading '%s'", fname);
+		EStudio::Alert("Error reading '%s'", fname);
 		return;
 	}
 	int i = 0;    // Color #.
