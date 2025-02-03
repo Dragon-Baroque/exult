@@ -12,9 +12,9 @@ GIMP_PLUGINS=
 endif
 
 if BUILD_STUDIO
-bin_PROGRAMS = exult_studio
+bin_PROGRAMS = exult_studio $(GIMP_PLUGINS)
 else
-bin_PROGRAMS =
+bin_PROGRAMS = $(GIMP_PLUGINS)
 endif
 
 u7shp_SOURCES = u7shp.cc

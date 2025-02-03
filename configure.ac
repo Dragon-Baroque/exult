@@ -909,28 +909,28 @@ AC_MSG_CHECKING([whether to build the GIMP plugin])
 if test x$enable_gimp_plugin = xyes; then
 	AC_MSG_RESULT(yes)
 	AC_MSG_CHECKING([for gimptool])
-	AC_CHECK_PROGS(GIMPTOOL, gimptool-2.0)
+	AC_CHECK_PROGS(GIMPTOOL, gimptool-3.0)
 	if test -z "$GIMPTOOL"; then
 		AC_MSG_RESULT([no, not building GIMP plugin])
 	else
 		AC_MSG_CHECKING([for GIMP version])
 		gimp_version=`$GIMPTOOL --version`
-		AX_COMPARE_VERSION([$gimp_version], [ge], [2.8.0], [dnl
-			dnl $gimp_version >= 2.8.0
-			AC_MSG_RESULT([found $gimp_version >= 2.8.0])
+		AX_COMPARE_VERSION([$gimp_version], [ge], [3.0.0], [dnl
+			dnl $gimp_version >= 3.0.0
+			AC_MSG_RESULT([found $gimp_version >= 3.0.0])
 			AC_SUBST(GIMPTOOL)
 			AM_CONDITIONAL(GIMP_PLUGIN, true)
 			GIMP_PLUGIN_PREFIX=`$GIMPTOOL --gimpplugindir`
 			GIMP_PLUGIN_PREFIX="$GIMP_PLUGIN_PREFIX/plug-ins"
 			AC_SUBST(GIMP_PLUGIN_PREFIX)
 			AC_DEFINE(HAVE_GIMP, 1, [Have GIMP])
-			GIMP_INCLUDES=`$PKG_CONFIG --cflags gimpui-2.0`
-			GIMP_LIBS=`$PKG_CONFIG --libs gimpui-2.0`
+			GIMP_INCLUDES=`$PKG_CONFIG --cflags gimpui-3.0`
+			GIMP_LIBS=`$PKG_CONFIG --libs gimpui-3.0`
 			AC_SUBST(GIMP_INCLUDES)
 			AC_SUBST(GIMP_LIBS)
 		], [
-			dnl $gimp_version < 2.8.0
-			AC_MSG_RESULT([found $gimp_version < 2.8.0 - disabling plugin])
+			dnl $gimp_version < 3.0.0
+			AC_MSG_RESULT([found $gimp_version < 3.0.0 - disabling plugin])
 		])
 	fi
 else
