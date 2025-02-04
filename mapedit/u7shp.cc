@@ -44,10 +44,11 @@
 #	define GDK_DISABLE_DEPRECATION_WARNINGS
 #	define GLIB_DISABLE_DEPRECATION_WARNINGS
 #endif    // USE_STRICT_GTK
-#include <gtk/gtk.h>
 #include <glib/gstdio.h>
+#include <gtk/gtk.h>
 #include <libgimp/gimp.h>
 #include <libgimp/gimpui.h>
+
 #ifdef __GNUC__
 #	pragma GCC diagnostic pop
 #endif    // __GNUC__
@@ -59,8 +60,9 @@
 #include "ignore_unused_variable_warning.h"
 #include "vgafile.h"
 
-#include <iostream>
 #include <errno.h>
+
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -76,60 +78,43 @@
 #define PLUG_IN_BINARY "file-shp"
 #define PLUG_IN_ROLE   "gimp-file-shp"
 
-
 typedef struct _Shp      Shp;
 typedef struct _ShpClass ShpClass;
 
-struct _Shp
-{
-  GimpPlugIn      parent_instance;
+struct _Shp {
+	GimpPlugIn parent_instance;
 };
 
-struct _ShpClass
-{
-  GimpPlugInClass parent_class;
+struct _ShpClass {
+	GimpPlugInClass parent_class;
 };
 
+#define SHP_TYPE (shp_get_type())
+#define SHP(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), SHP_TYPE, Shp))
 
-#define SHP_TYPE  (shp_get_type ())
-#define SHP(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), SHP_TYPE, Shp))
+GType shp_get_type(void) G_GNUC_CONST;
 
-GType                   shp_get_type         (void) G_GNUC_CONST;
+static GList*         shp_query_procedures(GimpPlugIn* plug_in);
+static GimpProcedure* shp_create_procedure(
+		GimpPlugIn* plug_in, const gchar* name);
 
-static GList          * shp_query_procedures (GimpPlugIn            *plug_in);
-static GimpProcedure  * shp_create_procedure (GimpPlugIn            *plug_in,
-                                              const gchar           *name);
+static GimpValueArray* shp_load(
+		GimpProcedure* procedure, GimpRunMode run_mode, GFile* file,
+		GimpMetadata* metadata, GimpMetadataLoadFlags* flags,
+		GimpProcedureConfig* config, gpointer run_data);
+static GimpValueArray* shp_export(
+		GimpProcedure* procedure, GimpRunMode run_mode, GimpImage* image,
+		GFile* file, GimpExportOptions* options, GimpMetadata* metadata,
+		GimpProcedureConfig* config, gpointer run_data);
+static gboolean shp_palette_dialog(
+		const gchar* title, GimpProcedure* procedure,
+		GimpProcedureConfig* config);
 
-static GimpValueArray * shp_load             (GimpProcedure         *procedure,
-                                              GimpRunMode            run_mode,
-                                              GFile                 *file,
-                                              GimpMetadata          *metadata,
-                                              GimpMetadataLoadFlags *flags,
-                                              GimpProcedureConfig   *config,
-                                              gpointer               run_data);
-static GimpValueArray * shp_export           (GimpProcedure         *procedure,
-                                              GimpRunMode            run_mode,
-                                              GimpImage             *image,
-                                              GFile                 *file,
-                                              GimpExportOptions     *options,
-                                              GimpMetadata          *metadata,
-                                              GimpProcedureConfig   *config,
-                                              gpointer               run_data);
-static gboolean         shp_palette_dialog   (const gchar           *title,
-                                              GimpProcedure         *procedure,
-                                              GimpProcedureConfig   *config);
-
-static gint             load_palette         (GFile                 *file,
-                                              guchar                 palette[],
-                                              GError               **error);
-static GimpImage      * load_image           (GFile                 *file,
-                                              GFile                 *palette_file,
-                                              GimpRunMode            run_mode,
-                                              GError               **error);
-static gboolean         export_image         (GFile                 *file,
-                                              GimpImage             *image,
-                                              GimpRunMode            run_mode,
-                                              GError               **error);
+static gint       load_palette(GFile* file, guchar palette[], GError** error);
+static GimpImage* load_image(
+		GFile* file, GFile* palette_file, GimpRunMode run_mode, GError** error);
+static gboolean export_image(
+		GFile* file, GimpImage* image, GimpRunMode run_mode, GError** error);
 
 #ifdef __GNUC__
 #	pragma GCC diagnostic push
@@ -140,181 +125,163 @@ static gboolean         export_image         (GFile                 *file,
 #		endif
 #	endif
 #endif    // __GNUC__
-G_DEFINE_TYPE (Shp, shp, GIMP_TYPE_PLUG_IN)
+G_DEFINE_TYPE(Shp, shp, GIMP_TYPE_PLUG_IN)
 #ifdef __GNUC__
 #	pragma GCC diagnostic pop
 #endif    // __GNUC__
 
-GIMP_MAIN (SHP_TYPE)
+GIMP_MAIN(SHP_TYPE)
 
-static void shp_class_init (ShpClass *klass) {
-  GimpPlugInClass *plug_in_class = GIMP_PLUG_IN_CLASS (klass);
-  plug_in_class->query_procedures = shp_query_procedures;
-  plug_in_class->create_procedure = shp_create_procedure;
-  plug_in_class->set_i18n         = nullptr;
+static void shp_class_init(ShpClass* klass) {
+	GimpPlugInClass* plug_in_class  = GIMP_PLUG_IN_CLASS(klass);
+	plug_in_class->query_procedures = shp_query_procedures;
+	plug_in_class->create_procedure = shp_create_procedure;
+	plug_in_class->set_i18n         = nullptr;
 }
 
-static void shp_init (Shp *shp) {
+static void shp_init(Shp* shp) {
 	ignore_unused_variable_warning(shp);
 }
 
-static GList *shp_query_procedures (GimpPlugIn *plug_in) {
+static GList* shp_query_procedures(GimpPlugIn* plug_in) {
 	ignore_unused_variable_warning(plug_in);
-  GList *list = nullptr;
-  list = g_list_append (list, g_strdup (LOAD_PROC));
-  list = g_list_append (list, g_strdup (EXPORT_PROC));
-  return list;
+	GList* list = nullptr;
+	list        = g_list_append(list, g_strdup(LOAD_PROC));
+	list        = g_list_append(list, g_strdup(EXPORT_PROC));
+	return list;
 }
 
-static GimpProcedure * shp_create_procedure (GimpPlugIn  *plug_in,
-		const gchar *name) {
-  GimpProcedure *procedure = nullptr;
-  if (! strcmp (name, LOAD_PROC)) {
-      procedure = gimp_load_procedure_new (plug_in, name,
-                                           GIMP_PDB_PROC_TYPE_PLUGIN,
-                                           shp_load, nullptr, nullptr);
-      gimp_procedure_set_menu_label (procedure, "Ultima VII Shape");
-      gimp_procedure_set_documentation (procedure,
-                                        "Loads files in Ultima VII Shape file format",
-                                        "This plug-in loads individual Ultima VII "
-                                        "Shape files.",
-                                        name);
-      gimp_procedure_set_attribution (procedure,
-                                      "The Exult Team",
-                                      "The Exult Team",
-                                      "2010-2025");
-      gimp_file_procedure_set_extensions (GIMP_FILE_PROCEDURE (procedure),
-                                          "shp");
-      gimp_procedure_add_file_argument (procedure, "palette-file",
-                                        "_Palette file",
-                                        "PAL file to load palette from",
-                                        G_PARAM_READWRITE);
-  } else if (! strcmp (name, EXPORT_PROC)) {
-      procedure = gimp_export_procedure_new (plug_in, name,
-                                             GIMP_PDB_PROC_TYPE_PLUGIN,
-                                             FALSE, shp_export, nullptr, nullptr);
-      gimp_procedure_set_image_types (procedure, "RGB*, INDEXED*");
-      gimp_procedure_set_menu_label (procedure, "Ultima VII Shape");
-      gimp_procedure_set_documentation (procedure,
-                                        "Exports files in Ultima VII Shape file format",
-                                        "This plug-in exports individual Ultima VII "
-                                        "Shape files.",
-                                        name);
-      gimp_procedure_set_attribution (procedure,
-                                      "The Exult Team",
-                                      "The Exult Team",
-                                      "2010-2025");
-      gimp_file_procedure_set_handles_remote (GIMP_FILE_PROCEDURE (procedure),
-                                              TRUE);
-      gimp_file_procedure_set_extensions (GIMP_FILE_PROCEDURE (procedure),
-                                          "shp");
-      gimp_export_procedure_set_capabilities (GIMP_EXPORT_PROCEDURE (procedure),
-                                              static_cast<GimpExportCapabilities>(GIMP_EXPORT_CAN_HANDLE_RGB   |
-                                              GIMP_EXPORT_CAN_HANDLE_ALPHA |
-                                              GIMP_EXPORT_CAN_HANDLE_LAYERS |
-                                              GIMP_EXPORT_CAN_HANDLE_INDEXED),
-                                              nullptr, nullptr, nullptr);
-      gimp_procedure_add_file_argument (procedure, "palette-file",
-                                        "_Palette file",
-                                        "PAL file to save palette to",
-                                        G_PARAM_READWRITE);
-  }
-  return procedure;
+static GimpProcedure* shp_create_procedure(
+		GimpPlugIn* plug_in, const gchar* name) {
+	GimpProcedure* procedure = nullptr;
+	if (!strcmp(name, LOAD_PROC)) {
+		procedure = gimp_load_procedure_new(
+				plug_in, name, GIMP_PDB_PROC_TYPE_PLUGIN, shp_load, nullptr,
+				nullptr);
+		gimp_procedure_set_menu_label(procedure, "Ultima VII Shape");
+		gimp_procedure_set_documentation(
+				procedure, "Loads files in Ultima VII Shape file format",
+				"This plug-in loads individual Ultima VII "
+				"Shape files.",
+				name);
+		gimp_procedure_set_attribution(
+				procedure, "The Exult Team", "The Exult Team", "2010-2025");
+		gimp_file_procedure_set_extensions(
+				GIMP_FILE_PROCEDURE(procedure), "shp");
+		gimp_procedure_add_file_argument(
+				procedure, "palette-file", "_Palette file",
+				"PAL file to load palette from", G_PARAM_READWRITE);
+	} else if (!strcmp(name, EXPORT_PROC)) {
+		procedure = gimp_export_procedure_new(
+				plug_in, name, GIMP_PDB_PROC_TYPE_PLUGIN, FALSE, shp_export,
+				nullptr, nullptr);
+		gimp_procedure_set_image_types(procedure, "RGB*, INDEXED*");
+		gimp_procedure_set_menu_label(procedure, "Ultima VII Shape");
+		gimp_procedure_set_documentation(
+				procedure, "Exports files in Ultima VII Shape file format",
+				"This plug-in exports individual Ultima VII "
+				"Shape files.",
+				name);
+		gimp_procedure_set_attribution(
+				procedure, "The Exult Team", "The Exult Team", "2010-2025");
+		gimp_file_procedure_set_handles_remote(
+				GIMP_FILE_PROCEDURE(procedure), TRUE);
+		gimp_file_procedure_set_extensions(
+				GIMP_FILE_PROCEDURE(procedure), "shp");
+		gimp_export_procedure_set_capabilities(
+				GIMP_EXPORT_PROCEDURE(procedure),
+				static_cast<GimpExportCapabilities>(
+						GIMP_EXPORT_CAN_HANDLE_RGB
+						| GIMP_EXPORT_CAN_HANDLE_ALPHA
+						| GIMP_EXPORT_CAN_HANDLE_LAYERS
+						| GIMP_EXPORT_CAN_HANDLE_INDEXED),
+				nullptr, nullptr, nullptr);
+		gimp_procedure_add_file_argument(
+				procedure, "palette-file", "_Palette file",
+				"PAL file to save palette to", G_PARAM_READWRITE);
+	}
+	return procedure;
 }
 
-static GimpValueArray *
-shp_load (GimpProcedure         *procedure,
-          GimpRunMode            run_mode,
-          GFile                 *file,
-          GimpMetadata          *metadata,
-          GimpMetadataLoadFlags *flags,
-          GimpProcedureConfig   *config,
-          gpointer               run_data)
-{
-	ignore_unused_variable_warning(procedure, run_mode, file, metadata, flags, config, run_data);
-  GimpValueArray *return_vals;
-  GimpImage      *image         = nullptr;
-  GFile          *palette_file  = nullptr;
-  GError         *error         = nullptr;
+static GimpValueArray* shp_load(
+		GimpProcedure* procedure, GimpRunMode run_mode, GFile* file,
+		GimpMetadata* metadata, GimpMetadataLoadFlags* flags,
+		GimpProcedureConfig* config, gpointer run_data) {
+	ignore_unused_variable_warning(
+			procedure, run_mode, file, metadata, flags, config, run_data);
+	GimpValueArray* return_vals;
+	GimpImage*      image        = nullptr;
+	GFile*          palette_file = nullptr;
+	GError*         error        = nullptr;
 
-  gegl_init (nullptr, nullptr);
+	gegl_init(nullptr, nullptr);
 
-  if (error != nullptr) {
-    return gimp_procedure_new_return_values (procedure,
-                                             GIMP_PDB_EXECUTION_ERROR,
-                                             error);
-  }
+	if (error != nullptr) {
+		return gimp_procedure_new_return_values(
+				procedure, GIMP_PDB_EXECUTION_ERROR, error);
+	}
 
-  g_object_get (config, "palette-file", &palette_file, nullptr);
-  if (run_mode != GIMP_RUN_NONINTERACTIVE) {
-    g_clear_object (&palette_file);
-    if (shp_palette_dialog ("Load PAL Palette", procedure, config)) {
-      g_object_get (config, "palette-file", &palette_file, nullptr);
-    }
-  }
+	g_object_get(config, "palette-file", &palette_file, nullptr);
+	if (run_mode != GIMP_RUN_NONINTERACTIVE) {
+		g_clear_object(&palette_file);
+		if (shp_palette_dialog("Load PAL Palette", procedure, config)) {
+			g_object_get(config, "palette-file", &palette_file, nullptr);
+		}
+	}
 
-  image = load_image (file, palette_file, run_mode, &error);
-  g_clear_object (&palette_file);
-  if (! image) {
-    return gimp_procedure_new_return_values (procedure,
-                                             GIMP_PDB_EXECUTION_ERROR,
-                                             error);
-  }
-  return_vals = gimp_procedure_new_return_values (procedure,
-                                                  GIMP_PDB_SUCCESS,
-                                                  nullptr);
-  GIMP_VALUES_SET_IMAGE (return_vals, 1, image);
-  return return_vals;
+	image = load_image(file, palette_file, run_mode, &error);
+	g_clear_object(&palette_file);
+	if (!image) {
+		return gimp_procedure_new_return_values(
+				procedure, GIMP_PDB_EXECUTION_ERROR, error);
+	}
+	return_vals = gimp_procedure_new_return_values(
+			procedure, GIMP_PDB_SUCCESS, nullptr);
+	GIMP_VALUES_SET_IMAGE(return_vals, 1, image);
+	return return_vals;
 }
 
-static GimpValueArray *
-shp_export (GimpProcedure        *procedure,
-            GimpRunMode           run_mode,
-            GimpImage            *image,
-            GFile                *file,
-            GimpExportOptions    *options,
-            GimpMetadata         *metadata,
-            GimpProcedureConfig  *config,
-            gpointer              run_data)
-{
-	ignore_unused_variable_warning(procedure, run_mode, image, file, options, metadata, config, run_data);
-  GimpPDBStatusType  status = GIMP_PDB_SUCCESS;
-  GimpExportReturn   expret = GIMP_EXPORT_IGNORE;
-  GError            *error  = nullptr;
+static GimpValueArray* shp_export(
+		GimpProcedure* procedure, GimpRunMode run_mode, GimpImage* image,
+		GFile* file, GimpExportOptions* options, GimpMetadata* metadata,
+		GimpProcedureConfig* config, gpointer run_data) {
+	ignore_unused_variable_warning(
+			procedure, run_mode, image, file, options, metadata, config,
+			run_data);
+	GimpPDBStatusType status = GIMP_PDB_SUCCESS;
+	GimpExportReturn  expret = GIMP_EXPORT_IGNORE;
+	GError*           error  = nullptr;
 
-  gegl_init (nullptr, nullptr);
+	gegl_init(nullptr, nullptr);
 
-  expret = gimp_export_options_get_image (options, &image);
+	expret = gimp_export_options_get_image(options, &image);
 
-  if (! export_image (file, image, run_mode, &error)) {
-    status = GIMP_PDB_EXECUTION_ERROR;
-  }
+	if (!export_image(file, image, run_mode, &error)) {
+		status = GIMP_PDB_EXECUTION_ERROR;
+	}
 
-  if (expret == GIMP_EXPORT_EXPORT) {
-    gimp_image_delete (image);
-  }
+	if (expret == GIMP_EXPORT_EXPORT) {
+		gimp_image_delete(image);
+	}
 
-  return gimp_procedure_new_return_values (procedure, status, error);
+	return gimp_procedure_new_return_values(procedure, status, error);
 }
 
-static gboolean
-shp_palette_dialog (const gchar         *title,
-                    GimpProcedure       *procedure,
-                    GimpProcedureConfig *config)
-{
-  GtkWidget *dialog;
-  gboolean   run;
+static gboolean shp_palette_dialog(
+		const gchar* title, GimpProcedure* procedure,
+		GimpProcedureConfig* config) {
+	GtkWidget* dialog;
+	gboolean   run;
 
-  gimp_ui_init (PLUG_IN_BINARY);
-  dialog = gimp_procedure_dialog_new (GIMP_PROCEDURE (procedure),
-                                      GIMP_PROCEDURE_CONFIG (config),
-                                      title);
-  gimp_procedure_dialog_set_ok_label (GIMP_PROCEDURE_DIALOG (dialog), "_Open");
-  gimp_procedure_dialog_fill (GIMP_PROCEDURE_DIALOG (dialog), nullptr);
-  run = gimp_procedure_dialog_run (GIMP_PROCEDURE_DIALOG (dialog));
+	gimp_ui_init(PLUG_IN_BINARY);
+	dialog = gimp_procedure_dialog_new(
+			GIMP_PROCEDURE(procedure), GIMP_PROCEDURE_CONFIG(config), title);
+	gimp_procedure_dialog_set_ok_label(GIMP_PROCEDURE_DIALOG(dialog), "_Open");
+	gimp_procedure_dialog_fill(GIMP_PROCEDURE_DIALOG(dialog), nullptr);
+	run = gimp_procedure_dialog_run(GIMP_PROCEDURE_DIALOG(dialog));
 
-  gtk_widget_destroy (dialog);
-  return run;
+	gtk_widget_destroy(dialog);
+	return run;
 }
 
 /*
@@ -427,293 +394,272 @@ Bounds get_shape_bounds(Shape_file& shape) {
 
 /* Load Shape image into GIMP */
 
-static GimpImage *
-load_image (GFile        *file,
-            GFile        *palette_file,
-            GimpRunMode   run_mode,
-            GError      **error)
-{
+static GimpImage* load_image(
+		GFile* file, GFile* palette_file, GimpRunMode run_mode,
+		GError** error) {
 	ignore_unused_variable_warning(file, palette_file, run_mode, error);
 #if 0
-  FILE       *fp;            /* Read file pointer */
-  guchar      header[32],    /* File header */
-              file_mark,     /* KiSS file type */
-              bpp;           /* Bits per pixel */
-  gint        height, width, /* Dimensions of image */
-              offx, offy,    /* Layer offsets */
-              colors;        /* Number of colors */
+	FILE*  fp;          /* Read file pointer */
+	guchar header[32],  /* File header */
+			file_mark,  /* KiSS file type */
+			bpp;        /* Bits per pixel */
+	gint height, width, /* Dimensions of image */
+			offx, offy, /* Layer offsets */
+			colors;     /* Number of colors */
 
-  GimpImage  *image;         /* Image */
-  GimpLayer  *layer;         /* Layer */
-  guchar     *buf;           /* Temporary buffer */
-  guchar     *line;          /* Pixel data */
-  GeglBuffer *buffer;        /* Buffer for layer */
+	GimpImage*  image;  /* Image */
+	GimpLayer*  layer;  /* Layer */
+	guchar*     buf;    /* Temporary buffer */
+	guchar*     line;   /* Pixel data */
+	GeglBuffer* buffer; /* Buffer for layer */
 
-  gint        i, j, k;       /* Counters */
-  size_t      n_read;        /* Number of items read from file */
+	gint   i, j, k; /* Counters */
+	size_t n_read;  /* Number of items read from file */
 
-  gimp_progress_init_printf (_("Opening '%s'"),
-                             gimp_file_get_utf8_name (file));
+	gimp_progress_init_printf(_("Opening '%s'"), gimp_file_get_utf8_name(file));
 
-  /* Open the file for reading */
-  fp = g_fopen (g_file_peek_path (file), "r");
+	/* Open the file for reading */
+	fp = g_fopen(g_file_peek_path(file), "r");
 
-  if (fp == nullptr)
-    {
-      g_set_error (error, G_FILE_ERROR, g_file_error_from_errno (errno),
-                   _("Could not open '%s' for reading: %s"),
-                   gimp_file_get_utf8_name (file), g_strerror (errno));
-      return nullptr;
-    }
+	if (fp == nullptr) {
+		g_set_error(
+				error, G_FILE_ERROR, g_file_error_from_errno(errno),
+				_("Could not open '%s' for reading: %s"),
+				gimp_file_get_utf8_name(file), g_strerror(errno));
+		return nullptr;
+	}
 
-  /* Get the image dimensions and create the image... */
+	/* Get the image dimensions and create the image... */
 
-  n_read = fread (header, 4, 1, fp);
+	n_read = fread(header, 4, 1, fp);
 
-  if (n_read < 1)
-    {
-      g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                   _("EOF or error while reading image header"));
-      fclose (fp);
-      return nullptr;
-    }
+	if (n_read < 1) {
+		g_set_error(
+				error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+				_("EOF or error while reading image header"));
+		fclose(fp);
+		return nullptr;
+	}
 
-  if (strncmp ((const gchar *) header, "KiSS", 4))
-    {
-      colors= 16;
-      bpp = 4;
-      width = header[0] + (256 * header[1]);
-      height = header[2] + (256 * header[3]);
-      offx= 0;
-      offy= 0;
-    }
-  else
-    { /* New-style image file, read full header */
-      n_read = fread (header, 28, 1, fp);
+	if (strncmp((const gchar*)header, "KiSS", 4)) {
+		colors = 16;
+		bpp    = 4;
+		width  = header[0] + (256 * header[1]);
+		height = header[2] + (256 * header[3]);
+		offx   = 0;
+		offy   = 0;
+	} else { /* New-style image file, read full header */
+		n_read = fread(header, 28, 1, fp);
 
-      if (n_read < 1)
-        {
-          g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                       _("EOF or error while reading image header"));
-          fclose (fp);
-          return nullptr;
-        }
+		if (n_read < 1) {
+			g_set_error(
+					error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+					_("EOF or error while reading image header"));
+			fclose(fp);
+			return nullptr;
+		}
 
-      file_mark = header[0];
-      if (file_mark != 0x20 && file_mark != 0x21)
-        {
-          g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                       _("is not a CEL image file"));
-          fclose (fp);
-          return nullptr;
-        }
+		file_mark = header[0];
+		if (file_mark != 0x20 && file_mark != 0x21) {
+			g_set_error(
+					error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+					_("is not a CEL image file"));
+			fclose(fp);
+			return nullptr;
+		}
 
-      bpp = header[1];
-      switch (bpp)
-        {
-        case 4:
-        case 8:
-        case 32:
-          colors = (1 << bpp);
-          break;
-        default:
-          g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                       _("illegal bpp value in image: %hhu"), bpp);
-          fclose (fp);
-          return nullptr;
-        }
+		bpp = header[1];
+		switch (bpp) {
+		case 4:
+		case 8:
+		case 32:
+			colors = (1 << bpp);
+			break;
+		default:
+			g_set_error(
+					error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+					_("illegal bpp value in image: %hhu"), bpp);
+			fclose(fp);
+			return nullptr;
+		}
 
-      width = header[4] + (256 * header[5]);
-      height = header[6] + (256 * header[7]);
-      offx = header[8] + (256 * header[9]);
-      offy = header[10] + (256 * header[11]);
-    }
+		width  = header[4] + (256 * header[5]);
+		height = header[6] + (256 * header[7]);
+		offx   = header[8] + (256 * header[9]);
+		offy   = header[10] + (256 * header[11]);
+	}
 
-  if ((width == 0) || (height == 0) || (width + offx > GIMP_MAX_IMAGE_SIZE) ||
-      (height + offy > GIMP_MAX_IMAGE_SIZE))
-    {
-      g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                   _("illegal image dimensions: width: %d, horizontal offset: "
-                     "%d, height: %d, vertical offset: %d"),
-                   width, offx, height, offy);
-      fclose (fp);
-      return nullptr;
-    }
+	if ((width == 0) || (height == 0) || (width + offx > GIMP_MAX_IMAGE_SIZE)
+		|| (height + offy > GIMP_MAX_IMAGE_SIZE)) {
+		g_set_error(
+				error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+				_("illegal image dimensions: width: %d, horizontal offset: "
+				  "%d, height: %d, vertical offset: %d"),
+				width, offx, height, offy);
+		fclose(fp);
+		return nullptr;
+	}
 
-  if (bpp == 32)
-    image = gimp_image_new (width + offx, height + offy, GIMP_RGB);
-  else
-    image = gimp_image_new (width + offx, height + offy, GIMP_INDEXED);
+	if (bpp == 32) {
+		image = gimp_image_new(width + offx, height + offy, GIMP_RGB);
+	} else {
+		image = gimp_image_new(width + offx, height + offy, GIMP_INDEXED);
+	}
 
-  if (! image)
-    {
-      g_set_error (error, 0, 0, _("Can't create a new image"));
-      fclose (fp);
-      return nullptr;
-    }
+	if (!image) {
+		g_set_error(error, 0, 0, _("Can't create a new image"));
+		fclose(fp);
+		return nullptr;
+	}
 
-  /* Create an indexed-alpha layer to hold the image... */
-  if (bpp == 32)
-    layer = gimp_layer_new (image, _("Background"), width, height,
-                            GIMP_RGBA_IMAGE,
-                            100,
-                            gimp_image_get_default_new_layer_mode (image));
-  else
-    layer = gimp_layer_new (image, _("Background"), width, height,
-                            GIMP_INDEXEDA_IMAGE,
-                            100,
-                            gimp_image_get_default_new_layer_mode (image));
-  gimp_image_insert_layer (image, layer, nullptr, 0);
-  gimp_layer_set_offsets (layer, offx, offy);
+	/* Create an indexed-alpha layer to hold the image... */
+	if (bpp == 32) {
+		layer = gimp_layer_new(
+				image, _("Background"), width, height, GIMP_RGBA_IMAGE, 100,
+				gimp_image_get_default_new_layer_mode(image));
+	} else {
+		layer = gimp_layer_new(
+				image, _("Background"), width, height, GIMP_INDEXEDA_IMAGE, 100,
+				gimp_image_get_default_new_layer_mode(image));
+	}
+	gimp_image_insert_layer(image, layer, nullptr, 0);
+	gimp_layer_set_offsets(layer, offx, offy);
 
-  /* Get the drawable and set the pixel region for our load... */
+	/* Get the drawable and set the pixel region for our load... */
 
-  buffer = gimp_drawable_get_buffer (GIMP_DRAWABLE (layer));
+	buffer = gimp_drawable_get_buffer(GIMP_DRAWABLE(layer));
 
-  /* Read the image in and give it to GIMP a line at a time */
-  buf  = g_new (guchar, width * 4);
-  line = g_new (guchar, (width + 1) * 4);
+	/* Read the image in and give it to GIMP a line at a time */
+	buf  = g_new(guchar, width * 4);
+	line = g_new(guchar, (width + 1) * 4);
 
-  for (i = 0; i < height && !feof(fp); ++i)
-    {
-      switch (bpp)
-        {
-        case 4:
-          n_read = fread (buf, (width + 1) / 2, 1, fp);
+	for (i = 0; i < height && !feof(fp); ++i) {
+		switch (bpp) {
+		case 4:
+			n_read = fread(buf, (width + 1) / 2, 1, fp);
 
-          if (n_read < 1)
-            {
-              g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                           _("EOF or error while reading image data"));
-              fclose (fp);
-              return nullptr;
-            }
+			if (n_read < 1) {
+				g_set_error(
+						error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+						_("EOF or error while reading image data"));
+				fclose(fp);
+				return nullptr;
+			}
 
-          for (j = 0, k = 0; j < width * 2; j+= 4, ++k)
-            {
-              if (buf[k] / 16 == 0)
-                {
-                  line[j]     = 16;
-                  line[j+ 1 ] = 0;
-                }
-              else
-                {
-                  line[j]     = (buf[k] / 16) - 1;
-                  line[j + 1] = 255;
-                }
+			for (j = 0, k = 0; j < width * 2; j += 4, ++k) {
+				if (buf[k] / 16 == 0) {
+					line[j]     = 16;
+					line[j + 1] = 0;
+				} else {
+					line[j]     = (buf[k] / 16) - 1;
+					line[j + 1] = 255;
+				}
 
-              if (buf[k] % 16 == 0)
-                {
-                  line[j + 2] = 16;
-                  line[j + 3] = 0;
-                }
-              else
-                {
-                  line[j + 2] = (buf[k] % 16) - 1;
-                  line[j + 3] = 255;
-                }
-            }
-          break;
+				if (buf[k] % 16 == 0) {
+					line[j + 2] = 16;
+					line[j + 3] = 0;
+				} else {
+					line[j + 2] = (buf[k] % 16) - 1;
+					line[j + 3] = 255;
+				}
+			}
+			break;
 
-        case 8:
-          n_read = fread (buf, width, 1, fp);
+		case 8:
+			n_read = fread(buf, width, 1, fp);
 
-          if (n_read < 1)
-            {
-              g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                           _("EOF or error while reading image data"));
-              fclose (fp);
-              return nullptr;
-            }
+			if (n_read < 1) {
+				g_set_error(
+						error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+						_("EOF or error while reading image data"));
+				fclose(fp);
+				return nullptr;
+			}
 
-          for (j = 0, k = 0; j < width * 2; j+= 2, ++k)
-            {
-              if (buf[k] == 0)
-                {
-                  line[j]     = 255;
-                  line[j + 1] = 0;
-                }
-              else
-                {
-                  line[j]     = buf[k] - 1;
-                  line[j + 1] = 255;
-                }
-            }
-          break;
+			for (j = 0, k = 0; j < width * 2; j += 2, ++k) {
+				if (buf[k] == 0) {
+					line[j]     = 255;
+					line[j + 1] = 0;
+				} else {
+					line[j]     = buf[k] - 1;
+					line[j + 1] = 255;
+				}
+			}
+			break;
 
-        case 32:
-          n_read = fread (line, width * 4, 1, fp);
+		case 32:
+			n_read = fread(line, width * 4, 1, fp);
 
-          if (n_read < 1)
-            {
-              g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                           _("EOF or error while reading image data"));
-              fclose (fp);
-              return nullptr;
-            }
+			if (n_read < 1) {
+				g_set_error(
+						error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+						_("EOF or error while reading image data"));
+				fclose(fp);
+				return nullptr;
+			}
 
-          /* The CEL file order is BGR so we need to swap B and R
-           * to get the Gimp RGB order.
-           */
-          for (j= 0; j < width; j++)
-            {
-              guint8 tmp = line[j*4];
-              line[j*4] = line[j*4+2];
-              line[j*4+2] = tmp;
-            }
-          break;
+			/* The CEL file order is BGR so we need to swap B and R
+			 * to get the Gimp RGB order.
+			 */
+			for (j = 0; j < width; j++) {
+				guint8 tmp      = line[j * 4];
+				line[j * 4]     = line[j * 4 + 2];
+				line[j * 4 + 2] = tmp;
+			}
+			break;
 
-        default:
-          g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                       _("Unsupported bit depth (%d)!"), bpp);
-          fclose (fp);
-          return nullptr;
-        }
+		default:
+			g_set_error(
+					error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+					_("Unsupported bit depth (%d)!"), bpp);
+			fclose(fp);
+			return nullptr;
+		}
 
-      gegl_buffer_set (buffer, GEGL_RECTANGLE (0, i, width, 1), 0,
-                       nullptr, line, GEGL_AUTO_ROWSTRIDE);
+		gegl_buffer_set(
+				buffer, GEGL_RECTANGLE(0, i, width, 1), 0, nullptr, line,
+				GEGL_AUTO_ROWSTRIDE);
 
-      gimp_progress_update ((float) i / (float) height);
-    }
+		gimp_progress_update((float)i / (float)height);
+	}
 
-  /* Close image files, give back allocated memory */
+	/* Close image files, give back allocated memory */
 
-  fclose (fp);
-  g_free (buf);
-  g_free (line);
+	fclose(fp);
+	g_free(buf);
+	g_free(line);
 
-  if (bpp != 32)
-    {
-      /* Use palette from file or otherwise default grey palette */
-      guchar palette[256 * 3];
+	if (bpp != 32) {
+		/* Use palette from file or otherwise default grey palette */
+		guchar palette[256 * 3];
 
-      if (palette_file != nullptr)
-        {
-          colors = load_palette (palette_file, palette, error);
-          if (colors < 0 || *error)
-            return nullptr;
-        }
-      else
-        {
-          for (i= 0; i < colors; ++i)
-            {
-              palette[i * 3] = palette[i * 3 + 1] = palette[i * 3 + 2]= i * 256 / colors;
-            }
-        }
+		if (palette_file != nullptr) {
+			colors = load_palette(palette_file, palette, error);
+			if (colors < 0 || *error) {
+				return nullptr;
+			}
+		} else {
+			for (i = 0; i < colors; ++i) {
+				palette[i * 3] = palette[i * 3 + 1] = palette[i * 3 + 2]
+						= i * 256 / colors;
+			}
+		}
 
-      gimp_palette_set_colormap (gimp_image_get_palette (image), babl_format ("R'G'B' u8"), palette + 3, (colors - 1) * 3);
-    }
+		gimp_palette_set_colormap(
+				gimp_image_get_palette(image), babl_format("R'G'B' u8"),
+				palette + 3, (colors - 1) * 3);
+	}
 
-  /* Now get everything redrawn and hand back the finished image */
+	/* Now get everything redrawn and hand back the finished image */
 
-  g_object_unref (buffer);
+	g_object_unref(buffer);
 
-  gimp_progress_update (1.0);
+	gimp_progress_update(1.0);
 
-  return image;
+	return image;
 #endif
-// static gint32 load_image(gchar* filename) {
-//	Shape_file shape(filename);
+	// static gint32 load_image(gchar* filename) {
+	//	Shape_file shape(filename);
 	if (!g_file_query_exists(file, nullptr)) {
 		return nullptr;
 	}
@@ -735,26 +681,28 @@ load_image (GFile        *file,
 		image_type = GIMP_INDEXED_IMAGE;
 	}
 
-	GimpImage *image = gimp_image_new(
+	GimpImage* image = gimp_image_new(
 			bounds.xleft + bounds.xright + 1, bounds.yabove + bounds.ybelow + 1,
 			GIMP_INDEXED);
-//	gimp_image_set_filename(image, filename);
-//	gimp_image_set_filename(image, gimp_file_get_utf8_name(file));
-//	gimp_image_set_colormap(image, gimp_cmap, 256);
-	gimp_palette_set_colormap (gimp_image_get_palette (image), babl_format ("R'G'B' u8"), gimp_cmap, (256) * 3);
+	//	gimp_image_set_filename(image, filename);
+	//	gimp_image_set_filename(image, gimp_file_get_utf8_name(file));
+	//	gimp_image_set_colormap(image, gimp_cmap, 256);
+	gimp_palette_set_colormap(
+			gimp_image_get_palette(image), babl_format("R'G'B' u8"), gimp_cmap,
+			(256) * 3);
 	int framenum = 0;
 	for (auto& frame : shape) {
 		const std::string framename = "Frame " + std::to_string(framenum);
-		GimpLayer *layer = gimp_layer_new(
+		GimpLayer*        layer     = gimp_layer_new(
                 image, framename.c_str(), frame->get_width(),
                 frame->get_height(), image_type, 100,
-                gimp_image_get_default_new_layer_mode (image));
+                gimp_image_get_default_new_layer_mode(image));
 		gimp_image_insert_layer(image, layer, nullptr, 0);
 		gimp_item_transform_translate(
 				GIMP_ITEM(layer), bounds.xleft - frame->get_xleft(),
 				bounds.yabove - frame->get_yabove());
 
-		GeglBuffer*         drawable = gimp_drawable_get_buffer(GIMP_DRAWABLE(layer));
+		GeglBuffer* drawable = gimp_drawable_get_buffer(GIMP_DRAWABLE(layer));
 		const GeglRectangle rect{
 				0, 0, gegl_buffer_get_width(drawable),
 				gegl_buffer_get_height(drawable)};
@@ -799,157 +747,145 @@ load_image (GFile        *file,
 	return image;
 }
 
-static gint
-load_palette (GFile   *file,
-              guchar   palette[],
-              GError **error)
-{
+static gint load_palette(GFile* file, guchar palette[], GError** error) {
 	ignore_unused_variable_warning(file, palette, error);
 #if 0
-  GFileInputStream *input;
-  guchar            header[32];     /* File header */
-  guchar            buffer[2];
-  guchar            file_mark, bpp;
-  gint              i, colors = 0;
-  gssize            n_read;
+	GFileInputStream* input;
+	guchar            header[32]; /* File header */
+	guchar            buffer[2];
+	guchar            file_mark, bpp;
+	gint              i, colors = 0;
+	gssize            n_read;
 
-  input = g_file_read (file, nullptr, error);
-  if (input == nullptr)
-    return -1;
+	input = g_file_read(file, nullptr, error);
+	if (input == nullptr) {
+		return -1;
+	}
 
-  n_read = g_input_stream_read (G_INPUT_STREAM (input), header, 4, nullptr, error);
+	n_read = g_input_stream_read(
+			G_INPUT_STREAM(input), header, 4, nullptr, error);
 
-  if (n_read < 1)
-    {
-      g_object_unref (input);
-      return -1;
-    }
+	if (n_read < 1) {
+		g_object_unref(input);
+		return -1;
+	}
 
-  if (!strncmp ((const gchar *) header, "KiSS", 4))
-    {
-      n_read = g_input_stream_read (G_INPUT_STREAM (input), header + 4, 28, nullptr, error);
+	if (!strncmp((const gchar*)header, "KiSS", 4)) {
+		n_read = g_input_stream_read(
+				G_INPUT_STREAM(input), header + 4, 28, nullptr, error);
 
-      if (n_read < 1)
-        {
-          g_object_unref (input);
-          return -1;
-        }
+		if (n_read < 1) {
+			g_object_unref(input);
+			return -1;
+		}
 
-      file_mark = header[4];
-      if (file_mark != 0x10)
-        {
-          g_object_unref (input);
-          g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                       _("'%s': is not a KCF palette file"),
-                       gimp_file_get_utf8_name (file));
-          return -1;
-        }
+		file_mark = header[4];
+		if (file_mark != 0x10) {
+			g_object_unref(input);
+			g_set_error(
+					error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+					_("'%s': is not a KCF palette file"),
+					gimp_file_get_utf8_name(file));
+			return -1;
+		}
 
-      bpp = header[5];
-      if (bpp != 12 && bpp != 24)
-        {
-          g_object_unref (input);
-          g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                       _("'%s': illegal bpp value in palette: %hhu"),
-                       gimp_file_get_utf8_name (file), bpp);
-          return -1;
-        }
+		bpp = header[5];
+		if (bpp != 12 && bpp != 24) {
+			g_object_unref(input);
+			g_set_error(
+					error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+					_("'%s': illegal bpp value in palette: %hhu"),
+					gimp_file_get_utf8_name(file), bpp);
+			return -1;
+		}
 
-      colors = header[8] + header[9] * 256;
-      if (colors != 16 && colors != 256)
-        {
-          g_object_unref (input);
-          g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                       _("'%s': illegal number of colors: %u"),
-                       gimp_file_get_utf8_name (file), colors);
-          return -1;
-        }
+		colors = header[8] + header[9] * 256;
+		if (colors != 16 && colors != 256) {
+			g_object_unref(input);
+			g_set_error(
+					error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+					_("'%s': illegal number of colors: %u"),
+					gimp_file_get_utf8_name(file), colors);
+			return -1;
+		}
 
-      switch (bpp)
-        {
-        case 12:
-          for (i = 0; i < colors; ++i)
-            {
-              n_read = g_input_stream_read (G_INPUT_STREAM (input), buffer, 2, nullptr, error);
+		switch (bpp) {
+		case 12:
+			for (i = 0; i < colors; ++i) {
+				n_read = g_input_stream_read(
+						G_INPUT_STREAM(input), buffer, 2, nullptr, error);
 
-              if (n_read == 1)
-                {
-                  g_object_unref (input);
-                  g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                               _("'%s': EOF or error while reading "
-                                 "palette data"),
-                               gimp_file_get_utf8_name (file));
-                  return -1;
-                }
-              else if (n_read < 1)
-                {
-                  g_object_unref (input);
-                  return -1;
-                }
+				if (n_read == 1) {
+					g_object_unref(input);
+					g_set_error(
+							error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+							_("'%s': EOF or error while reading "
+							  "palette data"),
+							gimp_file_get_utf8_name(file));
+					return -1;
+				} else if (n_read < 1) {
+					g_object_unref(input);
+					return -1;
+				}
 
-              palette[i*3]= buffer[0] & 0xf0;
-              palette[i*3+1]= (buffer[1] & 0x0f) * 16;
-              palette[i*3+2]= (buffer[0] & 0x0f) * 16;
-            }
-          break;
-        case 24:
-          n_read = g_input_stream_read (G_INPUT_STREAM (input), palette, 3 * colors, nullptr, error);
+				palette[i * 3]     = buffer[0] & 0xf0;
+				palette[i * 3 + 1] = (buffer[1] & 0x0f) * 16;
+				palette[i * 3 + 2] = (buffer[0] & 0x0f) * 16;
+			}
+			break;
+		case 24:
+			n_read = g_input_stream_read(
+					G_INPUT_STREAM(input), palette, 3 * colors, nullptr, error);
 
-          if (n_read < 1)
-            {
-              g_object_unref (input);
-              return -1;
-            }
-          else if (n_read < 3 * colors)
-            {
-              g_object_unref (input);
-              g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                           _("'%s': EOF or error while reading palette data"),
-                           gimp_file_get_utf8_name (file));
-              return -1;
-            }
-          break;
-        default:
-          g_assert_not_reached ();
-        }
-    }
-  else
-    {
-      colors = 16;
-      if (! g_seekable_seek (G_SEEKABLE (input), 0, G_SEEK_SET, nullptr, error))
-        {
-          g_object_unref (input);
-          return -1;
-        }
+			if (n_read < 1) {
+				g_object_unref(input);
+				return -1;
+			} else if (n_read < 3 * colors) {
+				g_object_unref(input);
+				g_set_error(
+						error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+						_("'%s': EOF or error while reading palette data"),
+						gimp_file_get_utf8_name(file));
+				return -1;
+			}
+			break;
+		default:
+			g_assert_not_reached();
+		}
+	} else {
+		colors = 16;
+		if (!g_seekable_seek(
+					G_SEEKABLE(input), 0, G_SEEK_SET, nullptr, error)) {
+			g_object_unref(input);
+			return -1;
+		}
 
-      for (i= 0; i < colors; ++i)
-        {
-          n_read = g_input_stream_read (G_INPUT_STREAM (input), buffer, 2, nullptr, error);
+		for (i = 0; i < colors; ++i) {
+			n_read = g_input_stream_read(
+					G_INPUT_STREAM(input), buffer, 2, nullptr, error);
 
-          if (n_read < 1)
-            {
-              g_object_unref (input);
-              return -1;
-            }
-          else if (n_read == 1)
-            {
-              g_object_unref (input);
-              g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
-                           _("'%s': EOF or error while reading palette data"),
-                           gimp_file_get_utf8_name (file));
-              return -1;
-            }
+			if (n_read < 1) {
+				g_object_unref(input);
+				return -1;
+			} else if (n_read == 1) {
+				g_object_unref(input);
+				g_set_error(
+						error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+						_("'%s': EOF or error while reading palette data"),
+						gimp_file_get_utf8_name(file));
+				return -1;
+			}
 
-          palette[i*3] = buffer[0] & 0xf0;
-          palette[i*3+1] = (buffer[1] & 0x0f) * 16;
-          palette[i*3+2] = (buffer[0] & 0x0f) * 16;
-        }
-    }
+			palette[i * 3]     = buffer[0] & 0xf0;
+			palette[i * 3 + 1] = (buffer[1] & 0x0f) * 16;
+			palette[i * 3 + 2] = (buffer[0] & 0x0f) * 16;
+		}
+	}
 
-  return colors;
+	return colors;
 #endif
-// static void load_palette(const std::string& filename) {
-//	const U7object pal(filename, 0);
+	// static void load_palette(const std::string& filename) {
+	//	const U7object pal(filename, 0);
 	const U7object pal(gimp_file_get_utf8_name(file), 0);
 	size_t         len;
 	auto           data = pal.retrieve(len);
@@ -977,208 +913,184 @@ load_palette (GFile   *file,
 	return 256;
 }
 
-static gboolean
-export_image (GFile         *file,
-              GimpImage     *image,
-              GimpRunMode    run_mode,
-              GError       **error)
-{
+static gboolean export_image(
+		GFile* file, GimpImage* image, GimpRunMode run_mode, GError** error) {
 	ignore_unused_variable_warning(file, image, run_mode, error);
 #if 0
-  GOutputStream *output;
-  GeglBuffer    *buffer;
-  const Babl    *format;
-  GCancellable  *cancellable;
-  gint           width;
-  gint           height;
-  guchar         header[32];    /* File header */
-  gint           bpp;           /* Bit per pixel */
-  gint           colors = 0;    /* Number of colors */
-  gint           type;          /* type of layer */
-  gint           offx, offy;    /* Layer offsets */
-  guchar        *buf  = nullptr;   /* Temporary buffer */
-  guchar        *line = nullptr;   /* Pixel data */
-  gint           i, j, k;       /* Counters */
+	GOutputStream* output;
+	GeglBuffer*    buffer;
+	const Babl*    format;
+	GCancellable*  cancellable;
+	gint           width;
+	gint           height;
+	guchar         header[32];     /* File header */
+	gint           bpp;            /* Bit per pixel */
+	gint           colors = 0;     /* Number of colors */
+	gint           type;           /* type of layer */
+	gint           offx, offy;     /* Layer offsets */
+	guchar*        buf  = nullptr; /* Temporary buffer */
+	guchar*        line = nullptr; /* Pixel data */
+	gint           i, j, k;        /* Counters */
 
-  /* Check that this is an indexed image, fail otherwise */
-  type = gimp_drawable_type (drawable);
+	/* Check that this is an indexed image, fail otherwise */
+	type = gimp_drawable_type(drawable);
 
-  if (type == GIMP_INDEXEDA_IMAGE)
-    {
-      bpp    = 4;
-      format = nullptr;
-    }
-  else
-    {
-      bpp    = 32;
-      format = babl_format ("R'G'B'A u8");
-    }
+	if (type == GIMP_INDEXEDA_IMAGE) {
+		bpp    = 4;
+		format = nullptr;
+	} else {
+		bpp    = 32;
+		format = babl_format("R'G'B'A u8");
+	}
 
-  /* Find out how offset this layer was */
-  gimp_drawable_get_offsets (drawable, &offx, &offy);
+	/* Find out how offset this layer was */
+	gimp_drawable_get_offsets(drawable, &offx, &offy);
 
-  buffer = gimp_drawable_get_buffer (drawable);
+	buffer = gimp_drawable_get_buffer(drawable);
 
-  width  = gegl_buffer_get_width  (buffer);
-  height = gegl_buffer_get_height (buffer);
+	width  = gegl_buffer_get_width(buffer);
+	height = gegl_buffer_get_height(buffer);
 
-  gimp_progress_init_printf (_("Exporting '%s'"),
-                             gimp_file_get_utf8_name (file));
+	gimp_progress_init_printf(
+			_("Exporting '%s'"), gimp_file_get_utf8_name(file));
 
-  output = G_OUTPUT_STREAM (g_file_replace (file,
-                                            nullptr, FALSE, G_FILE_CREATE_NONE,
-                                            nullptr, error));
-  if (output)
-    {
-      GOutputStream *buffered;
+	output = G_OUTPUT_STREAM(g_file_replace(
+			file, nullptr, FALSE, G_FILE_CREATE_NONE, nullptr, error));
+	if (output) {
+		GOutputStream* buffered;
 
-      buffered = g_buffered_output_stream_new (output);
-      g_object_unref (output);
+		buffered = g_buffered_output_stream_new(output);
+		g_object_unref(output);
 
-      output = buffered;
-    }
-  else
-    {
-      return FALSE;
-    }
+		output = buffered;
+	} else {
+		return FALSE;
+	}
 
-  /* Headers */
-  memset (header, 0, 32);
-  strcpy ((gchar *) header, "KiSS");
-  header[4]= 0x20;
+	/* Headers */
+	memset(header, 0, 32);
+	strcpy((gchar*)header, "KiSS");
+	header[4] = 0x20;
 
-  /* Work out whether to save as 8bit or 4bit */
-  if (bpp < 32)
-    {
-      colors = gimp_palette_get_color_count (gimp_image_get_palette (image));
+	/* Work out whether to save as 8bit or 4bit */
+	if (bpp < 32) {
+		colors = gimp_palette_get_color_count(gimp_image_get_palette(image));
 
-      if (colors > 15)
-        {
-          header[5] = 8;
-        }
-      else
-        {
-          header[5] = 4;
-        }
-    }
-  else
-    {
-      header[5] = 32;
-    }
+		if (colors > 15) {
+			header[5] = 8;
+		} else {
+			header[5] = 4;
+		}
+	} else {
+		header[5] = 32;
+	}
 
-  /* Fill in the blanks ... */
-  header[8]  = width % 256;
-  header[9]  = width / 256;
-  header[10] = height % 256;
-  header[11] = height / 256;
-  header[12] = offx % 256;
-  header[13] = offx / 256;
-  header[14] = offy % 256;
-  header[15] = offy / 256;
+	/* Fill in the blanks ... */
+	header[8]  = width % 256;
+	header[9]  = width / 256;
+	header[10] = height % 256;
+	header[11] = height / 256;
+	header[12] = offx % 256;
+	header[13] = offx / 256;
+	header[14] = offy % 256;
+	header[15] = offy / 256;
 
-  if (! g_output_stream_write_all (output, header, 32, nullptr,
-                                   nullptr, error))
-    goto fail;
+	if (!g_output_stream_write_all(
+				output, header, 32, nullptr, nullptr, error)) {
+		goto fail;
+	}
 
-  /* Arrange for memory etc. */
-  buf  = g_new (guchar, width * 4);
-  line = g_new (guchar, (width + 1) * 4);
+	/* Arrange for memory etc. */
+	buf  = g_new(guchar, width * 4);
+	line = g_new(guchar, (width + 1) * 4);
 
-  /* Get the image from GIMP one line at a time and write it out */
-  for (i = 0; i < height; ++i)
-    {
-      gegl_buffer_get (buffer, GEGL_RECTANGLE (0, i, width, 1), 1.0,
-                       format, line,
-                       GEGL_AUTO_ROWSTRIDE, GEGL_ABYSS_NONE);
+	/* Get the image from GIMP one line at a time and write it out */
+	for (i = 0; i < height; ++i) {
+		gegl_buffer_get(
+				buffer, GEGL_RECTANGLE(0, i, width, 1), 1.0, format, line,
+				GEGL_AUTO_ROWSTRIDE, GEGL_ABYSS_NONE);
 
-      memset (buf, 0, width);
+		memset(buf, 0, width);
 
-      if (bpp == 32)
-        {
-          for (j = 0; j < width; j++)
-            {
-              buf[4 * j]     = line[4 * j + 2];   /* B */
-              buf[4 * j + 1] = line[4 * j + 1];   /* G */
-              buf[4 * j + 2] = line[4 * j + 0];   /* R */
-              buf[4 * j + 3] = line[4 * j + 3];   /* Alpha */
-            }
+		if (bpp == 32) {
+			for (j = 0; j < width; j++) {
+				buf[4 * j]     = line[4 * j + 2]; /* B */
+				buf[4 * j + 1] = line[4 * j + 1]; /* G */
+				buf[4 * j + 2] = line[4 * j + 0]; /* R */
+				buf[4 * j + 3] = line[4 * j + 3]; /* Alpha */
+			}
 
-          if (! g_output_stream_write_all (output, buf, width * 4, nullptr,
-                                           nullptr, error))
-            goto fail;
-        }
-      else if (colors > 16)
-        {
-          for (j = 0, k = 0; j < width * 2; j += 2, ++k)
-            {
-              if (line[j + 1] > 127)
-                {
-                  buf[k]= line[j] + 1;
-                }
-            }
+			if (!g_output_stream_write_all(
+						output, buf, width * 4, nullptr, nullptr, error)) {
+				goto fail;
+			}
+		} else if (colors > 16) {
+			for (j = 0, k = 0; j < width * 2; j += 2, ++k) {
+				if (line[j + 1] > 127) {
+					buf[k] = line[j] + 1;
+				}
+			}
 
-          if (! g_output_stream_write_all (output, buf, width, nullptr,
-                                           nullptr, error))
-            goto fail;
-        }
-      else
-        {
-          for (j = 0, k = 0; j < width * 2; j+= 4, ++k)
-            {
-              buf[k] = 0;
+			if (!g_output_stream_write_all(
+						output, buf, width, nullptr, nullptr, error)) {
+				goto fail;
+			}
+		} else {
+			for (j = 0, k = 0; j < width * 2; j += 4, ++k) {
+				buf[k] = 0;
 
-              if (line[j + 1] > 127)
-                {
-                  buf[k] += (line[j] + 1)<< 4;
-                }
+				if (line[j + 1] > 127) {
+					buf[k] += (line[j] + 1) << 4;
+				}
 
-              if (line[j + 3] > 127)
-                {
-                  buf[k] += (line[j + 2] + 1);
-                }
-            }
+				if (line[j + 3] > 127) {
+					buf[k] += (line[j + 2] + 1);
+				}
+			}
 
-          if (! g_output_stream_write_all (output, buf, width + 1 / 2, nullptr,
-                                           nullptr, error))
-            goto fail;
-        }
+			if (!g_output_stream_write_all(
+						output, buf, width + 1 / 2, nullptr, nullptr, error)) {
+				goto fail;
+			}
+		}
 
-      gimp_progress_update ((float) i / (float) height);
-    }
+		gimp_progress_update((float)i / (float)height);
+	}
 
-  if (! g_output_stream_close (output, nullptr, error))
-    goto fail;
+	if (!g_output_stream_close(output, nullptr, error)) {
+		goto fail;
+	}
 
-  gimp_progress_update (1.0);
+	gimp_progress_update(1.0);
 
-  g_free (buf);
-  g_free (line);
-  g_object_unref (buffer);
-  g_object_unref (output);
+	g_free(buf);
+	g_free(line);
+	g_object_unref(buffer);
+	g_object_unref(output);
 
-  return TRUE;
+	return TRUE;
 
- fail:
+fail:
 
-  cancellable = g_cancellable_new ();
-  g_cancellable_cancel (cancellable);
-  g_output_stream_close (output, cancellable, nullptr);
-  g_object_unref (cancellable);
+	cancellable = g_cancellable_new();
+	g_cancellable_cancel(cancellable);
+	g_output_stream_close(output, cancellable, nullptr);
+	g_object_unref(cancellable);
 
-  g_free (buf);
-  g_free (line);
-  g_object_unref (buffer);
-  g_object_unref (output);
+	g_free(buf);
+	g_free(line);
+	g_object_unref(buffer);
+	g_object_unref(output);
 
-  return FALSE;
+	return FALSE;
 #endif
-//static gint32 export_image(
-//		gchar* filename, gint32 image_ID, gint32 drawable_ID,
-//		gint32 orig_image_ID) {
-//	ignore_unused_variable_warning(drawable_ID, orig_image_ID);
+	// static gint32 export_image(
+	//		gchar* filename, gint32 image_ID, gint32 drawable_ID,
+	//		gint32 orig_image_ID) {
+	//	ignore_unused_variable_warning(drawable_ID, orig_image_ID);
 	if (run_mode != GIMP_RUN_NONINTERACTIVE) {
 		std::string name_buf("Saving ");
-//		name_buf += filename;
+		//		name_buf += filename;
 		name_buf += gimp_file_get_utf8_name(file);
 		name_buf += ':';
 		gimp_progress_init(name_buf.c_str());
@@ -1187,9 +1099,8 @@ export_image (GFile         *file,
 	// Find the guides...
 	int hotx = -1;
 	int hoty = -1;
-	for (gint32 guide_ID = gimp_image_find_next_guide(image, 0);
-		 guide_ID > 0;
-		 guide_ID = gimp_image_find_next_guide(image, guide_ID)) {
+	for (gint32 guide_ID = gimp_image_find_next_guide(image, 0); guide_ID > 0;
+		 guide_ID        = gimp_image_find_next_guide(image, guide_ID)) {
 #ifdef DEBUG
 		std::cout << "Found guide " << guide_ID << ':';
 #endif
@@ -1216,22 +1127,25 @@ export_image (GFile         *file,
 		}
 	}
 
-	GList *layers  = g_list_reverse(gimp_image_list_layers(image));
+	GList* layers  = g_list_reverse(gimp_image_list_layers(image));
 	gint32 nlayers = g_list_length(layers);
-	std::cout << "SHP: Exporting " << g_list_length(layers) << " layers" << std::endl;
+	std::cout << "SHP: Exporting " << g_list_length(layers) << " layers"
+			  << std::endl;
 
 	if (layers && !gimp_drawable_is_indexed(GIMP_DRAWABLE(layers->data))) {
 		g_message("SHP: You can only save indexed images!");
 		return FALSE;
 	}
 
-	Shape shape(nlayers);
-	GList *cur_layer=g_list_first(layers);
+	Shape  shape(nlayers);
+	GList* cur_layer = g_list_first(layers);
 	for (auto& frame : shape) {
-		GeglBuffer* drawable = gimp_drawable_get_buffer(GIMP_DRAWABLE(cur_layer->data));
-		gint        offsetX;
-		gint        offsetY;
-		gimp_drawable_get_offsets(GIMP_DRAWABLE(cur_layer->data), &offsetX, &offsetY);
+		GeglBuffer* drawable
+				= gimp_drawable_get_buffer(GIMP_DRAWABLE(cur_layer->data));
+		gint offsetX;
+		gint offsetY;
+		gimp_drawable_get_offsets(
+				GIMP_DRAWABLE(cur_layer->data), &offsetX, &offsetY);
 		const int    width           = gegl_buffer_get_width(drawable);
 		const int    height          = gegl_buffer_get_height(drawable);
 		const int    xleft           = hotx - offsetX;
@@ -1265,10 +1179,10 @@ export_image (GFile         *file,
 		cur_layer = g_list_next(cur_layer);
 	}
 
-//	OFileDataSource ds(filename);
+	//	OFileDataSource ds(filename);
 	OFileDataSource ds(gimp_file_get_utf8_name(file));
 	if (!ds.good()) {
-//		g_message("SHP: can't create \"%s\"\n", filename);
+		//		g_message("SHP: can't create \"%s\"\n", filename);
 		g_message("SHP: can't create \"%s\"\n", gimp_file_get_utf8_name(file));
 		return -1;
 	}
