@@ -60,8 +60,7 @@
 #include "ignore_unused_variable_warning.h"
 #include "vgafile.h"
 
-#include <errno.h>
-
+#include <cerrno>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -78,8 +77,8 @@
 #define PLUG_IN_BINARY "file-shp"
 #define PLUG_IN_ROLE   "gimp-file-shp"
 
-typedef struct _Shp      Shp;
-typedef struct _ShpClass ShpClass;
+using Shp      = struct _Shp;
+using ShpClass = struct _ShpClass;
 
 struct _Shp {
 	GimpPlugIn parent_instance;
