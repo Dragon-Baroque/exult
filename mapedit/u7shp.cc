@@ -353,22 +353,6 @@ static guchar gimp_cmap[768] = {
 		0xFC, 0xFC, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xFC, 0x00, 0xFC, 0x00, 0x00,
 		0xFC, 0xFC, 0xFC, 0x61, 0x61, 0x61, 0xC0, 0xC0, 0xC0, 0xFC, 0x00, 0xF1};
 
-struct u7frame {
-	guchar* pixels;
-	size_t  datalen;
-	gint16  leftX;
-	gint16  leftY;
-	gint16  rightX;
-	gint16  rightY;
-	gint16  width;
-	gint16  height;
-};
-
-struct u7shape {
-	u7frame* frames;
-	size_t   num_frames;
-};
-
 struct Bounds {
 	int xright = -1;
 	int xleft  = -1;
