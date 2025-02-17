@@ -44,7 +44,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <cmath>
 #include <cstdlib>
 
-using EStudio::Add_menu_item;
 using std::cerr;
 using std::cout;
 using std::endl;
@@ -369,7 +368,12 @@ void Npc_chooser::scroll_to_frame() {
 				}
 			}
 		}
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+		GtkAdjustment* adj
+				= gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(hscroll));
+#else     // GTK 4
 		GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(hscroll));
+#endif    // GTK 4
 		gtk_adjustment_set_value(adj, hoffset);
 	}
 }
@@ -404,7 +408,12 @@ void Npc_chooser::goto_index(unsigned index    // Desired index in 'info'.
 	}
 	if (start < rows.size()) {
 		// Get to right spot again!
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+		GtkAdjustment* adj
+				= gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(vscroll));
+#else     // GTK 4
 		GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(vscroll));
+#endif    // GTK 4
 		gtk_adjustment_set_value(adj, rows[start].y);
 	}
 }
@@ -445,22 +454,27 @@ int Npc_chooser::find_npc(int npcnum) {
  *  Configure the viewing window.
  */
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
 static gint Configure_chooser(
-		GtkWidget*         widget,    // The drawing area.
-		GdkEventConfigure* event,
-		gpointer           data    // ->Npc_chooser
+		GtkWidget* widget,    // The drawing area.
+		int width, int height,
+		gpointer user_data    // ->Npc_chooser
 ) {
 	ignore_unused_variable_warning(widget);
-	auto* chooser = static_cast<Npc_chooser*>(data);
-	return chooser->configure(event);
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
+	return chooser->configure(width, height);
 }
 
-gint Npc_chooser::configure(GdkEventConfigure* event) {
+gint Npc_chooser::configure(int width, int height) {
 	Shape_draw::configure();
+	gint event_configure_width, event_configure_height;
+	event_configure_width  = width;
+	event_configure_height = height;
 	// Did the size change?
-	if (event->width != config_width || event->height != config_height) {
-		config_width  = event->width;
-		config_height = event->height;
+	if (event_configure_width != config_width
+		|| event_configure_height != config_height) {
+		config_width  = event_configure_width;
+		config_height = event_configure_height;
 		setup_info(true);
 		render();
 		update_statusbar();
@@ -472,18 +486,68 @@ gint Npc_chooser::configure(GdkEventConfigure* event) {
 	}
 	return true;
 }
+#else     // GTK 4
+static gint Configure_chooser(
+		GtkWidget* widget,    // The drawing area.
+		GdkEvent*  event,
+		gpointer   user_data    // ->Npc_chooser.
+) {
+	ignore_unused_variable_warning(widget);
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
+	return chooser->configure(event);
+}
+
+gint Npc_chooser::configure(GdkEvent* event) {
+	Shape_draw::configure();
+	gint event_configure_width, event_configure_height;
+	event_configure_width  = event->configure.width;
+	event_configure_height = event->configure.height;
+	// Did the size change?
+	if (event_configure_width != config_width
+		|| event_configure_height != config_height) {
+		config_width  = event_configure_width;
+		config_height = event_configure_height;
+		setup_info(true);
+		render();
+		update_statusbar();
+	} else {
+		render();    // Same size?  Just render it.
+	}
+	if (group) {          // Filtering?
+		enable_drop();    // Can drop NPCs here.
+	}
+	return true;
+}
+#endif    // GTK 4
 
 /*
  *  Handle an expose event.
  */
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+void Npc_chooser::expose(
+		GtkDrawingArea* widget,    // The view window.
+		cairo_t* cairo, int width, int height,
+		gpointer user_data    // ->Npc_chooser.
+) {
+	ignore_unused_variable_warning(widget);
+	auto*        chooser = static_cast<Npc_chooser*>(user_data);
+	GdkRectangle area    = {0, 0, width, height};
+	//	gdk_cairo_get_clip_rectangle(cairo, &area);
+	chooser->set_graphic_context(cairo);
+	chooser->show(
+			ZoomDown(area.x), ZoomDown(area.y), ZoomDown(area.width),
+			ZoomDown(area.height));
+	chooser->set_graphic_context(nullptr);
+}
+#else     // GTK 4
 gint Npc_chooser::expose(
 		GtkWidget* widget,    // The view window.
 		cairo_t*   cairo,
-		gpointer   data    // ->Npc_chooser.
+		gpointer   user_data    // ->Npc_chooser.
 ) {
 	ignore_unused_variable_warning(widget);
-	auto* chooser = static_cast<Npc_chooser*>(data);
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
 	chooser->set_graphic_context(cairo);
 	GdkRectangle area = {0, 0, 0, 0};
 	gdk_cairo_get_clip_rectangle(cairo, &area);
@@ -493,44 +557,52 @@ gint Npc_chooser::expose(
 	chooser->set_graphic_context(nullptr);
 	return true;
 }
+#endif    // GTK 4
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 /*
  *  Handle a mouse drag event.
  */
 
 gint Npc_chooser::drag_motion(
-		GtkWidget*      widget,    // The view window.
-		GdkEventMotion* event,
-		gpointer        data    // ->Npc_chooser.
+		GtkWidget* widget,    // The view window.
+		GdkEvent*  event,
+		gpointer   user_data    // ->Npc_chooser.
 ) {
 	ignore_unused_variable_warning(widget);
-	auto* chooser = static_cast<Npc_chooser*>(data);
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
 	if (!chooser->dragging && chooser->selected >= 0) {
-		chooser->start_drag(
-				U7_TARGET_NPCID_NAME, U7_TARGET_NPCID,
-				reinterpret_cast<GdkEvent*>(event));
+		chooser->start_drag(U7_TARGET_NPCID_NAME, U7_TARGET_NPCID, event);
 	}
 	return true;
 }
+#endif                            // GTK 4
 
 /*
  *  Handle a mouse button-press event.
  */
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
 gint Npc_chooser::mouse_press(
-		GtkWidget*      widget,    // The view window.
-		GdkEventButton* event) {
-	gtk_widget_grab_focus(widget);
+		GtkGestureClick* click_ctlr, int n_press, double x, double y) {
+	GtkWidget* widget
+			= gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(click_ctlr));
+	gtk_widget_grab_focus(widget);    // Enables keystrokes.
 
-#ifdef DEBUG
-	cout << "Npcs : Clicked to " << (event->x) << " * " << (event->y) << " by "
-		 << (event->button) << endl;
-#endif
-	if (event->button == 4) {
+	guint event_button_button = gtk_gesture_single_get_current_button(
+			GTK_GESTURE_SINGLE(click_ctlr));
+	gdouble event_button_x = x, event_button_y = y;
+
+#	ifdef DEBUG
+	cout << "Npcs : Clicked to " << event_button_x << " * " << event_button_y
+		 << " by " << event_button_button << endl;
+#	endif
+	if (event_button_button == 4) {
 		if (row0 > 0) {
 			scroll_row_vertical(row0 - 1);
 		}
 		return true;
-	} else if (event->button == 5) {
+	} else if (event_button_button == 5) {
 		scroll_row_vertical(row0 + 1);
 		return true;
 	}
@@ -538,10 +610,10 @@ gint Npc_chooser::mouse_press(
 	int            new_selected = -1;
 	unsigned       i;    // Search through entries.
 	const unsigned infosz = info.size();
-	const int      absx   = ZoomDown(static_cast<int>(event->x)) + hoffset;
-	const int      absy   = ZoomDown(static_cast<int>(event->y)) + voffset;
+	const int      absx = ZoomDown(static_cast<int>(event_button_x)) + hoffset;
+	const int      absy = ZoomDown(static_cast<int>(event_button_y)) + voffset;
 	for (i = rows[row0].index0; i < infosz; i++) {
-		if (info[i].box.distance(absx, absy) <= 2) {
+		if (info[i].box.has_point(absx, absy)) {
 			// Found the box?
 			// Indicate we can drag.
 			new_selected = i;
@@ -557,17 +629,26 @@ gint Npc_chooser::mouse_press(
 			(*sel_changed)();
 		}
 	}
-	if (new_selected < 0 && event->button == 1) {
+	if (new_selected < 0 && event_button_button == 1) {
 		unselect(true);    // No selection.
 	} else if (selected == old_selected && old_selected >= 0) {
 		// Same square.  Check for dbl-click.
-		if (reinterpret_cast<GdkEvent*>(event)->type == GDK_2BUTTON_PRESS) {
+		if (n_press == 2) {
 			edit_npc();
 		}
 	}
-	if (event->button == 3) {
-		gtk_menu_popup_at_pointer(
-				GTK_MENU(create_popup()), reinterpret_cast<GdkEvent*>(event));
+	if (event_button_button == 3) {
+		GMenu* popup = create_popup();
+		popup_widget = gtk_popover_new_from_model(widget, G_MENU_MODEL(popup));
+		g_object_unref(popup);
+		if (selected >= 0) {
+			GdkRectangle target = {
+					ZoomUp(info[selected].box.x - hoffset),
+					ZoomUp(info[selected].box.y - voffset),
+					ZoomUp(info[selected].box.w), ZoomUp(info[selected].box.h)};
+			gtk_popover_set_pointing_to(GTK_POPOVER(popup_widget), &target);
+		}
+		gtk_widget_set_visible(popup_widget, true);
 	}
 	return true;
 }
@@ -576,34 +657,137 @@ gint Npc_chooser::mouse_press(
  *  Handle mouse button press/release events.
  */
 static gint Mouse_press(
-		GtkWidget*      widget,    // The view window.
-		GdkEventButton* event,
-		gpointer        data    // ->Npc_chooser.
+		GtkGestureClick* click_ctlr, int n_press, double x, double y,
+		gpointer user_data    // ->Npc_chooser.
 ) {
-	auto* chooser = static_cast<Npc_chooser*>(data);
-	return chooser->mouse_press(widget, event);
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
+	return chooser->mouse_press(click_ctlr, n_press, x, y);
 }
 
 static gint Mouse_release(
-		GtkWidget*      widget,    // The view window.
-		GdkEventButton* event,
-		gpointer        data    // ->Npc_chooser.
+		GtkGestureClick* click_ctlr, int n_press, double x, double y,
+		gpointer user_data    // ->Npc_chooser.
 ) {
-	ignore_unused_variable_warning(widget, event);
-	auto* chooser = static_cast<Npc_chooser*>(data);
+	ignore_unused_variable_warning(click_ctlr, n_press, x, y);
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
 	chooser->mouse_up();
+	return true;
+}
+#else    // GTK 4
+gint Npc_chooser::mouse_press(
+		GtkWidget* widget,    // The view window.
+		GdkEvent*  event) {
+	gtk_widget_grab_focus(widget);    // Enables keystrokes.
+
+	GdkEventType event_type = gdk_event_get_event_type(event);
+	guint        event_button_button;
+	gdouble      event_button_x, event_button_y;
+	gdk_event_get_button(event, &event_button_button);
+	gdk_event_get_coords(event, &event_button_x, &event_button_y);
+
+#	ifdef DEBUG
+	cout << "Npcs : Clicked to " << event_button_x << " * " << event_button_y
+		 << " by " << event_button_button << endl;
+#	endif
+	if (event_button_button == 4) {
+		if (row0 > 0) {
+			scroll_row_vertical(row0 - 1);
+		}
+		return true;
+	} else if (event_button_button == 5) {
+		scroll_row_vertical(row0 + 1);
+		return true;
+	}
+	const int      old_selected = selected;
+	int            new_selected = -1;
+	unsigned       i;    // Search through entries.
+	const unsigned infosz = info.size();
+	const int      absx = ZoomDown(static_cast<int>(event_button_x)) + hoffset;
+	const int      absy = ZoomDown(static_cast<int>(event_button_y)) + voffset;
+	for (i = rows[row0].index0; i < infosz; i++) {
+		if (info[i].box.has_point(absx, absy)) {
+			// Found the box?
+			// Indicate we can drag.
+			new_selected = i;
+			break;
+		} else if (info[i].box.y - voffset >= ZoomDown(config_height)) {
+			break;    // Past bottom of screen.
+		}
+	}
+	if (new_selected >= 0) {
+		select(new_selected);
+		render();
+		if (sel_changed) {    // Tell client.
+			(*sel_changed)();
+		}
+	}
+	if (new_selected < 0 && event_button_button == 1) {
+		unselect(true);    // No selection.
+	} else if (selected == old_selected && old_selected >= 0) {
+		// Same square.  Check for dbl-click.
+		if (event_type == GDK_2BUTTON_PRESS) {
+			edit_npc();
+		}
+	}
+	if (event_button_button == 3) {
+		GMenu* popup = create_popup();
+		popup_widget = gtk_popover_new_from_model(widget, G_MENU_MODEL(popup));
+		g_object_unref(popup);
+		if (selected >= 0) {
+			GdkRectangle target = {
+					ZoomUp(info[selected].box.x - hoffset),
+					ZoomUp(info[selected].box.y - voffset),
+					ZoomUp(info[selected].box.w), ZoomUp(info[selected].box.h)};
+			gtk_popover_set_pointing_to(GTK_POPOVER(popup_widget), &target);
+		}
+		gtk_widget_set_visible(popup_widget, true);
+	}
 	return true;
 }
 
 /*
+ *  Handle mouse button press/release events.
+ */
+static gint Mouse_press(
+		GtkWidget* widget,    // The view window.
+		GdkEvent*  event,
+		gpointer   user_data    // ->Npc_chooser.
+) {
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
+	return chooser->mouse_press(widget, event);
+}
+
+static gint Mouse_release(
+		GtkWidget* widget,    // The view window.
+		GdkEvent*  event,
+		gpointer   user_data    // ->Npc_chooser.
+) {
+	ignore_unused_variable_warning(widget, event);
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
+	chooser->mouse_up();
+	return true;
+}
+#endif    // GTK 4
+
+/*
  *  Keystroke in draw-area.
  */
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
 C_EXPORT gboolean on_npc_draw_key_press(
-		GtkEntry* entry, GdkEventKey* event, gpointer user_data) {
-	ignore_unused_variable_warning(entry, event, user_data);
-	// Npc_chooser *chooser = static_cast<Npc_chooser *>(user_data);
+		GtkEventControllerKey* key_ctlr, guint keyval, guint keycode,
+		GdkModifierType state, gpointer user_data) {
+	ignore_unused_variable_warning(key_ctlr, keyval, keycode, state, user_data);
+	//	Npc_chooser *chooser = static_cast<Npc_chooser *>(user_data);
 	return false;    // Let parent handle it.
 }
+#else     // GTK 4
+C_EXPORT gboolean on_npc_draw_key_press(
+		GtkEntry* entry, GdkEvent* event, gpointer user_data) {
+	ignore_unused_variable_warning(entry, event, user_data);
+	//	Npc_chooser *chooser = static_cast<Npc_chooser *>(user_data);
+	return false;    // Let parent handle it.
+}
+#endif    // GTK 4
 
 /*
  *  Bring up the NPC editor.
@@ -641,6 +825,100 @@ void Npc_chooser::update_npc(int num) {
 	update_statusbar();
 }
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+/*
+ *  Beginning of a drag.
+ */
+
+GdkContentProvider* Npc_chooser::drag_prepare(
+		GtkDragSource* source, double x, double y,
+		gpointer user_data    // ->Npc_chooser.
+) {
+	ignore_unused_variable_warning(source, x, y);
+	cout << "In DRAG_PREPARE of Npc" << endl;
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
+	if (chooser->selected < 0) {
+		return nullptr;    // Not sure about this.
+	}
+	guchar buf[U7DND_DATA_LENGTH(1)];
+	int    npcnum = chooser->info[chooser->selected].npcnum;
+	int    len    = Store_u7_npcid(buf, npcnum);
+	cout << "Setting selection data (" << npcnum << ')' << endl;
+	const char*         target = reinterpret_cast<const char*>(buf);
+	GBytes*             gfile  = g_bytes_new(target, len);
+	GdkContentProvider* targets[]
+			= {gdk_content_provider_new_for_bytes(U7_TARGET_NPCID_NAME, gfile),
+			   gdk_content_provider_new_for_bytes(
+					   U7_TARGET_DROPTEXT_NAME_MIME, gfile),
+			   gdk_content_provider_new_typed(G_TYPE_STRING, target)};
+	return gdk_content_provider_new_union(targets, 3);
+}
+
+void Npc_chooser::drag_begin(
+		GtkDragSource* source, GdkDrag* drag,
+		gpointer user_data    // ->Npc_chooser.
+) {
+	ignore_unused_variable_warning(source);
+	cout << "In DRAG_BEGIN of Npc" << endl;
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
+	if (chooser->selected < 0) {
+		return;
+	}
+	// Get ->npc.
+	int          npcnum = chooser->info[chooser->selected].npcnum;
+	Estudio_npc& npc    = chooser->get_npcs()[npcnum];
+	Shape_frame* shape  = chooser->ifile->get_shape(npc.shapenum, 0);
+	if (!shape) {
+		return;
+	}
+	unsigned char  buf[Exult_server::maxlength];
+	unsigned char* ptr = &buf[0];
+	little_endian::Write2(ptr, npcnum);
+	ExultStudio* studio = ExultStudio::get_instance();
+	studio->send_to_server(Exult_server::drag_npc, buf, ptr - buf);
+	chooser->set_drag_icon(drag, shape);    // Set icon for dragging.
+	return;
+}
+
+/*
+ *  Npc was dropped here.
+ */
+
+gboolean Npc_chooser::drag_data_received(
+		GtkDropTarget* dest, GValue* value, double x, double y,
+		gpointer user_data) {
+	ignore_unused_variable_warning(dest, x, y);
+	const unsigned char* seldata
+			= reinterpret_cast<const unsigned char*>(g_value_get_string(value));
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
+	cout << "In DRAG_DATA_RECEIVED of Npc for '" << seldata << "'" << endl;
+	if (Is_u7_npcid(seldata) == true) {
+		int npcnum;
+		Get_u7_npcid(seldata, npcnum);
+		chooser->group->add(npcnum);
+		chooser->setup_info(true);
+		chooser->render();
+	}
+	return true;
+}
+
+/*
+ *  Set to accept drops from drag-n-drop of a npc.
+ */
+
+void Npc_chooser::enable_drop() {
+	if (drop_enabled) {    // More than once causes warning.
+		return;
+	}
+	drop_enabled = true;
+	gtk_widget_realize(draw);    //???????
+	GtkDropTarget* dest = gtk_drop_target_new(
+			G_TYPE_STRING,
+			static_cast<GdkDragAction>(GDK_ACTION_COPY | GDK_ACTION_MOVE));
+	g_signal_connect(dest, "drop", G_CALLBACK(drag_data_received), this);
+	gtk_widget_add_controller(draw, GTK_EVENT_CONTROLLER(dest));
+}
+#else     // GTK 4
 /*
  *  Someone wants the dragged shape.
  */
@@ -650,13 +928,13 @@ void Npc_chooser::drag_data_get(
 		GdkDragContext*   context,
 		GtkSelectionData* seldata,    // Fill this in.
 		guint info, guint time,
-		gpointer data    // ->Npc_chooser.
+		gpointer user_data    // ->Npc_chooser.
 ) {
 	ignore_unused_variable_warning(widget, context, time);
 	cout << "In DRAG_DATA_GET of Npc for " << info << " and '"
 		 << gdk_atom_name(gtk_selection_data_get_target(seldata)) << "'"
 		 << endl;
-	auto* chooser = static_cast<Npc_chooser*>(data);
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
 	if (chooser->selected < 0
 		|| (info != U7_TARGET_NPCID && info != U7_TARGET_NPCID + 100
 			&& info != U7_TARGET_NPCID + 200)) {
@@ -679,11 +957,11 @@ void Npc_chooser::drag_data_get(
 gint Npc_chooser::drag_begin(
 		GtkWidget*      widget,    // The view window.
 		GdkDragContext* context,
-		gpointer        data    // ->Npc_chooser.
+		gpointer        user_data    // ->Npc_chooser.
 ) {
 	ignore_unused_variable_warning(widget);
 	cout << "In DRAG_BEGIN of Npc" << endl;
-	auto* chooser = static_cast<Npc_chooser*>(data);
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
 	if (chooser->selected < 0) {
 		return false;    // ++++Display a halt bitmap.
 	}
@@ -704,16 +982,16 @@ gint Npc_chooser::drag_begin(
 }
 
 /*
- *  Chunk was dropped here.
+ *  Npc was dropped here.
  */
 
 void Npc_chooser::drag_data_received(
 		GtkWidget* widget, GdkDragContext* context, gint x, gint y,
 		GtkSelectionData* seldata, guint info, guint time,
-		gpointer udata    // -> Npc_chooser.
+		gpointer user_data    // ->Npc_chooser.
 ) {
 	ignore_unused_variable_warning(widget, context, x, y, info, time);
-	auto* chooser = static_cast<Npc_chooser*>(udata);
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
 	cout << "In DRAG_DATA_RECEIVED of Npc for '"
 		 << gdk_atom_name(gtk_selection_data_get_data_type(seldata)) << "'"
 		 << endl;
@@ -733,7 +1011,7 @@ void Npc_chooser::drag_data_received(
 }
 
 /*
- *  Set to accept drops from drag-n-drop of a chunk.
+ *  Set to accept drops from drag-n-drop of a npc.
  */
 
 void Npc_chooser::enable_drop() {
@@ -757,6 +1035,7 @@ void Npc_chooser::enable_drop() {
 			G_OBJECT(draw), "drag-data-received",
 			G_CALLBACK(drag_data_received), this);
 }
+#endif    // GTK 4
 
 /*
  *  Scroll to a new shape/frame.
@@ -836,7 +1115,11 @@ void Npc_chooser::scroll_vertical(int newoffset) {
  */
 
 void Npc_chooser::setup_vscrollbar() {
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	GtkAdjustment* adj = gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(vscroll));
+#else     // GTK 4
 	GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(vscroll));
+#endif    // GTK 4
 	gtk_adjustment_set_value(adj, 0);
 	gtk_adjustment_set_lower(adj, 0);
 	gtk_adjustment_set_upper(adj, total_height);
@@ -853,7 +1136,11 @@ void Npc_chooser::setup_vscrollbar() {
 void Npc_chooser::setup_hscrollbar(
 		int newmax    // New max., or -1 to leave alone.
 ) {
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	GtkAdjustment* adj = gtk_scrollbar_get_adjustment(GTK_SCROLLBAR(hscroll));
+#else     // GTK 4
 	GtkAdjustment* adj = gtk_range_get_adjustment(GTK_RANGE(hscroll));
+#endif    // GTK 4
 	if (newmax > 0) {
 		gtk_adjustment_set_upper(adj, newmax);
 	}
@@ -873,11 +1160,11 @@ void Npc_chooser::setup_hscrollbar(
  *  Handle a scrollbar event.
  */
 
-void Npc_chooser::vscrolled(    // For vertical scrollbar.
-		GtkAdjustment* adj,     // The adjustment.
-		gpointer       data     // ->Npc_chooser.
+void Npc_chooser::vscrolled(        // For vertical scrollbar.
+		GtkAdjustment* adj,         // The adjustment.
+		gpointer       user_data    // ->Npc_chooser.
 ) {
-	auto* chooser = static_cast<Npc_chooser*>(data);
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
 #ifdef DEBUG
 	cout << "Npcs : VScrolled to " << gtk_adjustment_get_value(adj) << " of [ "
 		 << gtk_adjustment_get_lower(adj) << ", "
@@ -890,11 +1177,11 @@ void Npc_chooser::vscrolled(    // For vertical scrollbar.
 	chooser->scroll_vertical(newindex);
 }
 
-void Npc_chooser::hscrolled(    // For horizontal scrollbar.
-		GtkAdjustment* adj,     // The adjustment.
-		gpointer       data     // ->Npc_chooser.
+void Npc_chooser::hscrolled(        // For horizontal scrollbar.
+		GtkAdjustment* adj,         // The adjustment.
+		gpointer       user_data    // ->Npc_chooser.
 ) {
-	auto* chooser = static_cast<Npc_chooser*>(data);
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
 #ifdef DEBUG
 	cout << "Npcs : HScrolled to " << gtk_adjustment_get_value(adj) << " of [ "
 		 << gtk_adjustment_get_lower(adj) << ", "
@@ -912,10 +1199,10 @@ void Npc_chooser::hscrolled(    // For horizontal scrollbar.
  */
 
 void Npc_chooser::frame_changed(
-		GtkAdjustment* adj,    // The adjustment.
-		gpointer       data    // ->Npc_chooser.
+		GtkAdjustment* adj,         // The adjustment.
+		gpointer       user_data    // ->Npc_chooser.
 ) {
-	auto*      chooser  = static_cast<Npc_chooser*>(data);
+	auto*      chooser  = static_cast<Npc_chooser*>(user_data);
 	const gint newframe = static_cast<gint>(gtk_adjustment_get_value(adj));
 	if (chooser->selected >= 0) {
 		Npc_entry&           npcinfo = chooser->info[chooser->selected];
@@ -938,8 +1225,8 @@ void Npc_chooser::frame_changed(
  *  'All frames' toggled.
  */
 
-void Npc_chooser::all_frames_toggled(GtkToggleButton* btn, gpointer data) {
-	auto* chooser = static_cast<Npc_chooser*>(data);
+void Npc_chooser::all_frames_toggled(GtkToggleButton* btn, gpointer user_data) {
+	auto* chooser = static_cast<Npc_chooser*>(user_data);
 	if (chooser->info.empty()) {
 		return;
 	}
@@ -1038,21 +1325,32 @@ void Npc_chooser::locate(bool upwards) {
  *  Handle popup menu items.
  */
 
-void on_npc_popup_edit_activate(GtkMenuItem* item, gpointer udata) {
-	ignore_unused_variable_warning(item);
-	static_cast<Npc_chooser*>(udata)->edit_npc();
+void npc_edit_action(
+		GSimpleAction* action, GVariant* parameter, gpointer user_data) {
+	ignore_unused_variable_warning(action, parameter);
+	static_cast<Npc_chooser*>(user_data)->edit_npc();
 }
 
 /*
  *  Set up popup menu for shape browser.
  */
 
-GtkWidget* Npc_chooser::create_popup() {
+static GActionEntry npc_entries[] = {
+		{"edit", npc_edit_action, nullptr, nullptr, nullptr, {0, 0, 0}}
+};
+
+GMenu* Npc_chooser::create_popup() {
+	// Bind popup menu actions.
+	GSimpleActionGroup* npc_group = g_simple_action_group_new();
+	g_action_map_add_action_entries(
+			G_ACTION_MAP(npc_group), npc_entries, G_N_ELEMENTS(npc_entries),
+			this);
+	gtk_widget_insert_action_group(
+			widget_get_top(get_widget()), "npc", G_ACTION_GROUP(npc_group));
 	// Create popup with groups, but not files.
-	create_popup_internal(false);
+	GMenu* popup = create_popup_internal(false);
 	if (selected >= 0) {    // Add editing choices.
-		Add_menu_item(
-				popup, "Edit...", G_CALLBACK(on_npc_popup_edit_activate), this);
+		menu_add_action(popup, "Edit...", "npc.edit");
 	}
 	return popup;
 }
@@ -1085,7 +1383,10 @@ Npc_chooser::Npc_chooser(
 
 	// A frame looks nice.
 	GtkWidget* frame = gtk_frame_new(nullptr);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_IN);
+#endif                            // GTK 4
 	widget_set_margins(
 			frame, 2 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
 	gtk_widget_set_visible(frame, true);
@@ -1093,28 +1394,66 @@ Npc_chooser::Npc_chooser(
 
 	// NOTE:  draw is in Shape_draw.
 	// Indicate the events we want.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_widget_set_events(
 			draw, GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK
 						  | GDK_BUTTON_RELEASE_MASK | GDK_BUTTON1_MOTION_MASK
 						  | GDK_KEY_PRESS_MASK);
-	// Set "configure" handler.
+#endif                            // GTK 4
+								  // Set "configure" handler.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	g_signal_connect(
+			G_OBJECT(draw), "resize", G_CALLBACK(Configure_chooser), this);
+#else                             // GTK 4
 	g_signal_connect(
 			G_OBJECT(draw), "configure-event", G_CALLBACK(Configure_chooser),
 			this);
-	// Set "expose-event" - "draw" handler.
+#endif                            // GTK 4
+								  // Set "expose-event" - "draw" handler.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	gtk_drawing_area_set_draw_func(
+			GTK_DRAWING_AREA(draw), expose, this, nullptr);
+#else                             // GTK 4
 	g_signal_connect(G_OBJECT(draw), "draw", G_CALLBACK(expose), this);
-	// Keystroke.
+#endif                            // GTK 4
+								  // Keystroke.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	key_ctlr = GTK_EVENT_CONTROLLER(gtk_event_controller_key_new());
+	gtk_widget_add_controller(GTK_WIDGET(draw), key_ctlr);
+	g_signal_connect(
+			G_OBJECT(key_ctlr), "key-pressed",
+			G_CALLBACK(on_npc_draw_key_press), this);
+#else     // GTK 4
 	g_signal_connect(
 			G_OBJECT(draw), "key-press-event",
 			G_CALLBACK(on_npc_draw_key_press), this);
+#endif    // GTK 4
 	gtk_widget_set_can_focus(GTK_WIDGET(draw), true);
 	// Set mouse click handler.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	click_ctlr = GTK_EVENT_CONTROLLER(gtk_gesture_click_new());
+	gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click_ctlr), 0);
+	gtk_widget_add_controller(GTK_WIDGET(draw), click_ctlr);
+	g_signal_connect(
+			G_OBJECT(click_ctlr), "pressed", G_CALLBACK(Mouse_press), this);
+	g_signal_connect(
+			G_OBJECT(click_ctlr), "released", G_CALLBACK(Mouse_release), this);
+#else                             // GTK 4
 	g_signal_connect(
 			G_OBJECT(draw), "button-press-event", G_CALLBACK(Mouse_press),
 			this);
 	g_signal_connect(
 			G_OBJECT(draw), "button-release-event", G_CALLBACK(Mouse_release),
 			this);
+#endif                            // GTK 4
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	drag_source = GTK_EVENT_CONTROLLER(gtk_drag_source_new());
+	g_signal_connect(
+			G_OBJECT(drag_source), "prepare", G_CALLBACK(drag_prepare), this);
+	g_signal_connect(drag_source, "drag-begin", G_CALLBACK(drag_begin), this);
+	gtk_widget_add_controller(draw, drag_source);
+#else     // GTK 4
 	// Mouse motion.
 	g_signal_connect(
 			G_OBJECT(draw), "drag-begin", G_CALLBACK(drag_begin), this);
@@ -1123,6 +1462,7 @@ Npc_chooser::Npc_chooser(
 			this);
 	g_signal_connect(
 			G_OBJECT(draw), "drag-data-get", G_CALLBACK(drag_data_get), this);
+#endif    // GTK 4
 	gtk_container_add(GTK_CONTAINER(frame), draw);
 	widget_set_margins(
 			draw, 2 * HMARGIN, 2 * HMARGIN, 2 * VMARGIN, 2 * VMARGIN);
@@ -1146,8 +1486,7 @@ Npc_chooser::Npc_chooser(
 	// Set scrollbar handler.
 	g_signal_connect(
 			G_OBJECT(shape_adj), "value-changed", G_CALLBACK(hscrolled), this);
-	//++++  gtk_widget_set_visible(hscroll, false);   // Only shown in 'frames'
-	// mode.
+	gtk_widget_set_visible(hscroll, false);    // Only shown in 'frames' mode.
 	// Scroll events.
 	enable_draw_vscroll(draw);
 
