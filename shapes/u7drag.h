@@ -27,16 +27,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 //	Generic Data Length is :
 //	  Per number = 7 : 1 dot separator + 1 sign + 5 digits
-//	  Prefix = 18 : 8 file:/// + 9 U7CHUNKID + 1 terminating null
-#define U7DND_DATA_LENGTH(n) (18 + ((n) * 7))
+//	  Prefix = 20 : 8 file:/// + 9 U7CHUNKID + 3 \r\n + terminating null
+#define U7DND_DATA_LENGTH(n) (20 + ((n) * 7))
 
 //	Generic FILE_MIME, TEXT_MIME Targets
 #if defined(MACOSX)
 #	define U7_TARGET_DROPFILE_NAME_MIME "public.file-url"
-#	define U7_TARGET_DROPTEXT_NAME_MIME "UTF8_STRING"
+#	define U7_TARGET_DROPTEXT_NAME_MIME "public.utf8-plain-text"
 #else
 #	define U7_TARGET_DROPFILE_NAME_MIME "text/uri-list"
-#	define U7_TARGET_DROPTEXT_NAME_MIME "UTF8_STRING"
+#	define U7_TARGET_DROPTEXT_NAME_MIME "text/plain;charset=utf-8"
 #endif    // MACOSX
 
 //	Target information for dragging a shape:
