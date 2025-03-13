@@ -248,6 +248,88 @@ void Shape_draw::configure() {
 	}
 }
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+/*
+ *  Shape was dropped.
+ */
+
+gboolean Shape_draw::drag_data_received(
+		GtkDropTarget* dest, GValue* value, double x, double y,
+		gpointer user_data) {
+	ignore_unused_variable_warning(dest, x, y);
+	const unsigned char* seldata
+			= reinterpret_cast<const unsigned char*>(g_value_get_string(value));
+	auto* draw = static_cast<Shape_draw*>(user_data);
+	cout << "In DRAG_DATA_RECEIVED of Shape for '" << seldata << "'" << endl;
+	if (draw->drop_callback && Is_u7_shapeid(seldata) == true) {
+		int file;
+		int shape;
+		int frame;
+		Get_u7_shapeid(seldata, file, shape, frame);
+		(*draw->drop_callback)(file, shape, frame, draw->drop_user_data);
+	}
+	return true;
+}
+
+/*
+ *  Set to accept drops from drag-n-drop of a shape.
+ */
+
+gulong Shape_draw::enable_drop(
+		Drop_callback callback,    // Call this when shape dropped.
+		void*         user_data    // Passed to callback.
+) {
+	drop_callback       = callback;
+	drop_user_data      = user_data;
+	GtkDropTarget* dest = gtk_drop_target_new(
+			G_TYPE_STRING,
+			static_cast<GdkDragAction>(GDK_ACTION_COPY | GDK_ACTION_MOVE));
+	gulong handler = g_signal_connect(
+			dest, "drop", G_CALLBACK(drag_data_received), this);
+	gtk_widget_add_controller(draw, GTK_EVENT_CONTROLLER(dest));
+	return handler;
+}
+
+/*
+ *  Set an icon for dragging FROM this area.
+ */
+
+void Shape_draw::set_drag_icon(
+		GdkDrag*     drag,
+		Shape_frame* shape    // Shape to use for the icon.
+) {
+	int           w      = shape->get_width();
+	int           h      = shape->get_height();
+	int           xright = shape->get_xright();
+	int           ybelow = shape->get_ybelow();
+	Image_buffer8 tbuf(w, h);    // Create buffer to render to.
+	tbuf.fill8(0xff);            // Fill with 'transparent' pixel.
+	unsigned char* tbits = tbuf.get_bits();
+	shape->paint(&tbuf, w - 1 - xright, h - 1 - ybelow);
+	// Put shape on a pixmap.
+	GdkPixbuf* pixbuf  = gdk_pixbuf_new(GDK_COLORSPACE_RGB, true, 8, w, h);
+	guchar*    pixels  = gdk_pixbuf_get_pixels(pixbuf);
+	int        rstride = gdk_pixbuf_get_rowstride(pixbuf);
+	int        pstride = gdk_pixbuf_get_n_channels(pixbuf);
+	for (int y = 0; y < h; y++) {
+		for (int x = 0; x < w; x++) {
+			guchar* t = pixels + y * rstride + x * pstride;
+			guchar  s = tbits[y * w + x];
+			guint32 c = palette->colors[s];
+			t[0]      = (s == 255 ? 0 : (c >> 16) & 255);
+			t[1]      = (s == 255 ? 0 : (c >> 8) & 255);
+			t[2]      = (s == 255 ? 0 : (c >> 0) & 255);
+			t[3]      = (s == 255 ? 0 : 255);
+		}
+	}
+	// This will be the shape dragged.
+	GdkTexture* icon = gdk_texture_new_for_pixbuf(pixbuf);
+	// Discard the Origin, space the pointer and the Shape for macOS
+	gtk_drag_icon_set_from_paintable(drag, GDK_PAINTABLE(icon), w + 2, h + 2);
+	g_object_unref(pixbuf);
+	g_object_unref(icon);
+}
+#else     // GTK 4
 /*
  *  Shape was dropped.
  */
@@ -255,10 +337,10 @@ void Shape_draw::configure() {
 void Shape_draw::drag_data_received(
 		GtkWidget* widget, GdkDragContext* context, gint x, gint y,
 		GtkSelectionData* seldata, guint info, guint time,
-		gpointer udata    // Should point to Shape_draw.
+		gpointer user_data    // ->Shape_draw.
 ) {
 	ignore_unused_variable_warning(widget, context, x, y, info, time);
-	auto* draw = static_cast<Shape_draw*>(udata);
+	auto* draw = static_cast<Shape_draw*>(user_data);
 	cout << "In DRAG_DATA_RECEIVED of Shape for '"
 		 << gdk_atom_name(gtk_selection_data_get_data_type(seldata)) << "'"
 		 << endl;
@@ -285,11 +367,11 @@ void Shape_draw::drag_data_received(
 
 gulong Shape_draw::enable_drop(
 		Drop_callback callback,    // Call this when shape dropped.
-		void*         udata        // Passed to callback.
+		void*         user_data    // Passed to callback.
 ) {
 	gtk_widget_realize(draw);    //???????
 	drop_callback  = callback;
-	drop_user_data = udata;
+	drop_user_data = user_data;
 	GtkTargetEntry tents[3];
 	tents[0].target = const_cast<char*>(U7_TARGET_SHAPEID_NAME);
 	tents[1].target = const_cast<char*>(U7_TARGET_DROPTEXT_NAME_MIME);
@@ -378,6 +460,7 @@ void Shape_draw::start_drag(
 			event, -1, -1);
 	gtk_target_list_unref(tlist);
 }
+#endif    // GTK 4
 
 /*
  *  Implement class Shape_single
@@ -417,9 +500,15 @@ Shape_single::Shape_single(
 				G_OBJECT(frame), "changed",
 				G_CALLBACK(Shape_single::on_frame_changed), this);
 	}
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	gtk_drawing_area_set_draw_func(
+			GTK_DRAWING_AREA(draw), Shape_single::on_draw_expose_event, this,
+			nullptr);
+#else     // GTK 4
 	draw_connect = g_signal_connect(
 			G_OBJECT(draw), "draw",
 			G_CALLBACK(Shape_single::on_draw_expose_event), this);
+#endif    // GTK 4
 	if (vganum >= 0) {
 		drop_connect = enable_drop(Shape_single::on_shape_dropped, this);
 	}
@@ -518,6 +607,36 @@ void Shape_single::on_state_changed(
 	single->render();
 }
 
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+void Shape_single::on_draw_expose_event(
+		GtkDrawingArea* widget, cairo_t* cairo, int width, int height,
+		gpointer user_data) {
+	ignore_unused_variable_warning(widget);
+	auto*        single = static_cast<Shape_single*>(user_data);
+	GdkRectangle area   = {0, 0, width, height};
+	//	gdk_cairo_get_clip_rectangle(cairo, &area);
+	single->set_graphic_context(cairo);
+	single->configure();
+	int shnum = 0, frnum = 0;
+	if (single->shape) {
+		shnum = extract_value(single->shape);
+	}
+	if (single->vganum == U7_SHAPE_SPRITES && shnum >= 0 && single->ifile) {
+		frnum = single->ifile->get_num_frames(shnum) / 2;
+	}
+	if (single->frame) {
+		frnum = extract_value(single->frame);
+	}
+	if ((shnum == 0) && !(single->shapevalid(0))) {
+		shnum = -1;
+	}
+	single->draw_shape_centered(shnum, frnum);
+	single->show(
+			ZoomDown(area.x), ZoomDown(area.y), ZoomDown(area.width),
+			ZoomDown(area.height));
+	single->set_graphic_context(nullptr);
+}
+#else     // GTK 4
 gboolean Shape_single::on_draw_expose_event(
 		GtkWidget* widget, cairo_t* cairo, gpointer user_data) {
 	ignore_unused_variable_warning(widget);
@@ -546,6 +665,7 @@ gboolean Shape_single::on_draw_expose_event(
 	single->set_graphic_context(nullptr);
 	return true;
 }
+#endif    // GTK 4
 
 void Shape_single::on_shape_dropped(
 		int filenum, int shapenum, int framenum, gpointer user_data) {
