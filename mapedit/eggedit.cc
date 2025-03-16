@@ -45,10 +45,10 @@ class Egg_object;
  *  Open egg window.
  */
 
-C_EXPORT void on_open_egg_activate(GtkMenuItem* menuitem, gpointer user_data) {
-	ignore_unused_variable_warning(menuitem, user_data);
-	ExultStudio* studio = ExultStudio::get_instance();
-	studio->open_egg_window();
+C_EXPORT void app_open_egg_action(
+		GSimpleAction* action, GVariant* parameter, gpointer user_data) {
+	ignore_unused_variable_warning(action, parameter);
+	(static_cast<ExultStudio*>(user_data))->open_egg_window();
 }
 
 /*
@@ -84,7 +84,8 @@ C_EXPORT void on_egg_browse_usecode_clicked(
 		GtkButton* button, gpointer user_data) {
 	ignore_unused_variable_warning(button, user_data);
 	ExultStudio* studio = ExultStudio::get_instance();
-	const char*  uc     = studio->browse_usecode(true);
+	const char*  uc
+			= studio->browse_usecode(true, studio->get_widget("egg_window"));
 	if (*uc) {
 		studio->set_entry("usecode_number", uc, true);
 	}
@@ -93,6 +94,18 @@ C_EXPORT void on_egg_browse_usecode_clicked(
 /*
  *  "Teleport coords" toggled.
  */
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+C_EXPORT void on_teleport_coord_toggled(
+		GtkCheckButton* btn, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
+	ExultStudio* studio = ExultStudio::get_instance();
+	bool         on     = gtk_check_button_get_active(GTK_CHECK_BUTTON(btn));
+	studio->set_sensitive("teleport_x", on);
+	studio->set_sensitive("teleport_y", on);
+	studio->set_sensitive("teleport_z", on);
+	studio->set_sensitive("teleport_eggnum", !on);
+}
+#else     // GTK 4
 C_EXPORT void on_teleport_coord_toggled(
 		GtkToggleButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);
@@ -103,6 +116,7 @@ C_EXPORT void on_teleport_coord_toggled(
 	studio->set_sensitive("teleport_z", on);
 	studio->set_sensitive("teleport_eggnum", !on);
 }
+#endif    // GTK 4
 
 /*
  *  Open the egg-editing window.
