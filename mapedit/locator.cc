@@ -39,10 +39,10 @@ using std::endl;
  *  Open locator window.
  */
 
-C_EXPORT void on_locator1_activate(GtkMenuItem* menuitem, gpointer user_data) {
-	ignore_unused_variable_warning(menuitem, user_data);
-	ExultStudio* studio = ExultStudio::get_instance();
-	studio->open_locator_window();
+C_EXPORT void app_locator_action(
+		GSimpleAction* action, GVariant* parameter, gpointer user_data) {
+	ignore_unused_variable_warning(action, parameter);
+	(static_cast<ExultStudio*>(user_data))->open_locator_window();
 }
 
 void ExultStudio::open_locator_window() {
@@ -58,7 +58,7 @@ void ExultStudio::open_locator_window() {
 C_EXPORT void on_loc_close_clicked(GtkButton* btn, gpointer user_data) {
 	ignore_unused_variable_warning(user_data);
 	auto* loc = static_cast<Locator*>(g_object_get_data(
-			G_OBJECT(gtk_widget_get_toplevel(GTK_WIDGET(btn))), "user_data"));
+			G_OBJECT(widget_get_top(GTK_WIDGET(btn))), "user_data"));
 	loc->show(false);
 }
 
@@ -77,29 +77,50 @@ C_EXPORT gboolean on_loc_window_delete_event(
 /*
  *  Draw area created, or size changed.
  */
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
 C_EXPORT gboolean on_loc_draw_configure_event(
-		GtkWidget*         widget,    // The view window.
-		GdkEventConfigure* event,
-		gpointer           data    // ->Shape_chooser
-) {
-	ignore_unused_variable_warning(event, data);
+		GtkWidget* widget,    // The view window.
+		int width, int height, gpointer user_data) {
+	ignore_unused_variable_warning(width, height, user_data);
 	auto* loc = static_cast<Locator*>(g_object_get_data(
-			G_OBJECT(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
-			"user_data"));
+			G_OBJECT(widget_get_top(GTK_WIDGET(widget))), "user_data"));
 	loc->configure(widget);
 	return true;
 }
-
+#else     // GTK 4
+C_EXPORT gboolean on_loc_draw_configure_event(
+		GtkWidget* widget,    // The view window.
+		GdkEvent* event, gpointer user_data) {
+	ignore_unused_variable_warning(event, user_data);
+	auto* loc = static_cast<Locator*>(g_object_get_data(
+			G_OBJECT(widget_get_top(GTK_WIDGET(widget))), "user_data"));
+	loc->configure(widget);
+	return true;
+}
+#endif    // GTK 4
 /*
  *  Draw area needs a repaint.
  */
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+void Locator::on_loc_draw_expose_event(
+		GtkDrawingArea* widget,    // The view window.
+		cairo_t* cairo, int width, int height, gpointer user_data) {
+	ignore_unused_variable_warning(widget, user_data);
+	auto* loc = static_cast<Locator*>(g_object_get_data(
+			G_OBJECT(widget_get_top(GTK_WIDGET(widget))), "user_data"));
+	loc->set_graphic_context(cairo);
+	GdkRectangle area = {0, 0, width, height};
+	//	gdk_cairo_get_clip_rectangle(cairo, &area);
+	loc->render(&area);
+	loc->set_graphic_context(nullptr);
+}
+#else     // GTK 4
 gboolean Locator::on_loc_draw_expose_event(
 		GtkWidget* widget,    // The view window.
-		cairo_t* cairo, gpointer data) {
-	ignore_unused_variable_warning(widget, data);
+		cairo_t* cairo, gpointer user_data) {
+	ignore_unused_variable_warning(widget, user_data);
 	auto* loc = static_cast<Locator*>(g_object_get_data(
-			G_OBJECT(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
-			"user_data"));
+			G_OBJECT(widget_get_top(GTK_WIDGET(widget))), "user_data"));
 	loc->set_graphic_context(cairo);
 	GdkRectangle area = {0, 0, 0, 0};
 	gdk_cairo_get_clip_rectangle(cairo, &area);
@@ -107,45 +128,72 @@ gboolean Locator::on_loc_draw_expose_event(
 	loc->set_graphic_context(nullptr);
 	return true;
 }
+#endif    // GTK 4
 
 /*
  *  Mouse events in draw area.
  */
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
 C_EXPORT gboolean on_loc_draw_button_press_event(
-		GtkWidget*      widget,    // The view window.
-		GdkEventButton* event,
-		gpointer        data    // ->Chunk_chooser.
-) {
-	ignore_unused_variable_warning(data);
+		GtkGestureClick* click_ctlr, int n_press, double x, double y,
+		gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
+	GtkWidget* widget
+			= gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(click_ctlr));
 	auto* loc = static_cast<Locator*>(g_object_get_data(
-			G_OBJECT(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
-			"user_data"));
-	return loc->mouse_press(event);
+			G_OBJECT(widget_get_top(GTK_WIDGET(widget))), "user_data"));
+	return loc->mouse_press(GTK_GESTURE_SINGLE(click_ctlr), n_press, x, y);
 }
 
 C_EXPORT gboolean on_loc_draw_button_release_event(
-		GtkWidget*      widget,    // The view window.
-		GdkEventButton* event,
-		gpointer        data    // ->Chunk_chooser.
-) {
-	ignore_unused_variable_warning(data);
+		GtkGestureClick* click_ctlr, int n_press, double x, double y,
+		gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
+	GtkWidget* widget
+			= gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(click_ctlr));
 	auto* loc = static_cast<Locator*>(g_object_get_data(
-			G_OBJECT(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
-			"user_data"));
-	return loc->mouse_release(event);
+			G_OBJECT(widget_get_top(GTK_WIDGET(widget))), "user_data"));
+	return loc->mouse_release(GTK_GESTURE_SINGLE(click_ctlr), n_press, x, y);
 }
 
 C_EXPORT gboolean on_loc_draw_motion_notify_event(
-		GtkWidget*      widget,    // The view window.
-		GdkEventMotion* event,
-		gpointer        data    // ->Chunk_chooser.
-) {
-	ignore_unused_variable_warning(data);
+		GtkEventController* motion_ctlr, double x, double y,
+		gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
+	GtkWidget* widget = gtk_event_controller_get_widget(
+			GTK_EVENT_CONTROLLER(motion_ctlr));
 	auto* loc = static_cast<Locator*>(g_object_get_data(
-			G_OBJECT(gtk_widget_get_toplevel(GTK_WIDGET(widget))),
-			"user_data"));
-	return loc->mouse_motion(event);
+			G_OBJECT(widget_get_top(GTK_WIDGET(widget))), "user_data"));
+	return loc->mouse_motion(GTK_EVENT_CONTROLLER(motion_ctlr), x, y);
 }
+#else     // GTK 4
+C_EXPORT gboolean on_loc_draw_button_press_event(
+		GtkWidget* widget,    // The view window.
+		GdkEvent* event, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
+	auto* loc = static_cast<Locator*>(g_object_get_data(
+			G_OBJECT(widget_get_top(GTK_WIDGET(widget))), "user_data"));
+	return loc->mouse_press(widget, event);
+}
+
+C_EXPORT gboolean on_loc_draw_button_release_event(
+		GtkWidget* widget,    // The view window.
+		GdkEvent* event, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
+	auto* loc = static_cast<Locator*>(g_object_get_data(
+			G_OBJECT(widget_get_top(GTK_WIDGET(widget))), "user_data"));
+	return loc->mouse_release(widget, event);
+}
+
+C_EXPORT gboolean on_loc_draw_motion_notify_event(
+		GtkWidget* widget,    // The view window.
+		GdkEvent* event, gpointer user_data) {
+	ignore_unused_variable_warning(user_data);
+	auto* loc = static_cast<Locator*>(g_object_get_data(
+			G_OBJECT(widget_get_top(GTK_WIDGET(widget))), "user_data"));
+	return loc->mouse_motion(widget, event);
+}
+#endif    // GTK 4
 
 /*
  *  Create locator window.
@@ -158,9 +206,12 @@ Locator::Locator() {
 	g_object_set_data(G_OBJECT(win), "user_data", this);
 	draw = studio->get_widget("loc_draw");
 	// Indicate the events we want.
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+#else                             // GTK 4
 	gtk_widget_set_events(
 			draw, GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK
 						  | GDK_BUTTON_RELEASE_MASK | GDK_BUTTON1_MOTION_MASK);
+#endif                            // GTK 4
 	// Set up scales.
 	GtkWidget* scale = studio->get_widget("loc_hscale");
 	hadj             = gtk_range_get_adjustment(GTK_RANGE(scale));
@@ -174,9 +225,31 @@ Locator::Locator() {
 	gtk_adjustment_set_page_size(vadj, 2);
 	g_signal_emit_by_name(G_OBJECT(hadj), "changed");
 	g_signal_emit_by_name(G_OBJECT(vadj), "changed");
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	motion_ctlr = GTK_EVENT_CONTROLLER(gtk_event_controller_motion_new());
+	gtk_widget_add_controller(GTK_WIDGET(draw), motion_ctlr);
 	g_signal_connect(
-			G_OBJECT(studio->get_widget("loc_draw")), "draw",
-			G_CALLBACK(on_loc_draw_expose_event), this);
+			G_OBJECT(motion_ctlr), "motion",
+			G_CALLBACK(on_loc_draw_motion_notify_event), this);
+	click_ctlr = GTK_EVENT_CONTROLLER(gtk_gesture_click_new());
+	gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click_ctlr), 0);
+	gtk_widget_add_controller(GTK_WIDGET(draw), click_ctlr);
+	g_signal_connect(
+			G_OBJECT(click_ctlr), "pressed",
+			G_CALLBACK(on_loc_draw_button_press_event), this);
+	g_signal_connect(
+			G_OBJECT(click_ctlr), "released",
+			G_CALLBACK(on_loc_draw_button_release_event), this);
+	g_signal_connect(
+			G_OBJECT(draw), "resize", G_CALLBACK(on_loc_draw_configure_event),
+			nullptr);
+	gtk_drawing_area_set_draw_func(
+			GTK_DRAWING_AREA(draw), Locator::on_loc_draw_expose_event, this,
+			nullptr);
+#else     // GTK 4
+	g_signal_connect(
+			G_OBJECT(draw), "draw", G_CALLBACK(on_loc_draw_expose_event), this);
+#endif    // GTK 4
 	// Set scrollbar handlers.
 	g_signal_connect(
 			G_OBJECT(hadj), "value-changed", G_CALLBACK(hscrolled), this);
@@ -193,6 +266,17 @@ Locator::~Locator() {
 		g_source_remove(send_location_timer);
 	}
 	gtk_widget_destroy(win);
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+	if ((G_IS_OBJECT(click_ctlr)) && (G_OBJECT(click_ctlr)->ref_count > 0)) {
+		//		g_object_unref(click_ctlr);
+	}
+	click_ctlr = nullptr;
+	if ((G_IS_OBJECT(motion_ctlr)) && (G_OBJECT(motion_ctlr)->ref_count > 0)) {
+		//		g_object_unref(motion_ctlr);
+	}
+	motion_ctlr = nullptr;
+#else     // GTK 4
+#endif    // GTK 4
 }
 
 /*
@@ -359,11 +443,11 @@ void Locator::view_changed(
  *  Handle a scrollbar event.
  */
 
-void Locator::vscrolled(       // For vertical scrollbar.
-		GtkAdjustment* adj,    // The adjustment.
-		gpointer       data    // ->Shape_chooser.
+void Locator::vscrolled(            // For vertical scrollbar.
+		GtkAdjustment* adj,         // The adjustment.
+		gpointer       user_data    // ->Shape_chooser.
 ) {
-	auto*     loc   = static_cast<Locator*>(data);
+	auto*     loc   = static_cast<Locator*>(user_data);
 	const int oldty = loc->ty;
 	loc->ty         = static_cast<gint>(gtk_adjustment_get_value(adj))
 			  * c_tiles_per_chunk;
@@ -375,11 +459,11 @@ void Locator::vscrolled(       // For vertical scrollbar.
 	}
 }
 
-void Locator::hscrolled(       // For horizontal scrollbar.
-		GtkAdjustment* adj,    // The adjustment.
-		gpointer       data    // ->Locator.
+void Locator::hscrolled(            // For horizontal scrollbar.
+		GtkAdjustment* adj,         // The adjustment.
+		gpointer       user_data    // ->Locator.
 ) {
-	auto*     loc   = static_cast<Locator*>(data);
+	auto*     loc   = static_cast<Locator*>(user_data);
 	const int oldtx = loc->tx;
 	loc->tx         = static_cast<gint>(gtk_adjustment_get_value(adj))
 			  * c_tiles_per_chunk;
@@ -429,9 +513,9 @@ void Locator::query_location() {
  *  the new location to Exult if the mouse hasn't moved further.
  */
 
-gint Locator::delayed_send_location(gpointer data    // ->locator.
+gint Locator::delayed_send_location(gpointer user_data    // ->Locator.
 ) {
-	auto* loc = static_cast<Locator*>(data);
+	auto* loc = static_cast<Locator*>(user_data);
 	loc->send_location();
 	loc->send_location_timer = -1;
 	return 0;    // Cancels timer.
@@ -501,16 +585,21 @@ void Locator::goto_mouse(
  *  Handle a mouse-press event.
  */
 
-gboolean Locator::mouse_press(GdkEventButton* event) {
-	dragging = false;
-	if (event->button != 1) {
+#if GTK_CHECK_VERSION(4, 0, 0)    // GTK 4
+gboolean Locator::mouse_press(
+		GtkGestureSingle* gesture, int n_press, double x, double y) {
+	dragging                  = false;
+	guint event_button_button = gtk_gesture_single_get_current_button(gesture);
+	gdouble event_button_x = x, event_button_y = y;
+
+	if (event_button_button != 1) {
 		return false;    // Handling left-click.
 	}
 	// Get mouse position, draw dims.
-	const int mx = static_cast<int>(event->x);
-	const int my = static_cast<int>(event->y);
+	const int mx = static_cast<int>(event_button_x);
+	const int my = static_cast<int>(event_button_y);
 	// Double-click?
-	if (reinterpret_cast<GdkEvent*>(event)->type == GDK_2BUTTON_PRESS) {
+	if (n_press == 2) {
 		goto_mouse(mx, my);
 		return true;
 	}
@@ -530,8 +619,9 @@ gboolean Locator::mouse_press(GdkEventButton* event) {
  *  Handle a mouse-release event.
  */
 
-gboolean Locator::mouse_release(GdkEventButton* event) {
-	ignore_unused_variable_warning(event);
+gboolean Locator::mouse_release(
+		GtkGestureSingle* gesture, int n_press, double x, double y) {
+	ignore_unused_variable_warning(gesture, n_press, x, y);
 	dragging = false;
 	return true;
 }
@@ -540,17 +630,86 @@ gboolean Locator::mouse_release(GdkEventButton* event) {
  *  Handle a mouse-motion event.
  */
 
-gboolean Locator::mouse_motion(GdkEventMotion* event) {
-	int             mx;
-	int             my;
-	GdkModifierType state;
-	mx    = static_cast<int>(event->x);
-	my    = static_cast<int>(event->y);
-	state = static_cast<GdkModifierType>(event->state);
-	if (!dragging || !(state & GDK_BUTTON1_MASK)) {
+gboolean Locator::mouse_motion(
+		GtkEventController* event_ctlr, double x, double y) {
+	ignore_unused_variable_warning(event_ctlr);
+	gdouble event_button_x = x, event_button_y = y;
+
+	int mx;
+	int my;
+	mx = static_cast<int>(event_button_x);
+	my = static_cast<int>(event_button_y);
+	if (!dragging) {
 		return false;    // Not dragging with left button.
 	}
 	// Delay sending location to Exult.
 	goto_mouse(mx - drag_relx, my - drag_rely, true);
 	return true;
 }
+#else     // GTK 4
+gboolean Locator::mouse_press(GtkWidget* widget, GdkEvent* event) {
+	ignore_unused_variable_warning(widget);
+	dragging = false;
+
+	GdkEventType event_type = gdk_event_get_event_type(event);
+	guint        event_button_button;
+	gdouble      event_button_x, event_button_y;
+	gdk_event_get_button(event, &event_button_button);
+	gdk_event_get_coords(event, &event_button_x, &event_button_y);
+
+	if (event_button_button != 1) {
+		return false;    // Handling left-click.
+	}
+	// Get mouse position, draw dims.
+	const int mx = static_cast<int>(event_button_x);
+	const int my = static_cast<int>(event_button_y);
+	// Double-click?
+	if (event_type == GDK_2BUTTON_PRESS) {
+		goto_mouse(mx, my);
+		return true;
+	}
+	// On (or close to) view box?
+	if (mx < viewbox.x - 3 || my < viewbox.y - 3
+		|| mx > viewbox.x + viewbox.width + 6
+		|| my > viewbox.y + viewbox.height + 6) {
+		return false;
+	}
+	dragging  = true;
+	drag_relx = mx - viewbox.x;    // Save rel. pos.
+	drag_rely = my - viewbox.y;
+	return true;
+}
+
+/*
+ *  Handle a mouse-release event.
+ */
+
+gboolean Locator::mouse_release(GtkWidget* widget, GdkEvent* event) {
+	ignore_unused_variable_warning(widget, event);
+	dragging = false;
+	return true;
+}
+
+/*
+ *  Handle a mouse-motion event.
+ */
+
+gboolean Locator::mouse_motion(GtkWidget* widget, GdkEvent* event) {
+	ignore_unused_variable_warning(widget);
+	GdkModifierType event_button_state;
+	gdouble         event_button_x, event_button_y;
+	gdk_event_get_state(event, &event_button_state);
+	gdk_event_get_coords(event, &event_button_x, &event_button_y);
+
+	int mx;
+	int my;
+	mx = static_cast<int>(event_button_x);
+	my = static_cast<int>(event_button_y);
+	if (!dragging || !(event_button_state & GDK_BUTTON1_MASK)) {
+		return false;    // Not dragging with left button.
+	}
+	// Delay sending location to Exult.
+	goto_mouse(mx - drag_relx, my - drag_rely, true);
+	return true;
+}
+#endif    // GTK 4
